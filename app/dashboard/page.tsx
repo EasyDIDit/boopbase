@@ -98,7 +98,11 @@ export default function Dashboard() {
     if (!file) return;
     setUploadingPhoto(true);
     const reader = new FileReader();
-    reader.onload = (event) => setPhoto(event.target.result as string);
+    reader.onload = (event) => {
+      if (event.target) {
+        setPhoto(event.target.result as string);
+      }
+    };
     reader.readAsDataURL(file);
     setUploadingPhoto(false);
   };
@@ -108,7 +112,11 @@ export default function Dashboard() {
     if (!file) return;
     setUploadingBg(true);
     const reader = new FileReader();
-    reader.onload = (event) => setBgImage(event.target.result as string);
+    reader.onload = (event) => {
+      if (event.target) {
+        setBgImage(event.target.result as string);
+      }
+    };
     reader.readAsDataURL(file);
     setUploadingBg(false);
   };

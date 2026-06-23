@@ -10,39 +10,35 @@ export async function GET(
     await connectDB();
 
     const { username } = await params;
-
     const user = await User.findOne({ username: username.toLowerCase() });
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
+    // Build vCard content
     const vcard = [
       'BEGIN:VCARD',
       'VERSION:3.0',
-      `FN:${user.name}`,
-      `N:${user.name};;;;`,
-      user.title ? `TITLE:${user.title}` : '',
-      user.company ? `ORG:${user.company}` : '',
+      `FN:${user.name || ''}`,
+      `N:${user.name || ''};;;;`,
       user.phone ? `TEL;TYPE=CELL:${user.phone}` : '',
-      user.email ? `EMAIL;TYPE=WORK:${user.email}` : '',
-      user.address ? `ADR;TYPE=WORK:;;${user.address};;;` : '',
-      user.bio ? `NOTE:${user.bio}` : '',
-      user.profileImage ? `PHOTO;VALUE=URI:${user.profileImage}` : '',
-      'END:VCARD',
-    ]
-      .filter(Boolean)
-      .join('\r\n');
+      user.email ? `EMAIL;TYPE=INTERNET:${user.email}` : '',
+      user.company ? `ORG:${user.company}` : '',
+      user.title ? `TITLE:${user.title}` : '',
+      user.address ? `ADR;TYPE=HOME:;;${user.address};;;;` : '',
+      'END:VCARD'
+    ].filter(Boolean).join('\n');
 
     return new NextResponse(vcard, {
       status: 200,
       headers: {
         'Content-Type': 'text/vcard',
-        'Content-Disposition': `attachment; filename="${user.username}.vcf"`,
-      },
+        'Content-Disposition': `attachment; filename="${username}.vcf"`
+      }
     });
   } catch (error) {
-    console.error('vCard generation error:', error);
+    console.error('vCard error:', error);
     return NextResponse.json({ error: 'Failed to generate vCard' }, { status: 500 });
   }
 }

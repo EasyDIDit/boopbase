@@ -7,10 +7,7 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const body = await request.json();
-    console.log('Register request body:', body);
-
-    const { username, name, email, password } = body;
+    const { username, name, email, password } = await request.json();
 
     if (!username || !name || !password) {
       return NextResponse.json({ error: 'Username, name, and password are required' }, { status: 400 });
@@ -22,7 +19,6 @@ export async function POST(request: NextRequest) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('Password hashed successfully');
 
     const user = await User.create({
       username: username.toLowerCase(),
@@ -31,14 +27,12 @@ export async function POST(request: NextRequest) {
       password: hashedPassword,
     });
 
-    console.log('User created:', user.username);
-
     return NextResponse.json({ 
       message: 'User registered successfully', 
       user: { username: user.username, name: user.name } 
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Registration error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

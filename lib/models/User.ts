@@ -12,7 +12,8 @@ const UserSchema = new mongoose.Schema({
     id: { type: String },
     title: { type: String },
     url: { type: String },
-    isActive: { type: Boolean, default: true }
+    isActive: { type: Boolean, default: true },
+    clicks: { type: Number, default: 0 }
   }],
   instagram: { type: String, default: '' },
   tiktok: { type: String, default: '' },
@@ -24,6 +25,7 @@ const UserSchema = new mongoose.Schema({
   title: { type: String, default: '' },
   address: { type: String, default: '' },
   password: { type: String, required: true },
+  views: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 
