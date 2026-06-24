@@ -99,7 +99,7 @@ export default function Dashboard() {
     setUploadingPhoto(true);
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (event.target) {
+      if (event.target && event.target.result) {
         setPhoto(event.target.result as string);
       }
     };
@@ -113,7 +113,7 @@ export default function Dashboard() {
     setUploadingBg(true);
     const reader = new FileReader();
     reader.onload = (event) => {
-      if (event.target) {
+      if (event.target && event.target.result) {
         setBgImage(event.target.result as string);
       }
     };
