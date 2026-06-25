@@ -13,9 +13,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
+    // Clean up the data before saving
+    const cleanData = { ...updateData };
+    
+    // Remove any undefined or null values
+    Object.keys(cleanData).forEach(key => {
+      if (cleanData[key] === undefined || cleanData[key] === null) {
+        delete cleanData[key];
+      }
+    });
+
     const user = await User.findOneAndUpdate(
       { username: username.toLowerCase() },
-      { $set: updateData },
+      { $set: cleanData },
       { new: true, upsert: true }
     );
 
@@ -27,8 +37,8 @@ export async function POST(request: NextRequest) {
       message: 'Data saved successfully', 
       user 
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Save dashboard error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
