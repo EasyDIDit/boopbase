@@ -13,15 +13,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
-    // Clean up the data before saving
-    const cleanData = { ...updateData };
-    
-    // Remove any undefined or null values
-    Object.keys(cleanData).forEach(key => {
-      if (cleanData[key] === undefined || cleanData[key] === null) {
-        delete cleanData[key];
+    // Only keep fields that exist in the schema
+    const allowedFields = [
+      'name', 'bio', 'profileImage', 'backgroundImage', 'backgroundColor',
+      'buttonStyle', 'links', 'instagram', 'tiktok', 'youtube', 'facebook',
+      'phone', 'email', 'company', 'title', 'address'
+    ];
+
+    const cleanData: any = {};
+    for (const key of allowedFields) {
+      if (updateData[key] !== undefined) {
+        cleanData[key] = updateData[key];
       }
-    });
+    }
 
     const user = await User.findOneAndUpdate(
       { username: username.toLowerCase() },
@@ -30,15 +34,12 @@ export async function POST(request: NextRequest) {
     );
 
     if (!user) {
-      return NextResponse.json({ error: 'Failed to save user data' }, { status: 500 });
+      return NextResponse.json({ error: 'Failed to save' }, { status: 500 });
     }
 
-    return NextResponse.json({ 
-      message: 'Data saved successfully', 
-      user 
-    });
+    return NextResponse.json({ message: 'Saved successfully' });
   } catch (error: any) {
     console.error('Save dashboard error:', error);
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Save failed' }, { status: 500 });
   }
 }
