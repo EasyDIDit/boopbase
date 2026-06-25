@@ -55,6 +55,41 @@ export default function Dashboard() {
       .catch(err => console.error('Failed to load user data', err));
   }, []);
 
+  // Image resize helper
+  const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > maxWidth) {
+              height *= maxWidth / width;
+              width = maxWidth;
+            }
+          } else {
+            if (height > maxHeight) {
+              width *= maxHeight / height;
+              height = maxHeight;
+            }
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const saveAllChanges = async () => {
     setSaving(true);
     try {
@@ -99,13 +134,8 @@ export default function Dashboard() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingPhoto(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target && event.target.result) {
-        setPhoto(event.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    const resized = await resizeImage(file, 400, 400);
+    setPhoto(resized);
     setUploadingPhoto(false);
   };
 
@@ -113,13 +143,8 @@ export default function Dashboard() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingBg(true);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target && event.target.result) {
-        setBgImage(event.target.result as string);
-      }
-    };
-    reader.readAsDataURL(file);
+    const resized = await resizeImage(file, 1200, 1200);
+    setBgImage(resized);
     setUploadingBg(false);
   };
 
