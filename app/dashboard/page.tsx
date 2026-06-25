@@ -82,13 +82,15 @@ export default function Dashboard() {
         }),
       });
 
+      const data = await res.json();
+
       if (res.ok) {
         alert('All changes saved successfully!');
       } else {
-        alert('Failed to save changes');
+        alert(data.error || 'Failed to save changes');
       }
     } catch (err) {
-      alert('Error saving changes');
+      alert('Failed to save changes');
     }
     setSaving(false);
   };
