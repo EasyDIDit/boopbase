@@ -13,13 +13,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Username, name, and password are required' }, { status: 400 });
     }
 
-    // Check for existing username
     const existingUsername = await User.findOne({ username: username.toLowerCase() });
     if (existingUsername) {
       return NextResponse.json({ error: 'Username already exists' }, { status: 400 });
     }
 
-    // Check for existing email (if email is provided)
     if (email) {
       const existingEmail = await User.findOne({ email: email.toLowerCase() });
       if (existingEmail) {
@@ -34,20 +32,19 @@ export async function POST(request: NextRequest) {
       name,
       email: email ? email.toLowerCase() : '',
       password: hashedPassword,
+      createdAt: new Date(),
+      lastLogin: new Date(),
     });
 
     return NextResponse.json({ 
-      message: 'User registered successfully', 
+      message: 'Account created successfully', 
       user: { username: user.username, name: user.name } 
     });
   } catch (error: any) {
     console.error('Registration error:', error);
-    
-    // Handle duplicate key errors gracefully
     if (error.code === 11000) {
       return NextResponse.json({ error: 'Username or email already exists' }, { status: 400 });
     }
-    
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

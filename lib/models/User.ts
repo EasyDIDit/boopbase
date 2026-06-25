@@ -26,7 +26,8 @@ const UserSchema = new mongoose.Schema({
   address: { type: String, default: '' },
   password: { type: String, required: true },
   views: { type: Number, default: 0 },
-  createdAt: { type: Date, default: Date.now }
+  createdAt: { type: Date, default: Date.now },
+  lastLogin: { type: Date, default: Date.now }
 });
 
 export default mongoose.models.User || mongoose.model('User', UserSchema);

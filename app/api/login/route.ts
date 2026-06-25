@@ -34,12 +34,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
+
     const response = NextResponse.json({ 
       message: 'Login successful', 
-      user: { 
-        username: user.username, 
-        name: user.name 
-      } 
+      user: { username: user.username, name: user.name } 
     });
 
     response.cookies.set('user', user.username, { 

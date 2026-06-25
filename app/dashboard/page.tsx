@@ -28,6 +28,10 @@ export default function Dashboard() {
   const [uploadingBg, setUploadingBg] = useState(false);
   const [totalViews, setTotalViews] = useState(0);
 
+  // Max recommended image size before compression
+  const MAX_IMAGE_SIZE_MB = 5;
+  const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+
   // Load user data on mount
   useEffect(() => {
     fetch('/api/me')
@@ -55,9 +59,9 @@ export default function Dashboard() {
       .catch(err => console.error('Failed to load user data', err));
   }, []);
 
-  // Image resize helper
+  // Image compression helper
   const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
@@ -82,10 +86,14 @@ export default function Dashboard() {
           canvas.height = height;
           const ctx = canvas.getContext('2d');
           ctx?.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
+
+          // Compress to JPEG at 75% quality
+          const compressed = canvas.toDataURL('image/jpeg', 0.75);
+          resolve(compressed);
         };
         img.src = e.target?.result as string;
       };
+      reader.onerror = reject;
       reader.readAsDataURL(file);
     });
   };
@@ -133,18 +141,36 @@ export default function Dashboard() {
   const uploadPhoto = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      alert(`Image is ${(file.size / 1024 / 1024).toFixed(1)}MB. It will be compressed automatically.`);
+    }
+
     setUploadingPhoto(true);
-    const resized = await resizeImage(file, 400, 400);
-    setPhoto(resized);
+    try {
+      const resized = await resizeImage(file, 400, 400);
+      setPhoto(resized);
+    } catch (err) {
+      alert('Failed to process image');
+    }
     setUploadingPhoto(false);
   };
 
   const uploadBgImage = async (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      alert(`Image is ${(file.size / 1024 / 1024).toFixed(1)}MB. It will be compressed automatically.`);
+    }
+
     setUploadingBg(true);
-    const resized = await resizeImage(file, 1200, 1200);
-    setBgImage(resized);
+    try {
+      const resized = await resizeImage(file, 1200, 1200);
+      setBgImage(resized);
+    } catch (err) {
+      alert('Failed to process image');
+    }
     setUploadingBg(false);
   };
 
