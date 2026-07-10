@@ -13,17 +13,13 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
 
   useEffect(() => {
     if (backgroundImages.length <= 1) return;
-
     const interval = setInterval(() => {
       setCurrentBgIndex((prev) => (prev + 1) % backgroundImages.length);
     }, 7000);
-
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
 
-  const currentBackground = backgroundImages.length > 0
-    ? backgroundImages[currentBgIndex]
-    : null;
+  const currentBackground = backgroundImages.length > 0 ? backgroundImages[currentBgIndex] : null;
 
   const buttonStyle = user.buttonStyle || 'solid';
   let buttonClass = "bg-white text-black border-[4px] border-black hover:bg-yellow-300 active:bg-yellow-400 shadow-[3px_3px_0_0_#000] font-bold text-center py-4 px-8 rounded-2xl text-lg active:scale-[0.985] transition-all";
@@ -53,12 +49,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             backgroundPosition: 'center 20%'
           }}
         >
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 50%, ${user.backgroundColor || '#0a0a0a'} 90%)`
-            }}
-          />
+          <div className="absolute inset-0" style={{ background: `linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 50%, ${user.backgroundColor || '#0a0a0a'} 90%)` }} />
         </div>
 
         {/* CONTENT */}
