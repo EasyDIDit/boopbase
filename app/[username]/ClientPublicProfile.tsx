@@ -85,19 +85,8 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             )}
           </div>
 
-          {/* Social Icons + Add Contact */}
-          <div className="flex justify-center items-center gap-6 mb-10">
-            {hasVCardInfo && (
-              <a
-                href={`/api/vcard/${user.username}`}
-                download={`${user.username}.vcf`}
-                className="w-14 h-14 flex flex-col items-center justify-center bg-[#C4CFDA] hover:bg-[#E72679] active:bg-[#FCCC82] text-black border-[4px] border-black rounded-2xl shadow-[3px_3px_0_0_#000] active:scale-[0.96] transition-all"
-              >
-                <PhoneIcon className="w-6 h-6 mb-0.5 text-black" />
-                <span className="text-[10px] font-black tracking-widest -mt-0.5">+ ADD</span>
-              </a>
-            )}
-
+          {/* Social Icons */}
+          <div className="flex justify-center items-center gap-6 mb-8">
             {user.instagram && user.instagram.trim() !== '' && (
               <a href={user.instagram} target="_blank" className="text-4xl hover:scale-110 transition-all">
                 <InstagramIcon className="w-10 h-10 text-[#E72679]" />
@@ -120,7 +109,21 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             )}
           </div>
 
-          {/* Links */}
+          {/* ADD TO CONTACTS - Separate Section */}
+          {hasVCardInfo && (
+            <div className="mb-8">
+              <a
+                href={`/api/vcard/${user.username}`}
+                download={`${user.username}.vcf`}
+                className="block w-full bg-[#E72679] hover:bg-[#c41e64] active:bg-[#a01852] text-white border-[4px] border-black font-bold py-4 px-8 rounded-2xl text-center text-lg shadow-[3px_3px_0_0_#000] active:scale-[0.985] transition-all flex items-center justify-center gap-3"
+              >
+                <PhoneIcon className="w-6 h-6" />
+                ADD TO CONTACTS
+              </a>
+            </div>
+          )}
+
+          {/* Regular Links */}
           <div className="space-y-3.5">
             {user.links && user.links.filter((l: any) => l.isActive).map((link: any) => (
               <a
