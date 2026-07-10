@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import ClientPublicProfile from '../[username]/ClientPublicProfile';
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('links');
+  const [activeTab, setActiveTab] = useState('profile');
   const [user, setUser] = useState<any>(null);
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
@@ -25,10 +25,7 @@ export default function Dashboard() {
   const [title, setTitle] = useState('');
   const [address, setAddress] = useState('');
   const [saving, setSaving] = useState(false);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadingBg, setUploadingBg] = useState(false);
 
-  // Load user data
   useEffect(() => {
     fetch('/api/me')
       .then(res => res.json())
@@ -51,7 +48,7 @@ export default function Dashboard() {
         setTitle(data.title || '');
         setAddress(data.address || '');
       })
-      .catch(err => console.error('Failed to load user data', err));
+      .catch(err => console.error(err));
   }, []);
 
   const saveAllChanges = async () => {
@@ -62,65 +59,41 @@ export default function Dashboard() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           username: user?.username || 'pez',
-          name,
-          bio,
-          buttonStyle,
-          backgroundColor: bgColor,
-          backgroundImage: bgImage,
-          profileImage: photo,
-          links,
-          instagram,
-          tiktok,
-          youtube,
-          facebook,
-          phone,
-          email,
-          company,
-          title,
-          address,
+          name, bio, buttonStyle, backgroundColor: bgColor, 
+          backgroundImage: bgImage, profileImage: photo, 
+          links, instagram, tiktok, youtube, facebook,
+          phone, email, company, title, address,
         }),
       });
 
-      if (res.ok) {
-        alert('✅ All changes saved successfully!');
-      } else {
-        alert('Failed to save changes');
-      }
+      if (res.ok) alert('✅ All changes saved successfully!');
+      else alert('Failed to save changes');
     } catch (err) {
       alert('Failed to save changes');
     }
     setSaving(false);
   };
 
-  const uploadPhoto = async (e: any) => {
+  const uploadPhoto = (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploadingPhoto(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target && event.target.result) setPhoto(event.target.result as string);
-    };
+    reader.onload = (event) => setPhoto(event.target?.result as string);
     reader.readAsDataURL(file);
-    setUploadingPhoto(false);
   };
 
-  const uploadBgImage = async (e: any) => {
+  const uploadBgImage = (e: any) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploadingBg(true);
     const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target && event.target.result) setBgImage(event.target.result as string);
-    };
+    reader.onload = (event) => setBgImage(event.target?.result as string);
     reader.readAsDataURL(file);
-    setUploadingBg(false);
   };
 
   const addLink = () => {
     if (!newTitle || !newUrl) return;
     setLinks([...links, { id: Date.now(), title: newTitle, url: newUrl, isActive: true, clicks: 0 }]);
-    setNewTitle('');
-    setNewUrl('');
+    setNewTitle(''); setNewUrl('');
   };
 
   const deleteLink = (id: number) => {
@@ -128,22 +101,13 @@ export default function Dashboard() {
     setLinks(links.filter(l => l.id !== id));
   };
 
-  const updateButtonStyle = (style: string) => setButtonStyle(style);
-
-  // Drag and Drop
-  const handleDragStart = (e: React.DragEvent, index: number) => {
-    e.dataTransfer.setData('text/plain', index.toString());
-  };
-
-  const handleDragOver = (e: React.DragEvent) => e.preventDefault();
-
   const handleDrop = (e: React.DragEvent, dropIndex: number) => {
     e.preventDefault();
     const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
     if (dragIndex === dropIndex) return;
     const newLinks = [...links];
-    const [draggedLink] = newLinks.splice(dragIndex, 1);
-    newLinks.splice(dropIndex, 0, draggedLink);
+    const [dragged] = newLinks.splice(dragIndex, 1);
+    newLinks.splice(dropIndex, 0, dragged);
     setLinks(newLinks);
   };
 
@@ -179,6 +143,36 @@ export default function Dashboard() {
               </button>
             ))}
           </div>
+
+          {/* Profile Tab */}
+          {activeTab === 'profile' && (
+            <div className="space-y-8">
+              <div className="bg-zinc-900 rounded-3xl p-8">
+                <h3 className="text-xl mb-4">Profile Photo</h3>
+                {photo && <img src={photo} alt="profile" className="w-32 h-32 object-cover rounded-full mb-4" />}
+                <label className="cursor-pointer block bg-white text-black py-4 text-center rounded-2xl font-medium">
+                  Upload Photo
+                  <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" />
+                </label>
+              </div>
+
+              <div className="bg-zinc-900 rounded-3xl p-8">
+                <h3 className="text-xl mb-4">Name</h3>
+                <input type="text" value={name} onChange={e => setName(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
+              </div>
+
+              <div className="bg-zinc-900 rounded-3xl p-8">
+                <h3 className="text-xl mb-4">Bio / Tagline (max 125 chars)</h3>
+                <textarea 
+                  value={bio} 
+                  onChange={e => setBio(e.target.value.slice(0, 125))} 
+                  className="w-full bg-zinc-800 p-4 rounded-2xl h-24 resize-y"
+                  placeholder="Short description..."
+                />
+                <p className="text-xs text-right text-zinc-400 mt-1">{bio.length}/125</p>
+              </div>
+            </div>
+          )}
 
           {/* Links Tab */}
           {activeTab === 'links' && (
@@ -248,36 +242,19 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-
         </div>
       </div>
 
-      {/* RIGHT: Live Preview - Smaller and cleaner */}
+      {/* RIGHT: Live Preview */}
       <div className="w-1/2 bg-zinc-900 overflow-auto p-6">
         <div className="sticky top-6">
-          <h3 className="text-xl mb-4 text-white/70 flex items-center gap-2">
-            👀 Live Preview
-          </h3>
-          <div className="border border-zinc-700 rounded-3xl overflow-hidden shadow-2xl scale-[0.85] origin-top">
+          <h3 className="text-xl mb-4 text-white/70">👀 Live Preview</h3>
+          <div className="border border-zinc-700 rounded-3xl overflow-hidden shadow-2xl scale-[0.82] origin-top">
             <ClientPublicProfile 
               user={{
-                ...user,
-                name,
-                bio,
-                profileImage: photo,
-                backgroundColor: bgColor,
-                backgroundImage: bgImage,
-                buttonStyle,
-                links,
-                instagram,
-                tiktok,
-                youtube,
-                facebook,
-                phone,
-                email,
-                company,
-                title,
-                address,
+                ...user, name, bio, profileImage: photo, backgroundColor: bgColor,
+                backgroundImage: bgImage, buttonStyle, links, instagram, tiktok,
+                youtube, facebook, phone, email, company, title, address
               }} 
               backgroundImages={bgImage ? [bgImage] : []} 
             />
