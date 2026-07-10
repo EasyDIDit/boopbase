@@ -26,15 +26,14 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     : null;
 
   const buttonStyle = user.buttonStyle || 'solid';
-  let buttonClass = "bg-white text-black border-[4px] border-black hover:bg-yellow-300 active:bg-yellow-400 shadow-[3px_3px_0_0_#000] font-bold text-center";
+  let buttonClass = "bg-white text-black border-[4px] border-black hover:bg-yellow-300 active:bg-yellow-400 shadow-[3px_3px_0_0_#000] font-bold text-center py-4 px-8 rounded-2xl text-lg active:scale-[0.985] transition-all";
 
   if (buttonStyle === 'outline') {
-    buttonClass = "bg-transparent border-[4px] border-white text-white hover:bg-white hover:text-black active:bg-yellow-300 shadow-[3px_3px_0_0_#000] font-bold text-center";
+    buttonClass = "bg-transparent border-[4px] border-white text-white hover:bg-white hover:text-black active:bg-yellow-300 shadow-[3px_3px_0_0_#000] font-bold text-center py-4 px-8 rounded-2xl text-lg active:scale-[0.985] transition-all";
   } else if (buttonStyle === 'glass') {
-    buttonClass = "bg-white/10 backdrop-blur-md border-[4px] border-white/60 text-white hover:bg-white/30 active:bg-yellow-300 shadow-[3px_3px_0_0_#000] font-bold text-center";
+    buttonClass = "bg-white/10 backdrop-blur-md border-[4px] border-white/60 text-white hover:bg-white/30 active:bg-yellow-300 shadow-[3px_3px_0_0_#000] font-bold text-center py-4 px-8 rounded-2xl text-lg active:scale-[0.985] transition-all";
   }
 
-  // Strict check for vCard info
   const hasVCardInfo = !!(user.phone?.trim() || user.email?.trim() || user.company?.trim() || user.title?.trim() || user.address?.trim());
 
   return (
@@ -57,22 +56,17 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(
-                to bottom,
-                rgba(0,0,0,0.08) 0%,
-                rgba(0,0,0,0.22) 45%,
-                ${user.backgroundColor || '#0a0a0a'} 100%
-              )`
+              background: `linear-gradient(to bottom, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.35) 50%, ${user.backgroundColor || '#0a0a0a'} 90%)`
             }}
           />
         </div>
 
-        {/* CONTENT SECTION */}
+        {/* CONTENT */}
         <div className="px-8 pt-8 pb-10 -mt-20 relative z-20">
 
-          {/* Profile Photo + Name + Tagline */}
-          <div className="flex flex-col md:flex-row gap-5 items-center md:items-start mb-8 text-center md:text-left">
-            <div className="w-32 h-32 flex-shrink-0 rounded-full border-[6px] border-black shadow-[4px_4px_0_0_#000] overflow-hidden bg-white">
+          {/* Profile Photo + Name + Bio */}
+          <div className="flex flex-col items-center text-center mb-8">
+            <div className="w-32 h-32 rounded-full border-[6px] border-black shadow-[4px_4px_0_0_#000] overflow-hidden bg-white mb-4">
               {user.profileImage ? (
                 <img src={user.profileImage} alt={user.name} className="w-full h-full object-cover" />
               ) : (
@@ -80,20 +74,19 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
               )}
             </div>
 
-            <div className="flex-1 pt-3">
-              <h1 className="text-4xl font-black tracking-[-2px] text-white leading-none mb-3 drop-shadow-[3px_3px_0_#000]">
-                {user.name}
-              </h1>
-              {user.bio && (
-                <p className="text-white/90 text-[13px] leading-tight drop-shadow-[1px_1px_0_#000]">
-                  {user.bio}
-                </p>
-              )}
-            </div>
+            <h1 className="text-4xl font-black tracking-[-2px] text-white leading-none mb-2 drop-shadow-[3px_3px_0_#000]">
+              {user.name}
+            </h1>
+
+            {user.bio && (
+              <p className="text-white/90 text-[15px] leading-tight max-w-[280px] mx-auto drop-shadow-[1px_1px_0_#000]">
+                {user.bio}
+              </p>
+            )}
           </div>
 
-          {/* Social Icons */}
-          <div className="flex justify-center items-center gap-6 mb-9">
+          {/* Social Icons + Add Contact */}
+          <div className="flex justify-center items-center gap-6 mb-10">
             {hasVCardInfo && (
               <a
                 href={`/api/vcard/${user.username}`}
@@ -127,14 +120,14 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             )}
           </div>
 
-          {/* Links - Centered Text */}
+          {/* Links */}
           <div className="space-y-3.5">
             {user.links && user.links.filter((l: any) => l.isActive).map((link: any) => (
               <a
                 key={link.id}
                 href={link.url}
                 target="_blank"
-                className={`block ${buttonClass} font-bold py-4 px-8 rounded-2xl text-lg active:scale-[0.985] transition-all`}
+                className={`block ${buttonClass}`}
               >
                 {link.title}
               </a>
