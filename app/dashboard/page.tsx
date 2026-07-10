@@ -148,133 +148,139 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
-      <div className="flex h-screen">
+    <div className="min-h-screen bg-zinc-950 text-white flex h-screen overflow-hidden">
+      {/* LEFT: Controls */}
+      <div className="w-1/2 border-r border-zinc-800 overflow-auto p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold">
+              {(user?.username || 'USER').toUpperCase()} DASHBOARD
+            </h1>
+            <button 
+              onClick={saveAllChanges} 
+              disabled={saving}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-2xl font-semibold disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save All Changes'}
+            </button>
+          </div>
 
-        {/* LEFT SIDE - Controls (Linktree style) */}
-        <div className="w-1/2 border-r border-zinc-800 overflow-auto p-8">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-4xl font-bold">
-                {(user?.username || 'USER').toUpperCase()} DASHBOARD
-              </h1>
-              <button 
-                onClick={saveAllChanges} 
-                disabled={saving}
-                className="bg-emerald-500 hover:bg-emerald-600 px-8 py-3 rounded-2xl font-semibold disabled:opacity-50"
+          {/* Tabs */}
+          <div className="flex border-b border-zinc-800 mb-8">
+            {['profile', 'links', 'design', 'analytics'].map(tab => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-8 py-4 font-medium capitalize border-b-2 transition-all ${
+                  activeTab === tab ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'
+                }`}
               >
-                {saving ? 'Saving...' : 'Save All Changes'}
+                {tab}
               </button>
-            </div>
+            ))}
+          </div>
 
-            {/* Tabs */}
-            <div className="flex border-b border-zinc-800 mb-8">
-              {['profile', 'links', 'design', 'analytics'].map(tab => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-8 py-4 font-medium capitalize border-b-2 transition-all ${
-                    activeTab === tab ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'
-                  }`}
-                >
-                  {tab}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab Content */}
-            {activeTab === 'links' && (
-              <div className="space-y-8">
-                {/* Add Link */}
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Add New Link</h3>
-                  <div className="flex gap-3">
-                    <input type="text" placeholder="Link Title" value={newTitle} onChange={e => setNewTitle(e.target.value)} className="flex-1 bg-zinc-800 p-4 rounded-2xl" />
-                    <input type="text" placeholder="https://" value={newUrl} onChange={e => setNewUrl(e.target.value)} className="flex-1 bg-zinc-800 p-4 rounded-2xl" />
-                    <button onClick={addLink} className="bg-white text-black px-8 rounded-2xl font-medium">Add</button>
-                  </div>
-                </div>
-
-                {/* Links List */}
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Your Links</h3>
-                  {links.length > 0 ? (
-                    <div className="space-y-3">
-                      {links.map((link: any, index: number) => (
-                        <div key={link.id} draggable onDragStart={(e) => e.dataTransfer.setData('text/plain', index.toString())} onDragOver={(e) => e.preventDefault()} onDrop={(e) => handleDrop(e, index)} className="bg-zinc-800 p-4 rounded-2xl flex items-center gap-4 cursor-move">
-                          <div className="text-zinc-500">⋮⋮</div>
-                          <div className="flex-1">
-                            <div className="font-medium">{link.title}</div>
-                            <div className="text-sm text-gray-400 truncate">{link.url}</div>
-                          </div>
-                          <button onClick={() => deleteLink(link.id)} className="text-red-400">Delete</button>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-400">No links yet. Add some above.</p>
-                  )}
+          {/* Links Tab */}
+          {activeTab === 'links' && (
+            <div className="space-y-8">
+              <div className="bg-zinc-900 rounded-3xl p-8">
+                <h3 className="text-xl mb-4">Add New Link</h3>
+                <div className="flex gap-3">
+                  <input type="text" placeholder="Link Title" value={newTitle} onChange={e => setNewTitle(e.target.value)} className="flex-1 bg-zinc-800 p-4 rounded-2xl" />
+                  <input type="text" placeholder="https://" value={newUrl} onChange={e => setNewUrl(e.target.value)} className="flex-1 bg-zinc-800 p-4 rounded-2xl" />
+                  <button onClick={addLink} className="bg-white text-black px-8 rounded-2xl font-medium">Add</button>
                 </div>
               </div>
-            )}
 
-            {/* Design Tab */}
-            {activeTab === 'design' && (
-              <div className="space-y-8">
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Background Image</h3>
-                  {bgImage && <img src={bgImage} alt="preview" className="w-full h-48 object-cover rounded-2xl mb-4" />}
-                  <label className="cursor-pointer block bg-white text-black py-4 text-center rounded-2xl font-medium">Upload Background Image<input type="file" accept="image/*" onChange={uploadBgImage} className="hidden" /></label>
-                </div>
-
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Background Color</h3>
-                  <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-20 h-12" />
-                </div>
-
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Button Style</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {['solid', 'outline', 'glass'].map(s => (
-                      <button key={s} onClick={() => setButtonStyle(s)} className={`py-4 rounded-2xl ${buttonStyle === s ? 'bg-white text-black' : 'bg-zinc-800'}`}>{s}</button>
+              <div className="bg-zinc-900 rounded-3xl p-8">
+                <h3 className="text-xl mb-4">Your Links</h3>
+                {links.length > 0 ? (
+                  <div className="space-y-3">
+                    {links.map((link: any, index: number) => (
+                      <div 
+                        key={link.id} 
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', index.toString())}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => handleDrop(e, index)}
+                        className="bg-zinc-800 p-4 rounded-2xl flex items-center gap-4 cursor-move"
+                      >
+                        <div className="text-zinc-500 cursor-grab">⋮⋮</div>
+                        <div className="flex-1">
+                          <div className="font-medium">{link.title}</div>
+                          <div className="text-sm text-gray-400 truncate">{link.url}</div>
+                        </div>
+                        <button onClick={() => deleteLink(link.id)} className="text-red-400">Delete</button>
+                      </div>
                     ))}
                   </div>
+                ) : (
+                  <p className="text-gray-400">No links yet. Add some above.</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Design Tab */}
+          {activeTab === 'design' && (
+            <div className="space-y-8">
+              <div className="bg-zinc-900 rounded-3xl p-8">
+                <h3 className="text-xl mb-4">Background Image</h3>
+                {bgImage && <img src={bgImage} alt="preview" className="w-full h-48 object-cover rounded-2xl mb-4" />}
+                <label className="cursor-pointer block bg-white text-black py-4 text-center rounded-2xl font-medium">
+                  Upload Background Image
+                  <input type="file" accept="image/*" onChange={uploadBgImage} className="hidden" />
+                </label>
+              </div>
+
+              <div className="bg-zinc-900 rounded-3xl p-8">
+                <h3 className="text-xl mb-4">Background Color</h3>
+                <input type="color" value={bgColor} onChange={e => setBgColor(e.target.value)} className="w-20 h-12" />
+              </div>
+
+              <div className="bg-zinc-900 rounded-3xl p-8">
+                <h3 className="text-xl mb-4">Button Style</h3>
+                <div className="grid grid-cols-3 gap-4">
+                  {['solid', 'outline', 'glass'].map(s => (
+                    <button key={s} onClick={() => setButtonStyle(s)} className={`py-4 rounded-2xl ${buttonStyle === s ? 'bg-white text-black' : 'bg-zinc-800'}`}>{s}</button>
+                  ))}
                 </div>
               </div>
-            )}
-
-            {/* Other tabs (profile + analytics) can be added later if needed */}
-          </div>
-        </div>
-
-        {/* RIGHT SIDE - LIVE PREVIEW */}
-        <div className="w-1/2 bg-zinc-900 overflow-auto p-8">
-          <div className="sticky top-8">
-            <h3 className="text-xl mb-4 text-white/70">Live Preview</h3>
-            <div className="border border-zinc-700 rounded-3xl overflow-hidden">
-              <ClientPublicProfile 
-                user={{
-                  ...user,
-                  name,
-                  bio,
-                  profileImage: photo,
-                  backgroundColor: bgColor,
-                  backgroundImage: bgImage,
-                  buttonStyle,
-                  links,
-                  instagram,
-                  tiktok,
-                  youtube,
-                  facebook,
-                  phone,
-                  email,
-                  company,
-                  title,
-                  address,
-                }} 
-                backgroundImages={bgImage ? [bgImage] : []} 
-              />
             </div>
+          )}
+
+        </div>
+      </div>
+
+      {/* RIGHT: Live Preview - Smaller and cleaner */}
+      <div className="w-1/2 bg-zinc-900 overflow-auto p-6">
+        <div className="sticky top-6">
+          <h3 className="text-xl mb-4 text-white/70 flex items-center gap-2">
+            👀 Live Preview
+          </h3>
+          <div className="border border-zinc-700 rounded-3xl overflow-hidden shadow-2xl scale-[0.85] origin-top">
+            <ClientPublicProfile 
+              user={{
+                ...user,
+                name,
+                bio,
+                profileImage: photo,
+                backgroundColor: bgColor,
+                backgroundImage: bgImage,
+                buttonStyle,
+                links,
+                instagram,
+                tiktok,
+                youtube,
+                facebook,
+                phone,
+                email,
+                company,
+                title,
+                address,
+              }} 
+              backgroundImages={bgImage ? [bgImage] : []} 
+            />
           </div>
         </div>
       </div>
