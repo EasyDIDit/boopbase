@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ClientPublicProfile from './ClientPublicProfile';
 
 interface PublicProfileProps {
@@ -8,14 +8,32 @@ interface PublicProfileProps {
 }
 
 export default function PublicProfile({ params }: PublicProfileProps) {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`/api/public-profile/${params.username}`);
+        if (res.ok) {
+          const data = await res.json();
+          setUser(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch profile');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, [params.username]);
+
+  // Track view once per session
   useEffect(() => {
     const trackView = async () => {
-      // Only track once per browser session
       const viewKey = `viewed_${params.username}`;
-      
-      if (sessionStorage.getItem(viewKey)) {
-        return; // Already tracked in this session
-      }
+      if (sessionStorage.getItem(viewKey)) return;
 
       try {
         await fetch('/api/track-view', {
@@ -23,18 +41,35 @@ export default function PublicProfile({ params }: PublicProfileProps) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: params.username }),
         });
-
-        // Mark as viewed for this session
         sessionStorage.setItem(viewKey, 'true');
       } catch (error) {
-        console.error('Failed to track profile view');
+        console.error('Failed to track view');
       }
     };
 
     trackView();
   }, [params.username]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <div className="text-white">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
+        Profile not found
+      </div>
+    );
+  }
+
   return (
-    <ClientPublicProfile username={params.username} />
+    <ClientPublicProfile 
+      user={user} 
+      backgroundImages={user.backgroundImage ? [user.backgroundImage] : []} 
+    />
   );
 }
