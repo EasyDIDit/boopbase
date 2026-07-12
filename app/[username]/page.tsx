@@ -1,52 +1,40 @@
-import connectDB from '@/lib/mongodb';
-import User from '@/lib/models/User';
+'use client';
+
+import { useEffect } from 'react';
 import ClientPublicProfile from './ClientPublicProfile';
 
+interface PublicProfileProps {
+  params: { username: string };
+}
 
-useEffect(() => {
-  // Increment profile views
-  const incrementViews = async () => {
-    try {
-      await fetch('/api/track-view', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: params.username }),
-      });
-    } catch (error) {
-      console.error('Failed to track view');
-    }
-  };
+export default function PublicProfile({ params }: PublicProfileProps) {
+  useEffect(() => {
+    const trackView = async () => {
+      // Only track once per browser session
+      const viewKey = `viewed_${params.username}`;
+      
+      if (sessionStorage.getItem(viewKey)) {
+        return; // Already tracked in this session
+      }
 
-  incrementViews();
-}, [params.username]);
+      try {
+        await fetch('/api/track-view', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: params.username }),
+        });
 
-useEffect(() => {
-  const trackView = async () => {
-    try {
-      await fetch('/api/track-view', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: params.username }),
-      });
-    } catch (error) {
-      console.error('Failed to track profile view');
-    }
-  };
+        // Mark as viewed for this session
+        sessionStorage.setItem(viewKey, 'true');
+      } catch (error) {
+        console.error('Failed to track profile view');
+      }
+    };
 
-  trackView();
-}, [params.username]);
-export default async function PublicProfile({ params }: { params: Promise<{ username: string }> }) {
-  await connectDB();
+    trackView();
+  }, [params.username]);
 
-  const { username } = await params;
-  const user = await User.findOne({ username: username.toLowerCase() }).lean();
-
-  if (!user) {
-    return <div className="min-h-screen flex items-center justify-center text-white">Profile not found</div>;
-  }
-
-  // Get background images
-  const backgroundImages = user.backgroundImage ? [user.backgroundImage] : [];
-
-  return <ClientPublicProfile user={user} backgroundImages={backgroundImages} />;
+  return (
+    <ClientPublicProfile username={params.username} />
+  );
 }
