@@ -4,52 +4,54 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function Login() {
-  const [emailOrUsername, setEmailOrUsername] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+    setLoading(true);
 
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ emailOrUsername, password }),
+        body: JSON.stringify({ username, password }),
       });
 
       const data = await res.json();
 
-      if (res.ok) {
-        router.push('/dashboard');
-      } else {
+      if (!res.ok) {
         setError(data.error || 'Login failed');
+        setLoading(false);
+        return;
       }
+
+      localStorage.setItem('token', data.token);
+      router.push('/dashboard');
     } catch (err) {
-      setError('Something went wrong. Please try again.');
-    } finally {
+      setError('Something went wrong');
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-zinc-900 rounded-3xl p-8">
-        <h1 className="text-3xl font-bold text-center mb-8">Login to BOOPbase</h1>
+    <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
+      <div className="w-full max-w-md p-8">
+        <h1 className="text-4xl font-bold text-center mb-8">Login to BOOPbase</h1>
 
-        <form onSubmit={handleLogin} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm mb-2">Email or Username</label>
+            <label className="block text-sm mb-2">Username</label>
             <input
               type="text"
-              value={emailOrUsername}
-              onChange={(e) => setEmailOrUsername(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               className="w-full bg-zinc-800 p-4 rounded-2xl"
-              placeholder="Enter email or username"
+              placeholder="Enter your username"
               required
             />
           </div>
@@ -61,25 +63,21 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-zinc-800 p-4 rounded-2xl"
-              placeholder="Enter password"
+              placeholder="Enter your password"
               required
             />
           </div>
 
-          {error && <p className="text-red-400 text-center">{error}</p>}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black py-4 rounded-2xl font-semibold disabled:opacity-50"
+            className="w-full bg-white text-black py-4 rounded-2xl font-semibold hover:bg-gray-200 disabled:opacity-50"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
-
-        <p className="text-center mt-6 text-zinc-400">
-          Don't have an account? <a href="/register" className="text-white hover:underline">Sign up</a>
-        </p>
       </div>
     </div>
   );

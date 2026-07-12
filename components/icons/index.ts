@@ -1,12 +1,12 @@
 export * from './PhoneIcon';
-export * from './InstagramIcon';
-export * from './TikTokIcon';
-export * from './YouTubeIcon';
+export { InstagramIcon } from './InstagramIcon';
+export { TikTokIcon } from './TikTokIcon';
+export { YouTubeIcon } from './YouTubeIcon';
+export { FacebookIcon } from './FacebookIcon';
 export * from './AddIcon';
 export * from './DeleteIcon';
 export * from './LinkIcon';
 export * from './ShareIcon';
-export * from './FacebookIcon';
 export * from './TwitterIcon';
 export * from './EditIcon';
 export * from './DragIcon';

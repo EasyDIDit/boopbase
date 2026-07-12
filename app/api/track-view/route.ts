@@ -6,26 +6,26 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const body = await request.json();
-    const { username, ...updateData } = body;
+    const { username } = await request.json();
 
     if (!username) {
       return NextResponse.json({ error: 'Username is required' }, { status: 400 });
     }
 
-    const user = await User.findOneAndUpdate(
+    // Increment views by 1
+    const updatedUser = await User.findOneAndUpdate(
       { username: username.toLowerCase() },
-      { $set: updateData },
-      { new: true, upsert: true }
+      { $inc: { views: 1 } },
+      { new: true }
     );
 
-    if (!user) {
+    if (!updatedUser) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, user });
+    return NextResponse.json({ success: true, views: updatedUser.views });
   } catch (error) {
-    console.error('Save error:', error);
-    return NextResponse.json({ error: 'Failed to save changes' }, { status: 500 });
+    console.error('Track view error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
