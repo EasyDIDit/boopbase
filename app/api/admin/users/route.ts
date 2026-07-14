@@ -6,9 +6,9 @@ export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    // Simple protection - only allow if logged in as a specific admin username
     const username = request.cookies.get('user')?.value;
 
+    // Only allow pez or easydidit for now
     if (username !== 'pez' && username !== 'easydidit') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
