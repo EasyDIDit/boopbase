@@ -1,83 +1,89 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
-export default function Login() {
-  const [username, setUsername] = useState('');
+export default function LoginPage() {
+  const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
     setLoading(true);
+    setError('');
 
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ emailOrUsername, password }),
       });
 
       const data = await res.json();
 
-      if (!res.ok) {
+      if (res.ok) {
+        window.location.href = '/dashboard';
+      } else {
         setError(data.error || 'Login failed');
-        setLoading(false);
-        return;
       }
-
-      localStorage.setItem('token', data.token);
-      router.push('/dashboard');
     } catch (err) {
-      setError('Something went wrong');
-      setLoading(false);
+      setError('Something went wrong. Please try again.');
     }
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
-      <div className="w-full max-w-md p-8">
-        <h1 className="text-4xl font-bold text-center mb-8">Login to BOOPbase</h1>
+    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-10">
+          <h1 className="text-5xl font-black tracking-tighter">BOOPBASE</h1>
+          <p className="text-zinc-400 mt-2">Sign in to your profile</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleLogin} className="space-y-6">
           <div>
-            <label className="block text-sm mb-2">Username</label>
             <input
               type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full bg-zinc-800 p-4 rounded-2xl"
-              placeholder="Enter your username"
+              placeholder="Username or Email"
+              value={emailOrUsername}
+              onChange={(e) => setEmailOrUsername(e.target.value)}
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-6 py-4 focus:outline-none focus:border-white"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm mb-2">Password</label>
             <input
               type="password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-zinc-800 p-4 rounded-2xl"
-              placeholder="Enter your password"
+              className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-6 py-4 focus:outline-none focus:border-white"
               required
             />
           </div>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-red-500 text-center">{error}</p>}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black py-4 rounded-2xl font-semibold hover:bg-gray-200 disabled:opacity-50"
+            className="w-full bg-white text-black font-semibold py-4 rounded-2xl hover:bg-yellow-300 transition-all disabled:opacity-50"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Signing in...' : 'Sign In'}
           </button>
         </form>
+
+        <div className="text-center mt-8">
+          <p className="text-zinc-400">
+            Don't have an account?{' '}
+            <Link href="/register" className="text-white hover:underline font-medium">
+              Create one here
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );
