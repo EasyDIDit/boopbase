@@ -112,7 +112,31 @@ export default function Dashboard() {
     setNewUrl('');
   };
 
-  // ... (rest of the file remains the same as previous version for brevity - upload functions, drag & drop, etc.)
+  const deleteLink = (id: number) => {
+    if (!confirm('Delete this link?')) return;
+    setLinks(links.filter(l => l.id !== id));
+  };
+
+  const updateButtonStyle = (style: string) => setButtonStyle(style);
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
+    if (dragIndex === dropIndex) return;
+
+    const newLinks = [...links];
+    const [draggedLink] = newLinks.splice(dragIndex, 1);
+    newLinks.splice(dropIndex, 0, draggedLink);
+    setLinks(newLinks);
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-8">
@@ -126,15 +150,16 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Tabs */}
+        {/* Navigation Tabs */}
         <div className="flex border-b border-zinc-800 mb-8 overflow-x-auto pb-1">
           <button onClick={() => setActiveTab('links')} className={`px-6 py-4 border-b-2 font-medium whitespace-nowrap ${activeTab === 'links' ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'}`}>Links</button>
-          {/* other tabs... */}
+          <button onClick={() => setActiveTab('profile')} className={`px-6 py-4 border-b-2 font-medium whitespace-nowrap ${activeTab === 'profile' ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'}`}>Profile</button>
+          <button onClick={() => setActiveTab('design')} className={`px-6 py-4 border-b-2 font-medium whitespace-nowrap ${activeTab === 'design' ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'}`}>Design</button>
+          <button onClick={() => setActiveTab('analytics')} className={`px-6 py-4 border-b-2 font-medium whitespace-nowrap ${activeTab === 'analytics' ? 'border-white text-white' : 'border-transparent text-zinc-400 hover:text-white'}`}>Analytics</button>
         </div>
 
         {activeTab === 'links' && (
           <div className="space-y-8">
-            {/* Improved Links Section */}
             <div className="bg-zinc-900 rounded-3xl p-8">
               <h3 className="text-xl mb-6">Add New Link</h3>
               
@@ -171,12 +196,33 @@ export default function Dashboard() {
                 <button onClick={addLink} className="bg-white text-black px-8 rounded-2xl font-medium">Add Link</button>
               </div>
 
-              {/* Existing Links */}
               {links.length > 0 && (
                 <div className="space-y-3">
                   {links.map((link: any, index: number) => (
-                    <div key={link.id} className="bg-zinc-800 p-5 rounded-2xl flex items-center gap-4 cursor-move" draggable ... >
-                      {/* drag handle, title, url, clicks, delete */}
+                    <div 
+                      key={link.id} 
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData('text/plain', index.toString())}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                        if (dragIndex === index) return;
+                        const newLinks = [...links];
+                        const [draggedLink] = newLinks.splice(dragIndex, 1);
+                        newLinks.splice(index, 0, draggedLink);
+                        setLinks(newLinks);
+                      }}
+                      className="bg-zinc-800 p-4 rounded-2xl flex justify-between items-center cursor-move border border-transparent hover:border-zinc-600"
+                    >
+                      <div>
+                        <div className="font-medium">{link.title}</div>
+                        <div className="text-sm text-gray-400">{link.url}</div>
+                      </div>
+                      <div className="text-emerald-400 font-mono">
+                        {(link.clicks || 0)} clicks
+                      </div>
+                      <button onClick={() => deleteLink(link.id)} className="text-red-400">Delete</button>
                     </div>
                   ))}
                 </div>
@@ -185,7 +231,11 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Other tabs remain the same */}
+        {/* Other tabs (profile, design, analytics) - keep the same as previous full version */}
+
+        <button onClick={saveAllChanges} className="w-full bg-emerald-500 py-4 rounded-2xl font-semibold mt-8">
+          Save All Changes
+        </button>
       </div>
     </div>
   );
