@@ -1,48 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const { username, password } = await request.json();
+    const { emailOrUsername, password } = await request.json();
 
-    if (!username || !password) {
-      return NextResponse.json({ error: 'Username and password are required' }, { status: 400 });
+    if (!emailOrUsername || !password) {
+      return NextResponse.json({ error: 'Email/Username and password are required' }, { status: 400 });
     }
 
-    const user = await User.findOne({ username: username.toLowerCase() });
+    const user = await User.findOne({
+      $or: [
+        { username: emailOrUsername.toLowerCase() },
+        { email: emailOrUsername.toLowerCase() }
+      ]
+    });
 
     if (!user) {
-      return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    if (!user.password) {
+      return NextResponse.json({ error: 'Account setup incomplete' }, { status: 401 });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
+
     if (!isPasswordValid) {
-      return NextResponse.json({ error: 'Invalid username or password' }, { status: 401 });
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    const token = jwt.sign(
-      { userId: user._id, username: user.username },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '7d' }
-    );
+    // Update last login
+    user.lastLogin = new Date();
+    await user.save();
 
-    // Set HTTP-only cookie
-    const response = NextResponse.json({ success: true, user: { username: user.username } });
-    response.cookies.set('token', token, {
-      httpOnly: true,
+    const response = NextResponse.json({ 
+      message: 'Login successful', 
+      user: { username: user.username, name: user.name } 
+    });
+
+    response.cookies.set('user', user.username, { 
+      httpOnly: true, 
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/',
+      path: '/'
     });
 
     return response;
   } catch (error) {
+    console.error('Login error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
