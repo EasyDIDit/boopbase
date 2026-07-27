@@ -46,178 +46,141 @@ function frames(preset: keyof typeof FRAME_PRESETS) {
   };
 }
 
-/**
- * OWNER CATALOG — only packs listed here appear in Design.
- * To add a skin: (1) FRAME_PRESETS entry (2) optional SVG cover/hero (3) register here.
- */
 const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
   'boop-classic': {
     id: 'boop-classic',
     name: 'Boop Classic',
     description: 'Bold 1930s BOOP baseline — pink & grey',
     isDefault: true,
-    tokens: {
-      text: '#000000',
-      accent: '#E72679',
-      pageBg: '#C4CFDA',
-      cardBg: '#ffffff',
-      linkText: '#000000',
-    },
-    assets: {
-      preview: null,
-      ...frames('classic'),
-      cover: null,
-      hero: null,
-    },
-    flags: {
-      allowsCustomHeroImage: true,
-      allowsCustomPageColor: true,
-      allowsCustomCardColor: true,
-    },
+    tokens: { text: '#000000', accent: '#E72679', pageBg: '#C4CFDA', cardBg: '#ffffff', linkText: '#000000' },
+    assets: { preview: null, ...frames('classic'), cover: null, hero: null },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: true },
   },
   'jazz-night': {
     id: 'jazz-night',
     name: 'Jazz Night',
     description: 'Sultry club — gold chrome & black',
     isDefault: false,
-    tokens: {
-      text: '#FFFFFF',
-      accent: '#FFD700',
-      pageBg: '#0F0F0F',
-      cardBg: '#1A1A1A',
-      linkText: '#FFFFFF',
-    },
+    tokens: { text: '#FFFFFF', accent: '#FFD700', pageBg: '#0F0F0F', cardBg: '#1A1A1A', linkText: '#FFFFFF' },
     assets: {
       preview: null,
       ...frames('jazz'),
       cover: '/skins/jazz-night/page-bg.svg',
       hero: '/skins/jazz-night/hero.svg',
     },
-    flags: {
-      allowsCustomHeroImage: true,
-      allowsCustomPageColor: false,
-      allowsCustomCardColor: false,
-    },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: false },
   },
   'night-city': {
     id: 'night-city',
     name: 'Night City',
     description: 'Cartoon skyline — neon cyan',
     isDefault: false,
-    tokens: {
-      text: '#FFFFFF',
-      accent: '#00F0FF',
-      pageBg: '#050A14',
-      cardBg: '#0A1525',
-      linkText: '#FFFFFF',
-    },
+    tokens: { text: '#FFFFFF', accent: '#00F0FF', pageBg: '#050A14', cardBg: '#0A1525', linkText: '#FFFFFF' },
     assets: {
       preview: null,
       ...frames('night'),
       cover: '/skins/night-city/page-bg.svg',
       hero: '/skins/night-city/hero.svg',
     },
-    flags: {
-      allowsCustomHeroImage: true,
-      allowsCustomPageColor: false,
-      allowsCustomCardColor: false,
-    },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: false },
   },
   'pink-cabaret': {
     id: 'pink-cabaret',
     name: 'Pink Cabaret',
     description: 'Stage lights & blush — feminine punch',
     isDefault: false,
-    tokens: {
-      text: '#18152E',
-      accent: '#E72679',
-      pageBg: '#2A1220',
-      cardBg: '#FFF0F5',
-      linkText: '#18152E',
-    },
+    tokens: { text: '#18152E', accent: '#E72679', pageBg: '#2A1220', cardBg: '#FFF0F5', linkText: '#18152E' },
     assets: {
       preview: null,
       ...frames('cabaret'),
       cover: '/skins/pink-cabaret/page-bg.svg',
       hero: '/skins/pink-cabaret/hero.svg',
     },
-    flags: {
-      allowsCustomHeroImage: true,
-      allowsCustomPageColor: false,
-      allowsCustomCardColor: false,
-    },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: false },
   },
   'soda-sky': {
     id: 'soda-sky',
     name: 'Soda Sky',
     description: 'Bright blue pop — clean daytime',
     isDefault: false,
-    tokens: {
-      text: '#18152E',
-      accent: '#3EBEEF',
-      pageBg: '#B8E4F5',
-      cardBg: '#FFFFFF',
-      linkText: '#18152E',
-    },
+    tokens: { text: '#18152E', accent: '#3EBEEF', pageBg: '#B8E4F5', cardBg: '#FFFFFF', linkText: '#18152E' },
     assets: {
       preview: null,
       ...frames('soda'),
       cover: '/skins/soda-sky/page-bg.svg',
       hero: '/skins/soda-sky/hero.svg',
     },
-    flags: {
-      allowsCustomHeroImage: true,
-      allowsCustomPageColor: false,
-      allowsCustomCardColor: true,
-    },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: true },
   },
   'butter-cream': {
     id: 'butter-cream',
     name: 'Butter Cream',
     description: 'Warm yellow cream — soft vintage',
     isDefault: false,
-    tokens: {
-      text: '#18152E',
-      accent: '#E8A84A',
-      pageBg: '#F5E6C8',
-      cardBg: '#FFF8E7',
-      linkText: '#18152E',
-    },
+    tokens: { text: '#18152E', accent: '#E8A84A', pageBg: '#F5E6C8', cardBg: '#FFF8E7', linkText: '#18152E' },
     assets: {
       preview: null,
       ...frames('butter'),
       cover: '/skins/butter-cream/page-bg.svg',
       hero: '/skins/butter-cream/hero.svg',
     },
-    flags: {
-      allowsCustomHeroImage: true,
-      allowsCustomPageColor: false,
-      allowsCustomCardColor: true,
-    },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: true },
   },
   'ink-noir': {
     id: 'ink-noir',
     name: 'Ink Noir',
     description: 'High-contrast black & white with pink spark',
     isDefault: false,
-    tokens: {
-      text: '#FFFFFF',
-      accent: '#E72679',
-      pageBg: '#0A0A0A',
-      cardBg: '#111111',
-      linkText: '#FFFFFF',
-    },
+    tokens: { text: '#FFFFFF', accent: '#E72679', pageBg: '#0A0A0A', cardBg: '#111111', linkText: '#FFFFFF' },
     assets: {
       preview: null,
       ...frames('noir'),
       cover: '/skins/ink-noir/page-bg.svg',
       hero: '/skins/ink-noir/hero.svg',
     },
-    flags: {
-      allowsCustomHeroImage: true,
-      allowsCustomPageColor: false,
-      allowsCustomCardColor: false,
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: false },
+  },
+  'mint-soda': {
+    id: 'mint-soda',
+    name: 'Mint Soda',
+    description: 'Fresh mint fizz — cool daytime',
+    isDefault: false,
+    tokens: { text: '#0F3D3E', accent: '#2EC4B6', pageBg: '#C8F0E8', cardBg: '#E8FFF6', linkText: '#0F3D3E' },
+    assets: {
+      preview: null,
+      ...frames('mint'),
+      cover: '/skins/mint-soda/page-bg.svg',
+      hero: '/skins/mint-soda/hero.svg',
     },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: true },
+  },
+  'ruby-lounge': {
+    id: 'ruby-lounge',
+    name: 'Ruby Lounge',
+    description: 'Deep red lounge — night glamour',
+    isDefault: false,
+    tokens: { text: '#FFFFFF', accent: '#C41E3A', pageBg: '#1A0508', cardBg: '#2A0E14', linkText: '#FFFFFF' },
+    assets: {
+      preview: null,
+      ...frames('ruby'),
+      cover: '/skins/ruby-lounge/page-bg.svg',
+      hero: '/skins/ruby-lounge/hero.svg',
+    },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: false },
+  },
+  'paper-kraft': {
+    id: 'paper-kraft',
+    name: 'Paper Kraft',
+    description: 'Craft paper — warm analog feel',
+    isDefault: false,
+    tokens: { text: '#3E2723', accent: '#8D6E63', pageBg: '#D7CCC8', cardBg: '#F5E6D3', linkText: '#3E2723' },
+    assets: {
+      preview: null,
+      ...frames('kraft'),
+      cover: '/skins/paper-kraft/page-bg.svg',
+      hero: '/skins/paper-kraft/hero.svg',
+    },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: true },
   },
 };
 
@@ -257,7 +220,6 @@ export function getSkinById(id: string | null | undefined): Skin {
   };
 }
 
-/** Customer-facing catalog — only curated full packs. */
 export function getAllSkins(): Skin[] {
   return Object.keys(SKIN_REGISTRY).map((id) => getSkinById(id));
 }
