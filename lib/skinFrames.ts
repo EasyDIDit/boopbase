@@ -1,6 +1,6 @@
 /**
  * Shared procedural SVG frame kit for Boop skins.
- * One generator → profile rings + link plates from parameters (Art Bible §2).
+ * OWNER factory only — customers never generate skins; they pick from shipped packs.
  */
 
 export type RingParams = {
@@ -26,7 +26,6 @@ export type LinkFrameParams = {
   height?: number;
 };
 
-/** Profile ring as inline SVG string (transparent center). */
 export function buildProfileRingSvg(p: RingParams = {}): string {
   const size = p.size ?? 160;
   const c = size / 2;
@@ -54,7 +53,6 @@ export function buildProfileRingSvg(p: RingParams = {}): string {
 </svg>`;
 }
 
-/** Link plate as inline SVG string (clear center for title). */
 export function buildLinkFrameSvg(p: LinkFrameParams = {}): string {
   const w = p.width ?? 320;
   const h = p.height ?? 56;
@@ -72,11 +70,11 @@ export function buildLinkFrameSvg(p: LinkFrameParams = {}): string {
 </svg>`;
 }
 
-/** Data-URL helpers for runtime use without static files. */
 export function svgDataUrl(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
+/** Owner factory presets — add new skins here first, then register in lib/skins.ts */
 export const FRAME_PRESETS = {
   classic: {
     ring: { outerStroke: '#000000', midStroke: '#FFFFFF', accentStroke: '#E72679', accentArcStroke: '#FCCC82' } as RingParams,
@@ -118,6 +116,86 @@ export const FRAME_PRESETS = {
       outerStroke: '#00F0FF',
       outerWidth: 4,
       insetStroke: '#A8DADC',
+      insetWidth: 1.5,
+      radius: 10,
+    } as LinkFrameParams,
+  },
+  cabaret: {
+    ring: {
+      outerStroke: '#000000',
+      outerWidth: 10,
+      midStroke: '#FFF0F5',
+      midWidth: 5,
+      accentStroke: '#E72679',
+      accentWidth: 3,
+      accentArcStroke: '#FCCC82',
+      showAccentArc: true,
+    } as RingParams,
+    link: {
+      fill: '#FFF0F5',
+      outerStroke: '#000000',
+      outerWidth: 5,
+      insetStroke: '#E72679',
+      insetWidth: 2,
+      radius: 12,
+    } as LinkFrameParams,
+  },
+  soda: {
+    ring: {
+      outerStroke: '#18152E',
+      outerWidth: 9,
+      midStroke: '#FFFFFF',
+      midWidth: 5,
+      accentStroke: '#3EBEEF',
+      accentWidth: 3,
+      accentArcStroke: '#3EBEEF',
+      showAccentArc: true,
+    } as RingParams,
+    link: {
+      fill: '#FFFFFF',
+      outerStroke: '#18152E',
+      outerWidth: 4,
+      insetStroke: '#3EBEEF',
+      insetWidth: 2,
+      radius: 12,
+    } as LinkFrameParams,
+  },
+  butter: {
+    ring: {
+      outerStroke: '#000000',
+      outerWidth: 9,
+      midStroke: '#FFF8E7',
+      midWidth: 5,
+      accentStroke: '#FCCC82',
+      accentWidth: 3,
+      accentArcStroke: '#E72679',
+      showAccentArc: true,
+    } as RingParams,
+    link: {
+      fill: '#FFF8E7',
+      outerStroke: '#000000',
+      outerWidth: 5,
+      insetStroke: '#E8A84A',
+      insetWidth: 2,
+      radius: 12,
+    } as LinkFrameParams,
+  },
+  noir: {
+    ring: {
+      outerStroke: '#FFFFFF',
+      outerWidth: 8,
+      midStroke: '#111111',
+      midWidth: 6,
+      accentStroke: '#C4CFDA',
+      accentWidth: 2,
+      accentArcStroke: '#E72679',
+      showAccentArc: true,
+    } as RingParams,
+    link: {
+      fill: '#111111',
+      outerStroke: '#FFFFFF',
+      outerWidth: 4,
+      insetStroke: '#C4CFDA',
       insetWidth: 1.5,
       radius: 10,
     } as LinkFrameParams,

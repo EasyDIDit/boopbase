@@ -1,4 +1,4 @@
-// lib/skins.ts
+// lib/skins.ts — curated catalog only. Customers pick; owner ships packs.
 import { themes, getThemeById, type Theme } from './themes';
 import { buildProfileRingSvg, buildLinkFrameSvg, svgDataUrl, FRAME_PRESETS } from './skinFrames';
 
@@ -38,48 +38,34 @@ export interface Skin {
   contentAreaClass?: string;
 }
 
-const CLASSIC_TOKENS: SkinTokens = {
-  text: '#000000',
-  accent: '#E72679',
-  pageBg: '#C4CFDA',
-  cardBg: '#ffffff',
-  linkText: '#000000',
-};
+function frames(preset: keyof typeof FRAME_PRESETS) {
+  const p = FRAME_PRESETS[preset];
+  return {
+    profileFrame: svgDataUrl(buildProfileRingSvg(p.ring)),
+    linkFrame: svgDataUrl(buildLinkFrameSvg(p.link)),
+  };
+}
 
-const JAZZ_TOKENS: SkinTokens = {
-  text: '#FFFFFF',
-  accent: '#FFD700',
-  pageBg: '#0F0F0F',
-  cardBg: '#1A1A1A',
-  linkText: '#FFFFFF',
-};
-
-const NIGHT_TOKENS: SkinTokens = {
-  text: '#FFFFFF',
-  accent: '#00F0FF',
-  pageBg: '#050A14',
-  cardBg: '#0A1525',
-  linkText: '#FFFFFF',
-};
-
-const classicRing = svgDataUrl(buildProfileRingSvg(FRAME_PRESETS.classic.ring));
-const classicLink = svgDataUrl(buildLinkFrameSvg(FRAME_PRESETS.classic.link));
-const jazzRing = svgDataUrl(buildProfileRingSvg(FRAME_PRESETS.jazz.ring));
-const jazzLink = svgDataUrl(buildLinkFrameSvg(FRAME_PRESETS.jazz.link));
-const nightRing = svgDataUrl(buildProfileRingSvg(FRAME_PRESETS.night.ring));
-const nightLink = svgDataUrl(buildLinkFrameSvg(FRAME_PRESETS.night.link));
-
+/**
+ * OWNER CATALOG — only packs listed here appear in Design.
+ * To add a skin: (1) FRAME_PRESETS entry (2) optional SVG cover/hero (3) register here.
+ */
 const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
   'boop-classic': {
     id: 'boop-classic',
     name: 'Boop Classic',
-    description: 'Bold 1930s BOOP baseline',
+    description: 'Bold 1930s BOOP baseline — pink & grey',
     isDefault: true,
-    tokens: CLASSIC_TOKENS,
+    tokens: {
+      text: '#000000',
+      accent: '#E72679',
+      pageBg: '#C4CFDA',
+      cardBg: '#ffffff',
+      linkText: '#000000',
+    },
     assets: {
       preview: null,
-      profileFrame: classicRing,
-      linkFrame: classicLink,
+      ...frames('classic'),
       cover: null,
       hero: null,
     },
@@ -92,13 +78,18 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
   'jazz-night': {
     id: 'jazz-night',
     name: 'Jazz Night',
-    description: 'Sultry 1930s jazz club — gold chrome & black',
+    description: 'Sultry club — gold chrome & black',
     isDefault: false,
-    tokens: JAZZ_TOKENS,
+    tokens: {
+      text: '#FFFFFF',
+      accent: '#FFD700',
+      pageBg: '#0F0F0F',
+      cardBg: '#1A1A1A',
+      linkText: '#FFFFFF',
+    },
     assets: {
       preview: null,
-      profileFrame: jazzRing,
-      linkFrame: jazzLink,
+      ...frames('jazz'),
       cover: '/skins/jazz-night/page-bg.svg',
       hero: '/skins/jazz-night/hero.svg',
     },
@@ -111,15 +102,116 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
   'night-city': {
     id: 'night-city',
     name: 'Night City',
-    description: 'Playful 1930s cartoon city at night — neon cyan',
+    description: 'Cartoon skyline — neon cyan',
     isDefault: false,
-    tokens: NIGHT_TOKENS,
+    tokens: {
+      text: '#FFFFFF',
+      accent: '#00F0FF',
+      pageBg: '#050A14',
+      cardBg: '#0A1525',
+      linkText: '#FFFFFF',
+    },
     assets: {
       preview: null,
-      profileFrame: nightRing,
-      linkFrame: nightLink,
+      ...frames('night'),
       cover: '/skins/night-city/page-bg.svg',
       hero: '/skins/night-city/hero.svg',
+    },
+    flags: {
+      allowsCustomHeroImage: true,
+      allowsCustomPageColor: false,
+      allowsCustomCardColor: false,
+    },
+  },
+  'pink-cabaret': {
+    id: 'pink-cabaret',
+    name: 'Pink Cabaret',
+    description: 'Stage lights & blush — feminine punch',
+    isDefault: false,
+    tokens: {
+      text: '#18152E',
+      accent: '#E72679',
+      pageBg: '#2A1220',
+      cardBg: '#FFF0F5',
+      linkText: '#18152E',
+    },
+    assets: {
+      preview: null,
+      ...frames('cabaret'),
+      cover: '/skins/pink-cabaret/page-bg.svg',
+      hero: '/skins/pink-cabaret/hero.svg',
+    },
+    flags: {
+      allowsCustomHeroImage: true,
+      allowsCustomPageColor: false,
+      allowsCustomCardColor: false,
+    },
+  },
+  'soda-sky': {
+    id: 'soda-sky',
+    name: 'Soda Sky',
+    description: 'Bright blue pop — clean daytime',
+    isDefault: false,
+    tokens: {
+      text: '#18152E',
+      accent: '#3EBEEF',
+      pageBg: '#B8E4F5',
+      cardBg: '#FFFFFF',
+      linkText: '#18152E',
+    },
+    assets: {
+      preview: null,
+      ...frames('soda'),
+      cover: '/skins/soda-sky/page-bg.svg',
+      hero: '/skins/soda-sky/hero.svg',
+    },
+    flags: {
+      allowsCustomHeroImage: true,
+      allowsCustomPageColor: false,
+      allowsCustomCardColor: true,
+    },
+  },
+  'butter-cream': {
+    id: 'butter-cream',
+    name: 'Butter Cream',
+    description: 'Warm yellow cream — soft vintage',
+    isDefault: false,
+    tokens: {
+      text: '#18152E',
+      accent: '#E8A84A',
+      pageBg: '#F5E6C8',
+      cardBg: '#FFF8E7',
+      linkText: '#18152E',
+    },
+    assets: {
+      preview: null,
+      ...frames('butter'),
+      cover: '/skins/butter-cream/page-bg.svg',
+      hero: '/skins/butter-cream/hero.svg',
+    },
+    flags: {
+      allowsCustomHeroImage: true,
+      allowsCustomPageColor: false,
+      allowsCustomCardColor: true,
+    },
+  },
+  'ink-noir': {
+    id: 'ink-noir',
+    name: 'Ink Noir',
+    description: 'High-contrast black & white with pink spark',
+    isDefault: false,
+    tokens: {
+      text: '#FFFFFF',
+      accent: '#E72679',
+      pageBg: '#0A0A0A',
+      cardBg: '#111111',
+      linkText: '#FFFFFF',
+    },
+    assets: {
+      preview: null,
+      ...frames('noir'),
+      cover: '/skins/ink-noir/page-bg.svg',
+      hero: '/skins/ink-noir/hero.svg',
     },
     flags: {
       allowsCustomHeroImage: true,
@@ -165,11 +257,7 @@ export function getSkinById(id: string | null | undefined): Skin {
   };
 }
 
+/** Customer-facing catalog — only curated full packs. */
 export function getAllSkins(): Skin[] {
-  const registeredIds = Object.keys(SKIN_REGISTRY);
-  const registered = registeredIds.map((id) => getSkinById(id));
-  const remaining = themes
-    .filter((t) => !SKIN_REGISTRY[t.id])
-    .map((t) => getSkinById(t.id));
-  return [...registered, ...remaining];
+  return Object.keys(SKIN_REGISTRY).map((id) => getSkinById(id));
 }
