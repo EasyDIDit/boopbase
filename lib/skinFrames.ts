@@ -74,7 +74,6 @@ export function svgDataUrl(svg: string): string {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
-/** Owner factory presets — add new skins here first, then register in lib/skins.ts */
 export const FRAME_PRESETS = {
   classic: {
     ring: { outerStroke: '#000000', midStroke: '#FFFFFF', accentStroke: '#E72679', accentArcStroke: '#FCCC82' } as RingParams,
@@ -198,6 +197,66 @@ export const FRAME_PRESETS = {
       insetStroke: '#C4CFDA',
       insetWidth: 1.5,
       radius: 10,
+    } as LinkFrameParams,
+  },
+  mint: {
+    ring: {
+      outerStroke: '#0F3D3E',
+      outerWidth: 9,
+      midStroke: '#E8FFF6',
+      midWidth: 5,
+      accentStroke: '#2EC4B6',
+      accentWidth: 3,
+      accentArcStroke: '#2EC4B6',
+      showAccentArc: true,
+    } as RingParams,
+    link: {
+      fill: '#E8FFF6',
+      outerStroke: '#0F3D3E',
+      outerWidth: 4,
+      insetStroke: '#2EC4B6',
+      insetWidth: 2,
+      radius: 12,
+    } as LinkFrameParams,
+  },
+  ruby: {
+    ring: {
+      outerStroke: '#3B0A12',
+      outerWidth: 9,
+      midStroke: '#2A0E14',
+      midWidth: 5,
+      accentStroke: '#C41E3A',
+      accentWidth: 3,
+      accentArcStroke: '#FCCC82',
+      showAccentArc: true,
+    } as RingParams,
+    link: {
+      fill: '#2A0E14',
+      outerStroke: '#C41E3A',
+      outerWidth: 4,
+      insetStroke: '#FCCC82',
+      insetWidth: 1.5,
+      radius: 10,
+    } as LinkFrameParams,
+  },
+  kraft: {
+    ring: {
+      outerStroke: '#3E2723',
+      outerWidth: 9,
+      midStroke: '#F5E6D3',
+      midWidth: 5,
+      accentStroke: '#8D6E63',
+      accentWidth: 2.5,
+      accentArcStroke: '#E72679',
+      showAccentArc: true,
+    } as RingParams,
+    link: {
+      fill: '#F5E6D3',
+      outerStroke: '#3E2723',
+      outerWidth: 5,
+      insetStroke: '#8D6E63',
+      insetWidth: 2,
+      radius: 12,
     } as LinkFrameParams,
   },
 } as const;
