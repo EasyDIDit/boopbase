@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" width="320" height="56" fill="none">
+  <!-- Outer black -->
+  <rect x="1" y="1" width="318" height="54" rx="8" ry="8" fill="none" stroke="#000" stroke-width="3"/>
+  <!-- Gold border -->
+  <rect x="5" y="5" width="310" height="46" rx="6" ry="6" fill="none" stroke="url(#goldGrad)" stroke-width="5"/>
+  <!-- Inner black plate (center open for text) -->
+  <rect x="12" y="12" width="296" height="32" rx="4" ry="4" fill="#1A1A1A"/>
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FFE55C"/>
+      <stop offset="50%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#C9A227"/>
+    </linearGradient>
+  </defs>
+</svg>

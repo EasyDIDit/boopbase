@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" width="320" height="56" fill="none">
+  <!-- Bold black outer plate -->
+  <rect x="2" y="2" width="316" height="52" rx="14" ry="14" stroke="#000000" stroke-width="4" fill="#FFFFFF"/>
+  <!-- Inner accent line -->
+  <rect x="8" y="8" width="304" height="40" rx="10" ry="10" stroke="#E72679" stroke-width="2" fill="none"/>
+  <!-- Center left open for title text -->
+</svg>

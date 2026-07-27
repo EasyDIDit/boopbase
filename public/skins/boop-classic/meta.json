@@ -1,0 +1,25 @@
+{
+  "id": "boop-classic",
+  "name": "Boop Classic",
+  "description": "Bold 1930s BOOP baseline",
+  "isDefault": true,
+  "tokens": {
+    "text": "#000000",
+    "accent": "#E72679",
+    "pageBg": "#C4CFDA",
+    "cardBg": "#ffffff",
+    "linkText": "#000000"
+  },
+  "assets": {
+    "preview": null,
+    "profileFrame": "/skins/boop-classic/profile-frame.svg",
+    "linkFrame": "/skins/boop-classic/link-frame.svg",
+    "cover": null,
+    "heroOverlay": null
+  },
+  "flags": {
+    "allowsCustomHeroImage": true,
+    "allowsCustomPageColor": true,
+    "allowsCustomCardColor": true
+  }
+}

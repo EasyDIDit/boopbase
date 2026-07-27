@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 56" width="320" height="56" fill="none">
+  <!-- Outer neon -->
+  <rect x="2" y="2" width="316" height="52" rx="6" ry="6" fill="none" stroke="#00F0FF" stroke-width="3"/>
+  <!-- Inner dark plate -->
+  <rect x="8" y="8" width="304" height="40" rx="4" ry="4" fill="#0A1525"/>
+  <!-- Inner neon line -->
+  <rect x="10" y="10" width="300" height="36" rx="3" ry="3" fill="none" stroke="#00F0FF" stroke-width="1.5" opacity="0.7"/>
+</svg>

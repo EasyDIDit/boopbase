@@ -1,0 +1,25 @@
+{
+  "id": "jazz-night",
+  "name": "Jazz Night",
+  "description": "Sultry 1930s jazz club — gold chrome & black",
+  "isDefault": false,
+  "tokens": {
+    "text": "#FFFFFF",
+    "accent": "#FFD700",
+    "pageBg": "#0F0F0F",
+    "cardBg": "#1A1A1A",
+    "linkText": "#FFFFFF"
+  },
+  "assets": {
+    "preview": null,
+    "profileFrame": "/skins/jazz-night/profile-frame.svg",
+    "linkFrame": "/skins/jazz-night/link-frame.svg",
+    "cover": null,
+    "heroOverlay": null
+  },
+  "flags": {
+    "allowsCustomHeroImage": true,
+    "allowsCustomPageColor": false,
+    "allowsCustomCardColor": false
+  }
+}

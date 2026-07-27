@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import ClientPublicProfile from '@/app/[username]/ClientPublicProfile';
-import { themes } from '@/lib/themes';
+import { getAllSkins } from '@/lib/skins';
 
 const socialPlatforms = [
   { name: 'Instagram', prefix: 'https://instagram.com/', field: 'instagram' as const },
@@ -310,6 +310,7 @@ export default function Dashboard() {
   );
 
   const backgroundImages = bgImage ? [bgImage] : [];
+  const skins = getAllSkins();
 
   const tabs = [
     { id: 'social', label: 'Social Buttons' },
@@ -524,21 +525,35 @@ export default function Dashboard() {
             {activeTab === 'design' && (
               <div className="space-y-8">
                 <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Theme</h3>
+                  <h3 className="text-xl mb-4">Skin / Theme</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {themes.map((t) => (
+                    {skins.map((s) => (
                       <button
-                        key={t.id}
+                        key={s.id}
                         type="button"
-                        onClick={() => setThemeId(t.id)}
+                        onClick={() => setThemeId(s.id)}
                         className={`text-left p-4 rounded-2xl border transition-all ${
-                          themeId === t.id
+                          themeId === s.id
                             ? 'border-white bg-zinc-800'
                             : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
                         }`}
                       >
-                        <div className="font-semibold">{t.name}</div>
-                        <div className="text-sm text-zinc-400">{t.description}</div>
+                        {s.assets.preview ? (
+                          <img
+                            src={s.assets.preview}
+                            alt={s.name}
+                            className="w-full h-32 object-cover rounded-xl mb-3"
+                          />
+                        ) : (
+                          <div
+                            className="w-full h-32 rounded-xl mb-3 flex items-center justify-center text-sm font-medium border border-zinc-700"
+                            style={{ backgroundColor: s.tokens.cardBg, color: s.tokens.text }}
+                          >
+                            {s.name}
+                          </div>
+                        )}
+                        <div className="font-semibold">{s.name}</div>
+                        <div className="text-sm text-zinc-400">{s.description}</div>
                       </button>
                     ))}
                   </div>

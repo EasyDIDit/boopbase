@@ -1,0 +1,25 @@
+{
+  "id": "night-city",
+  "name": "Night City",
+  "description": "Playful 1930s cartoon city at night — neon cyan & chrome",
+  "isDefault": false,
+  "tokens": {
+    "text": "#FFFFFF",
+    "accent": "#00F0FF",
+    "pageBg": "#050A14",
+    "cardBg": "#0A1525",
+    "linkText": "#FFFFFF"
+  },
+  "assets": {
+    "preview": null,
+    "profileFrame": "/skins/night-city/profile-frame.svg",
+    "linkFrame": "/skins/night-city/link-frame.svg",
+    "cover": null,
+    "heroOverlay": null
+  },
+  "flags": {
+    "allowsCustomHeroImage": true,
+    "allowsCustomPageColor": false,
+    "allowsCustomCardColor": false
+  }
+}

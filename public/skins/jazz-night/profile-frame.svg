@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" fill="none">
+  <!-- Outer black ring -->
+  <circle cx="80" cy="80" r="78" fill="none" stroke="#000000" stroke-width="4"/>
+  <!-- Gold metallic body -->
+  <circle cx="80" cy="80" r="74" fill="none" stroke="url(#goldGrad)" stroke-width="10"/>
+  <!-- Inner black ring -->
+  <circle cx="80" cy="80" r="66" fill="none" stroke="#000000" stroke-width="3"/>
+  <!-- Decorative diamonds -->
+  <g fill="#FFD700" stroke="#000" stroke-width="1.5">
+    <path d="M80 12 L84 20 L80 28 L76 20 Z"/>
+    <path d="M80 132 L84 140 L80 148 L76 140 Z"/>
+    <path d="M12 80 L20 84 L28 80 L20 76 Z"/>
+    <path d="M132 80 L140 84 L148 80 L140 76 Z"/>
+  </g>
+  <defs>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE55C"/>
+      <stop offset="50%" stop-color="#FFD700"/>
+      <stop offset="100%" stop-color="#C9A227"/>
+    </linearGradient>
+  </defs>
+</svg>
