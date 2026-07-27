@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import jwt from 'jsonwebtoken';
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const token = request.cookies.get('token')?.value;
+    const username = request.cookies.get('user')?.value;
 
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!username) {
+      return NextResponse.json({ error: 'Not logged in' }, { status: 401 });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key') as any;
-    const user = await User.findById(decoded.userId).select('-password');
+    const user = await User.findOne({ username: username.toLowerCase() }).lean();
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
@@ -22,6 +20,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(user);
   } catch (error) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    console.error('Me error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
