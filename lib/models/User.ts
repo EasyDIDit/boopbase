@@ -6,7 +6,11 @@ const UserSchema = new mongoose.Schema({
   bio: { type: String, default: '' },
   profileImage: { type: String, default: '' },
   backgroundImage: { type: String, default: '' },
-  backgroundColor: { type: String, default: '#0a0a0a' },   // ← This was missing
+  backgroundColor: { type: String, default: '#0a0a0a' },
+  outerBackgroundColor: { type: String, default: '#C4CFDA' },
+  innerBackgroundColor: { type: String, default: '#ffffff' },
+  useThemeBackground: { type: Boolean, default: true },
+  themeId: { type: String, default: 'boop-classic' },
   buttonStyle: { type: String, default: 'solid' },
   links: [{
     id: { type: String },

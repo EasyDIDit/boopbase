@@ -1,6 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import ClientPublicProfile from '@/app/[username]/ClientPublicProfile';
+import { themes } from '@/lib/themes';
 
 const socialPlatforms = [
   { name: 'Instagram', prefix: 'https://instagram.com/', field: 'instagram' as const },
@@ -15,8 +17,12 @@ export default function Dashboard() {
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
-  const [bgColor, setBgColor] = useState('#000000');
+  const [bgColor, setBgColor] = useState('#0a0a0a');
   const [bgImage, setBgImage] = useState<string | null>(null);
+  const [outerBg, setOuterBg] = useState('#C4CFDA');
+  const [innerBg, setInnerBg] = useState('#ffffff');
+  const [useThemeBg, setUseThemeBg] = useState(true);
+  const [themeId, setThemeId] = useState('boop-classic');
   const [links, setLinks] = useState<any[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
@@ -33,7 +39,6 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false);
   const [totalViews, setTotalViews] = useState(0);
 
-  // Local input state for @username fields (display only)
   const [igInput, setIgInput] = useState('');
   const [ttInput, setTtInput] = useState('');
   const [ytInput, setYtInput] = useState('');
@@ -48,8 +53,12 @@ export default function Dashboard() {
         setName(data.name || '');
         setBio(data.bio || '');
         setPhoto(data.profileImage || null);
-        setBgColor(data.backgroundColor || '#000000');
+        setBgColor(data.backgroundColor || '#0a0a0a');
         setBgImage(data.backgroundImage || null);
+        setOuterBg(data.outerBackgroundColor || '#C4CFDA');
+        setInnerBg(data.innerBackgroundColor || '#ffffff');
+        setUseThemeBg(data.useThemeBackground !== false);
+        setThemeId(data.themeId || 'boop-classic');
         setLinks(data.links || []);
         setButtonStyle(data.buttonStyle || 'solid');
         setInstagram(data.instagram || '');
@@ -63,7 +72,6 @@ export default function Dashboard() {
         setAddress(data.address || '');
         setTotalViews(data.views || 0);
 
-        // Pre-fill @ inputs if full URL already stored
         setIgInput(extractHandle(data.instagram, 'instagram.com/'));
         setTtInput(extractHandle(data.tiktok, 'tiktok.com/@'));
         setYtInput(extractHandle(data.youtube, 'youtube.com/@'));
@@ -80,13 +88,25 @@ export default function Dashboard() {
     return '@' + url.slice(idx + marker.length).replace(/\/$/, '');
   }
 
-  function applySocial(platform: typeof socialPlatforms[number], raw: string) {
+  function applySocial(platform: (typeof socialPlatforms)[number], raw: string) {
     let value = raw.trim();
     if (!value) {
-      if (platform.field === 'instagram') { setInstagram(''); setIgInput(''); }
-      if (platform.field === 'tiktok') { setTiktok(''); setTtInput(''); }
-      if (platform.field === 'youtube') { setYoutube(''); setYtInput(''); }
-      if (platform.field === 'facebook') { setFacebook(''); setFbInput(''); }
+      if (platform.field === 'instagram') {
+        setInstagram('');
+        setIgInput('');
+      }
+      if (platform.field === 'tiktok') {
+        setTiktok('');
+        setTtInput('');
+      }
+      if (platform.field === 'youtube') {
+        setYoutube('');
+        setYtInput('');
+      }
+      if (platform.field === 'facebook') {
+        setFacebook('');
+        setFbInput('');
+      }
       return;
     }
 
@@ -96,10 +116,22 @@ export default function Dashboard() {
       value = platform.prefix + value;
     }
 
-    if (platform.field === 'instagram') { setInstagram(value); setIgInput(raw); }
-    if (platform.field === 'tiktok') { setTiktok(value); setTtInput(raw); }
-    if (platform.field === 'youtube') { setYoutube(value); setYtInput(raw); }
-    if (platform.field === 'facebook') { setFacebook(value); setFbInput(raw); }
+    if (platform.field === 'instagram') {
+      setInstagram(value);
+      setIgInput(raw);
+    }
+    if (platform.field === 'tiktok') {
+      setTiktok(value);
+      setTtInput(raw);
+    }
+    if (platform.field === 'youtube') {
+      setYoutube(value);
+      setYtInput(raw);
+    }
+    if (platform.field === 'facebook') {
+      setFacebook(value);
+      setFbInput(raw);
+    }
   }
 
   const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
@@ -153,6 +185,10 @@ export default function Dashboard() {
           backgroundColor: bgColor,
           backgroundImage: bgImage,
           profileImage: photo,
+          outerBackgroundColor: outerBg,
+          innerBackgroundColor: innerBg,
+          useThemeBackground: useThemeBg,
+          themeId,
           links,
           instagram,
           tiktok,
@@ -224,6 +260,57 @@ export default function Dashboard() {
     }
   };
 
+  const liveUser = useMemo(
+    () => ({
+      username: user?.username || 'preview',
+      name,
+      bio,
+      profileImage: photo,
+      backgroundImage: bgImage,
+      backgroundColor: bgColor,
+      outerBackgroundColor: outerBg,
+      innerBackgroundColor: innerBg,
+      useThemeBackground: useThemeBg,
+      themeId,
+      buttonStyle,
+      links,
+      instagram,
+      tiktok,
+      youtube,
+      facebook,
+      phone,
+      email,
+      company,
+      title,
+      address,
+    }),
+    [
+      user?.username,
+      name,
+      bio,
+      photo,
+      bgImage,
+      bgColor,
+      outerBg,
+      innerBg,
+      useThemeBg,
+      themeId,
+      buttonStyle,
+      links,
+      instagram,
+      tiktok,
+      youtube,
+      facebook,
+      phone,
+      email,
+      company,
+      title,
+      address,
+    ]
+  );
+
+  const backgroundImages = bgImage ? [bgImage] : [];
+
   const tabs = [
     { id: 'social', label: 'Social Buttons' },
     { id: 'links', label: 'Links' },
@@ -266,7 +353,6 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
-            {/* SOCIAL BUTTONS TAB */}
             {activeTab === 'social' && (
               <div className="bg-zinc-900 rounded-3xl p-8 space-y-6">
                 <div>
@@ -275,7 +361,6 @@ export default function Dashboard() {
                     Enter @username — the full link is created automatically
                   </p>
                 </div>
-
                 <div className="space-y-5">
                   <div>
                     <label className="text-sm text-zinc-400 mb-2 block">Instagram</label>
@@ -286,11 +371,8 @@ export default function Dashboard() {
                       onChange={(e) => applySocial(socialPlatforms[0], e.target.value)}
                       className="w-full bg-zinc-800 p-4 rounded-2xl"
                     />
-                    {instagram && (
-                      <p className="text-xs text-zinc-500 mt-1 truncate">{instagram}</p>
-                    )}
+                    {instagram && <p className="text-xs text-zinc-500 mt-1 truncate">{instagram}</p>}
                   </div>
-
                   <div>
                     <label className="text-sm text-zinc-400 mb-2 block">TikTok</label>
                     <input
@@ -300,11 +382,8 @@ export default function Dashboard() {
                       onChange={(e) => applySocial(socialPlatforms[1], e.target.value)}
                       className="w-full bg-zinc-800 p-4 rounded-2xl"
                     />
-                    {tiktok && (
-                      <p className="text-xs text-zinc-500 mt-1 truncate">{tiktok}</p>
-                    )}
+                    {tiktok && <p className="text-xs text-zinc-500 mt-1 truncate">{tiktok}</p>}
                   </div>
-
                   <div>
                     <label className="text-sm text-zinc-400 mb-2 block">YouTube</label>
                     <input
@@ -314,11 +393,8 @@ export default function Dashboard() {
                       onChange={(e) => applySocial(socialPlatforms[2], e.target.value)}
                       className="w-full bg-zinc-800 p-4 rounded-2xl"
                     />
-                    {youtube && (
-                      <p className="text-xs text-zinc-500 mt-1 truncate">{youtube}</p>
-                    )}
+                    {youtube && <p className="text-xs text-zinc-500 mt-1 truncate">{youtube}</p>}
                   </div>
-
                   <div>
                     <label className="text-sm text-zinc-400 mb-2 block">Facebook</label>
                     <input
@@ -328,19 +404,15 @@ export default function Dashboard() {
                       onChange={(e) => applySocial(socialPlatforms[3], e.target.value)}
                       className="w-full bg-zinc-800 p-4 rounded-2xl"
                     />
-                    {facebook && (
-                      <p className="text-xs text-zinc-500 mt-1 truncate">{facebook}</p>
-                    )}
+                    {facebook && <p className="text-xs text-zinc-500 mt-1 truncate">{facebook}</p>}
                   </div>
                 </div>
               </div>
             )}
 
-            {/* LINKS TAB */}
             {activeTab === 'links' && (
               <div className="bg-zinc-900 rounded-3xl p-8">
                 <h3 className="text-xl mb-6">Custom Links</h3>
-
                 <div className="flex flex-col gap-3 mb-6">
                   <input
                     type="text"
@@ -356,29 +428,21 @@ export default function Dashboard() {
                     onChange={(e) => setNewTitle(e.target.value)}
                     className="bg-zinc-800 p-3 rounded-2xl"
                   />
-                  <button
-                    onClick={addLink}
-                    className="bg-white text-black py-3 rounded-2xl font-medium"
-                  >
+                  <button onClick={addLink} className="bg-white text-black py-3 rounded-2xl font-medium">
                     Add Link
                   </button>
                 </div>
-
                 {links.length > 0 ? (
                   <div className="space-y-3">
                     {links.map((link: any, index: number) => (
                       <div
                         key={link.id}
                         draggable
-                        onDragStart={(e) =>
-                          e.dataTransfer.setData('text/plain', index.toString())
-                        }
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', index.toString())}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => {
                           e.preventDefault();
-                          const dragIndex = parseInt(
-                            e.dataTransfer.getData('text/plain')
-                          );
+                          const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
                           if (dragIndex === index) return;
                           const next = [...links];
                           const [dragged] = next.splice(dragIndex, 1);
@@ -389,14 +453,9 @@ export default function Dashboard() {
                       >
                         <div className="min-w-0">
                           <div className="font-medium">{link.title}</div>
-                          <div className="text-sm text-gray-400 truncate">
-                            {link.url}
-                          </div>
+                          <div className="text-sm text-gray-400 truncate">{link.url}</div>
                         </div>
-                        <button
-                          onClick={() => deleteLink(link.id)}
-                          className="text-red-400 shrink-0 ml-4"
-                        >
+                        <button onClick={() => deleteLink(link.id)} className="text-red-400 shrink-0 ml-4">
                           Delete
                         </button>
                       </div>
@@ -408,7 +467,6 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* PROFILE TAB */}
             {activeTab === 'profile' && (
               <div className="space-y-8">
                 <div className="bg-zinc-900 rounded-3xl p-8">
@@ -416,29 +474,17 @@ export default function Dashboard() {
                   <div className="flex flex-col items-center gap-6">
                     <div className="w-24 h-24 rounded-full border-4 border-white/30 overflow-hidden">
                       {photo ? (
-                        <img
-                          src={photo}
-                          alt="Profile"
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={photo} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-4xl">
-                          👤
-                        </div>
+                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-4xl">👤</div>
                       )}
                     </div>
                     <label className="cursor-pointer bg-white text-black px-6 py-3 rounded-2xl font-medium">
                       Upload Photo
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={uploadPhoto}
-                        className="hidden"
-                      />
+                      <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" />
                     </label>
                   </div>
                 </div>
-
                 <div className="bg-zinc-900 rounded-3xl p-8">
                   <h3 className="text-xl mb-4">Name</h3>
                   <input
@@ -449,7 +495,6 @@ export default function Dashboard() {
                     placeholder="Your full name"
                   />
                 </div>
-
                 <div className="bg-zinc-900 rounded-3xl p-8">
                   <div className="flex justify-between items-center mb-4">
                     <h3 className="text-xl">Headline / Bio</h3>
@@ -463,85 +508,90 @@ export default function Dashboard() {
                     placeholder="Your tagline or bio..."
                   />
                 </div>
-
                 <div className="bg-zinc-900 rounded-3xl p-8">
                   <h3 className="text-xl mb-4">vCard Info</h3>
                   <div className="space-y-4">
-                    <input
-                      type="text"
-                      placeholder="Phone Number"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
-                    <input
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Company"
-                      value={company}
-                      onChange={(e) => setCompany(e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Job Title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
-                    <input
-                      type="text"
-                      placeholder="Address"
-                      value={address}
-                      onChange={(e) => setAddress(e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
+                    <input type="text" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
+                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
+                    <input type="text" placeholder="Company" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
+                    <input type="text" placeholder="Job Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
+                    <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
                   </div>
                 </div>
               </div>
             )}
 
-            {/* DESIGN TAB */}
             {activeTab === 'design' && (
               <div className="space-y-8">
                 <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Background Image</h3>
-                  <div className="flex flex-col items-center gap-4">
-                    {bgImage && (
-                      <div className="w-64 h-36 border border-zinc-700 rounded-2xl overflow-hidden">
-                        <img
-                          src={bgImage}
-                          alt="Background Preview"
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    )}
-                    <label className="cursor-pointer bg-white text-black px-6 py-3 rounded-2xl font-medium">
-                      Upload Background Image
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={uploadBgImage}
-                        className="hidden"
-                      />
-                    </label>
+                  <h3 className="text-xl mb-4">Theme</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {themes.map((t) => (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => setThemeId(t.id)}
+                        className={`text-left p-4 rounded-2xl border transition-all ${
+                          themeId === t.id
+                            ? 'border-white bg-zinc-800'
+                            : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
+                        }`}
+                      >
+                        <div className="font-semibold">{t.name}</div>
+                        <div className="text-sm text-zinc-400">{t.description}</div>
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Background Color</h3>
-                  <input
-                    type="color"
-                    value={bgColor}
-                    onChange={(e) => setBgColor(e.target.value)}
-                    className="w-16 h-12"
-                  />
+                  <h3 className="text-xl mb-4">Card background</h3>
+                  <label className="flex items-center gap-3 mb-4 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={useThemeBg}
+                      onChange={(e) => setUseThemeBg(e.target.checked)}
+                      className="w-5 h-5"
+                    />
+                    <span>Use theme card color</span>
+                  </label>
+                  {!useThemeBg && (
+                    <div>
+                      <label className="text-sm text-zinc-400 mb-2 block">Custom card color</label>
+                      <input type="color" value={innerBg} onChange={(e) => setInnerBg(e.target.value)} className="w-16 h-12" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-zinc-900 rounded-3xl p-8">
+                  <h3 className="text-xl mb-4">Page background (outside card)</h3>
+                  <input type="color" value={outerBg} onChange={(e) => setOuterBg(e.target.value)} className="w-16 h-12" />
+                </div>
+
+                <div className="bg-zinc-900 rounded-3xl p-8">
+                  <h3 className="text-xl mb-4">Hero / background image</h3>
+                  <div className="flex flex-col items-center gap-4">
+                    {bgImage && (
+                      <div className="w-64 h-36 border border-zinc-700 rounded-2xl overflow-hidden">
+                        <img src={bgImage} alt="Background Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <label className="cursor-pointer bg-white text-black px-6 py-3 rounded-2xl font-medium">
+                      Upload Background Image
+                      <input type="file" accept="image/*" onChange={uploadBgImage} className="hidden" />
+                    </label>
+                    {bgImage && (
+                      <button type="button" onClick={() => setBgImage(null)} className="text-red-400 text-sm">
+                        Remove image
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-zinc-900 rounded-3xl p-8">
+                  <h3 className="text-xl mb-4">Legacy background color</h3>
+                  <p className="text-sm text-zinc-400 mb-2">Kept for compatibility; outer/inner colors above control the live page.</p>
+                  <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-16 h-12" />
                 </div>
 
                 <div className="bg-zinc-900 rounded-3xl p-8">
@@ -561,47 +611,35 @@ export default function Dashboard() {
                       </button>
                     ))}
                   </div>
+                  <p className="text-xs text-zinc-500 mt-3">Theme styles usually override this on the public page.</p>
                 </div>
               </div>
             )}
 
-            {/* ANALYTICS TAB */}
             {activeTab === 'analytics' && (
               <div className="bg-zinc-900 rounded-3xl p-8 space-y-8">
                 <h3 className="text-2xl mb-6">Analytics Overview</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-zinc-800 rounded-3xl p-8 text-center">
-                    <div className="text-6xl font-bold text-emerald-400 mb-2">
-                      {totalViews}
-                    </div>
+                    <div className="text-6xl font-bold text-emerald-400 mb-2">{totalViews}</div>
                     <div className="text-zinc-400">Total Profile Views</div>
                   </div>
                   <div className="bg-zinc-800 rounded-3xl p-8 text-center">
-                    <div className="text-6xl font-bold text-emerald-400 mb-2">
-                      {links.length}
-                    </div>
+                    <div className="text-6xl font-bold text-emerald-400 mb-2">{links.length}</div>
                     <div className="text-zinc-400">Active Links</div>
                   </div>
                 </div>
-
                 {links.length > 0 && (
                   <div className="bg-zinc-800 rounded-3xl p-6">
                     <h4 className="text-lg mb-4">Link Performance</h4>
                     <div className="space-y-3">
                       {links.map((link: any) => (
-                        <div
-                          key={link.id}
-                          className="flex justify-between items-center bg-zinc-900 p-4 rounded-2xl"
-                        >
+                        <div key={link.id} className="flex justify-between items-center bg-zinc-900 p-4 rounded-2xl">
                           <div className="min-w-0">
                             <div className="font-medium">{link.title}</div>
-                            <div className="text-sm text-gray-400 truncate">
-                              {link.url}
-                            </div>
+                            <div className="text-sm text-gray-400 truncate">{link.url}</div>
                           </div>
-                          <div className="text-emerald-400 font-mono shrink-0 ml-4">
-                            {link.clicks || 0} clicks
-                          </div>
+                          <div className="text-emerald-400 font-mono shrink-0 ml-4">{link.clicks || 0} clicks</div>
                         </div>
                       ))}
                     </div>
@@ -611,80 +649,18 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* LIVE PREVIEW */}
+          {/* LIVE PREVIEW = real public profile component */}
           <div className="hidden lg:block">
             <div className="sticky top-8">
               <h3 className="text-xl mb-4 text-center text-zinc-400">Live Preview</h3>
-              <div className="bg-zinc-900 rounded-3xl p-6 border border-zinc-700">
-                <div
-                  className="w-full max-w-[320px] mx-auto rounded-2xl overflow-hidden"
-                  style={{ backgroundColor: bgColor }}
-                >
-                  <div
-                    className="relative h-40"
-                    style={{
-                      backgroundImage: bgImage ? `url(${bgImage})` : 'none',
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                    }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/80" />
-                  </div>
-                  <div className="p-6 -mt-12 relative z-10 text-center">
-                    <div className="w-20 h-20 rounded-full border-4 border-black overflow-hidden mx-auto mb-3 bg-white">
-                      {photo ? (
-                        <img
-                          src={photo}
-                          className="w-full h-full object-cover"
-                          alt=""
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-zinc-300 flex items-center justify-center text-2xl">
-                          👤
-                        </div>
-                      )}
-                    </div>
-                    <h4 className="text-xl font-bold text-white">
-                      {name || 'Your Name'}
-                    </h4>
-                    <p className="text-white/70 text-sm mt-1">{bio || 'Your bio'}</p>
-
-                    <div className="flex justify-center gap-3 mt-4">
-                      {instagram && (
-                        <div className="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-xs font-bold">
-                          IG
-                        </div>
-                      )}
-                      {tiktok && (
-                        <div className="w-8 h-8 rounded-full bg-cyan-400 flex items-center justify-center text-xs font-bold text-black">
-                          TT
-                        </div>
-                      )}
-                      {youtube && (
-                        <div className="w-8 h-8 rounded-full bg-yellow-400 flex items-center justify-center text-xs font-bold text-black">
-                          YT
-                        </div>
-                      )}
-                      {facebook && (
-                        <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-xs font-bold">
-                          FB
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-6 space-y-2">
-                      {links.slice(0, 4).map((link: any) => (
-                        <div
-                          key={link.id}
-                          className="bg-white text-black py-2 px-4 rounded-xl text-sm font-medium"
-                        >
-                          {link.title}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              <div className="rounded-3xl border border-zinc-700 overflow-hidden bg-zinc-900 max-h-[85vh] overflow-y-auto">
+                <div className="origin-top scale-[0.92] w-[108.7%]">
+                  <ClientPublicProfile user={liveUser} backgroundImages={backgroundImages} />
                 </div>
               </div>
+              <p className="text-center text-xs text-zinc-500 mt-3">
+                Same component as your public page (including Add to Contacts)
+              </p>
             </div>
           </div>
         </div>
