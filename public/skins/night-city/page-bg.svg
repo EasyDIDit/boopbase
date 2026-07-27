@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" width="390" height="844" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#050a14"/>
+      <stop offset="55%" stop-color="#0a1a2e"/>
+      <stop offset="100%" stop-color="#03060c"/>
+    </linearGradient>
+  </defs>
+  <rect width="390" height="844" fill="url(#sky)"/>
+  <!-- stars -->
+  <g fill="#7FDBFF" opacity="0.7">
+    <circle cx="40" cy="60" r="1.5"/><circle cx="120" cy="40" r="1"/><circle cx="200" cy="80" r="1.2"/>
+    <circle cx="280" cy="50" r="1.5"/><circle cx="340" cy="90" r="1"/><circle cx="90" cy="120" r="1"/>
+    <circle cx="310" cy="140" r="1.2"/><circle cx="160" cy="30" r="1"/>
+  </g>
+  <!-- skyline -->
+  <g fill="#0a1525" stroke="#00F0FF" stroke-width="1.2" opacity="0.85">
+    <rect x="20" y="520" width="50" height="200" rx="2"/>
+    <rect x="80" y="480" width="40" height="240" rx="2"/>
+    <rect x="130" y="540" width="55" height="180" rx="2"/>
+    <rect x="195" y="460" width="45" height="260" rx="2"/>
+    <rect x="250" y="500" width="60" height="220" rx="2"/>
+    <rect x="320" y="530" width="50" height="190" rx="2"/>
+  </g>
+  <g fill="#00F0FF" opacity="0.35">
+    <rect x="30" y="540" width="8" height="6"/><rect x="45" y="560" width="8" height="6"/>
+    <rect x="90" y="500" width="8" height="6"/><rect x="205" y="480" width="8" height="6"/>
+    <rect x="265" y="520" width="8" height="6"/><rect x="330" y="550" width="8" height="6"/>
+  </g>
+  <rect x="0" y="700" width="390" height="144" fill="#03060c" opacity="0.7"/>
+</svg>

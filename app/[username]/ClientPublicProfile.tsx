@@ -22,9 +22,19 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
 
-  const currentBackground = backgroundImages.length > 0 ? backgroundImages[currentBgIndex] : null;
+  // User hero upload wins; else skin hero; else none
+  const userHero =
+    backgroundImages.length > 0 ? backgroundImages[currentBgIndex] : null;
+  const heroImage =
+    userHero ||
+    (skin.flags.allowsCustomHeroImage === false ? skin.assets.hero : skin.assets.hero) ||
+    skin.assets.hero;
+
   const useThemeBG = user?.useThemeBackground !== false;
   const innerBgColor = useThemeBG ? skin.tokens.cardBg : user?.innerBackgroundColor || '#ffffff';
+
+  // Page surface: skin cover art if present, else solid color
+  const pageCover = skin.assets.cover;
   const pageBg = user?.outerBackgroundColor || skin.tokens.pageBg;
 
   const hasContact =
@@ -52,26 +62,32 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
 
   return (
     <div
-      className="min-h-screen flex justify-center items-start pt-6 pb-12 px-4"
-      style={{ backgroundColor: pageBg }}
+      className="min-h-screen flex justify-center items-start pt-6 pb-12 px-4 relative"
+      style={{
+        backgroundColor: pageBg,
+        backgroundImage: pageCover ? `url(${pageCover})` : undefined,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
     >
       <div
-        className="max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border border-black/10"
+        className="max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border border-black/10 relative z-10"
         style={{ backgroundColor: innerBgColor }}
       >
         {/* HERO */}
         <div
           className="relative h-72 sm:h-80 flex items-end pb-10"
           style={{
-            backgroundImage: currentBackground ? `url(${currentBackground})` : undefined,
+            backgroundImage: heroImage ? `url(${heroImage})` : undefined,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
-            backgroundColor: currentBackground ? undefined : innerBgColor,
+            backgroundColor: heroImage ? undefined : innerBgColor,
           }}
         >
-          {currentBackground ? (
-            <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/40 to-black/90 pointer-events-none" />
+          {heroImage ? (
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/30 to-black/85 pointer-events-none" />
           ) : (
             <div
               className="absolute inset-0 pointer-events-none opacity-90"
@@ -121,7 +137,6 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             </p>
           </div>
 
-          {/* Socials */}
           <div className="flex justify-center flex-wrap gap-3 mb-6">
             {user?.instagram && (
               <a href={user.instagram} target="_blank" rel="noopener noreferrer" className={skin.socialIconClass}>
@@ -145,7 +160,6 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             )}
           </div>
 
-          {/* Contacts — only if user filled contact fields */}
           {hasContact && (
             <div className="flex justify-center mb-8">
               <a
@@ -160,7 +174,6 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             </div>
           )}
 
-          {/* Links */}
           <div className="space-y-3.5">
             {activeLinks.map((link: any) => (
               <button
@@ -184,9 +197,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                     </span>
                   </>
                 ) : (
-                  <span
-                    className={`block py-4 px-8 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}
-                  >
+                  <span className={`block py-4 px-8 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
                     {link.title}
                   </span>
                 )}

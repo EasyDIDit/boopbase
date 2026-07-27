@@ -1,5 +1,6 @@
 // lib/skins.ts
 import { themes, getThemeById, type Theme } from './themes';
+import { buildProfileRingSvg, buildLinkFrameSvg, svgDataUrl, FRAME_PRESETS } from './skinFrames';
 
 export interface SkinTokens {
   text: string;
@@ -14,7 +15,7 @@ export interface SkinAssets {
   profileFrame: string | null;
   linkFrame: string | null;
   cover: string | null;
-  heroOverlay: string | null;
+  hero: string | null;
 }
 
 export interface SkinFlags {
@@ -61,7 +62,13 @@ const NIGHT_TOKENS: SkinTokens = {
   linkText: '#FFFFFF',
 };
 
-/** Registry of real skin packs. Add new packs here when assets are ready. */
+const classicRing = svgDataUrl(buildProfileRingSvg(FRAME_PRESETS.classic.ring));
+const classicLink = svgDataUrl(buildLinkFrameSvg(FRAME_PRESETS.classic.link));
+const jazzRing = svgDataUrl(buildProfileRingSvg(FRAME_PRESETS.jazz.ring));
+const jazzLink = svgDataUrl(buildLinkFrameSvg(FRAME_PRESETS.jazz.link));
+const nightRing = svgDataUrl(buildProfileRingSvg(FRAME_PRESETS.night.ring));
+const nightLink = svgDataUrl(buildLinkFrameSvg(FRAME_PRESETS.night.link));
+
 const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
   'boop-classic': {
     id: 'boop-classic',
@@ -71,10 +78,10 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
     tokens: CLASSIC_TOKENS,
     assets: {
       preview: null,
-      profileFrame: '/skins/boop-classic/profile-frame.svg',
-      linkFrame: '/skins/boop-classic/link-frame.svg',
+      profileFrame: classicRing,
+      linkFrame: classicLink,
       cover: null,
-      heroOverlay: null,
+      hero: null,
     },
     flags: {
       allowsCustomHeroImage: true,
@@ -90,10 +97,10 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
     tokens: JAZZ_TOKENS,
     assets: {
       preview: null,
-      profileFrame: '/skins/jazz-night/profile-frame.svg',
-      linkFrame: '/skins/jazz-night/link-frame.svg',
-      cover: null,
-      heroOverlay: null,
+      profileFrame: jazzRing,
+      linkFrame: jazzLink,
+      cover: '/skins/jazz-night/page-bg.svg',
+      hero: '/skins/jazz-night/hero.svg',
     },
     flags: {
       allowsCustomHeroImage: true,
@@ -104,15 +111,15 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
   'night-city': {
     id: 'night-city',
     name: 'Night City',
-    description: 'Playful 1930s cartoon city at night — neon cyan & chrome',
+    description: 'Playful 1930s cartoon city at night — neon cyan',
     isDefault: false,
     tokens: NIGHT_TOKENS,
     assets: {
       preview: null,
-      profileFrame: '/skins/night-city/profile-frame.svg',
-      linkFrame: '/skins/night-city/link-frame.svg',
-      cover: null,
-      heroOverlay: null,
+      profileFrame: nightRing,
+      linkFrame: nightLink,
+      cover: '/skins/night-city/page-bg.svg',
+      hero: '/skins/night-city/hero.svg',
     },
     flags: {
       allowsCustomHeroImage: true,
@@ -122,10 +129,6 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
   },
 };
 
-/**
- * Resolve a skin by id.
- * Always returns a complete Skin. Never throws. Classic is the hard fallback.
- */
 export function getSkinById(id: string | null | undefined): Skin {
   const safeId = id || 'boop-classic';
   const pack = SKIN_REGISTRY[safeId];
@@ -148,7 +151,7 @@ export function getSkinById(id: string | null | undefined): Skin {
       profileFrame: null,
       linkFrame: null,
       cover: null,
-      heroOverlay: null,
+      hero: null,
     },
     flags: pack?.flags || {
       allowsCustomHeroImage: true,

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 280" width="390" height="280" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="nsky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a1a3a"/>
+      <stop offset="100%" stop-color="#050a14"/>
+    </linearGradient>
+  </defs>
+  <rect width="390" height="280" fill="url(#nsky)"/>
+  <circle cx="310" cy="70" r="36" fill="#E8F4FF" opacity="0.9"/>
+  <circle cx="310" cy="70" r="42" fill="none" stroke="#7FDBFF" stroke-width="2" opacity="0.4"/>
+  <g fill="#7FDBFF" opacity="0.6">
+    <circle cx="50" cy="40" r="1.5"/><circle cx="100" cy="70" r="1"/><circle cx="180" cy="35" r="1.2"/>
+    <circle cx="240" cy="55" r="1"/>
+  </g>
+  <g fill="#0A1525" stroke="#00F0FF" stroke-width="2">
+    <path d="M0 200 L40 160 L70 180 L110 120 L150 170 L190 100 L230 150 L280 90 L320 140 L360 110 L390 150 L390 280 L0 280 Z"/>
+  </g>
+  <g fill="#00F0FF" opacity="0.4">
+    <rect x="50" y="190" width="6" height="8"/><rect x="130" y="175" width="6" height="8"/>
+    <rect x="210" y="165" width="6" height="8"/><rect x="300" y="155" width="6" height="8"/>
+  </g>
+  <linearGradient id="nfade" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="40%" stop-color="#050a14" stop-opacity="0"/>
+    <stop offset="100%" stop-color="#050a14" stop-opacity="0.95"/>
+  </linearGradient>
+  <rect width="390" height="280" fill="url(#nfade)"/>
+</svg>
