@@ -36,6 +36,7 @@ export default function Dashboard() {
   const [address, setAddress] = useState('');
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [saveOk, setSaveOk] = useState(false);
   const [totalViews, setTotalViews] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
@@ -157,6 +158,7 @@ export default function Dashboard() {
 
   const saveAllChanges = async () => {
     if (!user?.username) {
+      setSaveOk(false);
       setSaveMsg('Not logged in');
       return;
     }
@@ -188,14 +190,24 @@ export default function Dashboard() {
           address,
         }),
       });
-      if (res.ok) {
+
+      let data: any = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (res.ok && (data?.success === true || data?.success === undefined)) {
+        setSaveOk(true);
         setSaveMsg('Saved');
         setTimeout(() => setSaveMsg(null), 2500);
       } else {
-        const err = await res.json().catch(() => ({}));
-        setSaveMsg(err.error || 'Save failed');
+        setSaveOk(false);
+        setSaveMsg(data?.error || `Save failed (${res.status})`);
       }
     } catch {
+      setSaveOk(false);
       setSaveMsg('Save failed');
     }
     setSaving(false);
@@ -226,6 +238,7 @@ export default function Dashboard() {
     try {
       setPhoto(await resizeImage(file, 400, 400));
     } catch {
+      setSaveOk(false);
       setSaveMsg('Photo failed');
     }
   };
@@ -236,6 +249,7 @@ export default function Dashboard() {
     try {
       setBgImage(await resizeImage(file, 1200, 1200));
     } catch {
+      setSaveOk(false);
       setSaveMsg('Background failed');
     }
   };
@@ -302,18 +316,17 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
-      {/* Sticky studio header */}
       <div className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs text-zinc-500 tracking-widest uppercase">Boop studio</p>
-            <h1 className="text-xl md:text-2xl font-bold">
-              @{user?.username || '…'}
-            </h1>
+            <h1 className="text-xl md:text-2xl font-bold">@{user?.username || '…'}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {saveMsg && (
-              <span className="text-sm text-emerald-400 font-medium px-2">{saveMsg}</span>
+              <span className={`text-sm font-medium px-2 ${saveOk ? 'text-emerald-400' : 'text-red-400'}`}>
+                {saveMsg}
+              </span>
             )}
             <a
               href={publicUrl}
@@ -442,20 +455,8 @@ export default function Dashboard() {
             {activeTab === 'links' && (
               <Section title="Links">
                 <div className="flex flex-col gap-2 mb-5">
-                  <input
-                    type="text"
-                    placeholder="https://…"
-                    value={newUrl}
-                    onChange={(e) => setNewUrl(e.target.value)}
-                    className="bg-zinc-800 p-3 rounded-xl"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Title on button"
-                    value={newTitle}
-                    onChange={(e) => setNewTitle(e.target.value)}
-                    className="bg-zinc-800 p-3 rounded-xl"
-                  />
+                  <input type="text" placeholder="https://…" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
+                  <input type="text" placeholder="Title on button" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
                   <button type="button" onClick={addLink} className="bg-white text-black py-3 rounded-xl font-medium">
                     Add link
                   </button>
@@ -498,9 +499,7 @@ export default function Dashboard() {
             {activeTab === 'design' && (
               <div className="space-y-6">
                 <Section title="Skin">
-                  <p className="text-sm text-zinc-400 mb-4">
-                    Full card look (frames + colors). Default is Boop Classic.
-                  </p>
+                  <p className="text-sm text-zinc-400 mb-4">Full card look (frames + colors). Default is Boop Classic.</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {skins.map((s) => (
                       <button
@@ -522,7 +521,9 @@ export default function Dashboard() {
                         </div>
                         <div className="font-semibold text-sm">{s.name}</div>
                         <div className="text-xs text-zinc-400">{s.description}</div>
-                        {s.isDefault && <div className="text-[10px] text-[#E72679] mt-1 uppercase tracking-wide">Default</div>}
+                        {s.isDefault && (
+                          <div className="text-[10px] text-[#E72679] mt-1 uppercase tracking-wide">Default</div>
+                        )}
                       </button>
                     ))}
                   </div>
@@ -603,7 +604,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* Desktop live preview */}
           <div className="hidden lg:block">
             <div className="sticky top-28">
               <p className="text-center text-xs text-zinc-500 mb-3 tracking-widest uppercase">Live card</p>
@@ -617,7 +617,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Mobile preview overlay */}
       {showMobilePreview && (
         <div className="fixed inset-0 z-50 bg-black/80 flex flex-col lg:hidden">
           <div className="flex justify-between items-center p-4 border-b border-zinc-800">
