@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import ClientPublicProfile from '@/app/[username]/ClientPublicProfile';
-import { getAllSkins } from '@/lib/skins';
+import { getAllSkins, getSkinById } from '@/lib/skins';
 
 const socialPlatforms = [
   { name: 'Instagram', prefix: 'https://instagram.com/', field: 'instagram' as const },
@@ -12,12 +12,11 @@ const socialPlatforms = [
 ];
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState('social');
+  const [activeTab, setActiveTab] = useState('profile');
   const [user, setUser] = useState<any>(null);
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
-  const [bgColor, setBgColor] = useState('#0a0a0a');
   const [bgImage, setBgImage] = useState<string | null>(null);
   const [outerBg, setOuterBg] = useState('#C4CFDA');
   const [innerBg, setInnerBg] = useState('#ffffff');
@@ -26,7 +25,6 @@ export default function Dashboard() {
   const [links, setLinks] = useState<any[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
-  const [buttonStyle, setButtonStyle] = useState('solid');
   const [instagram, setInstagram] = useState('');
   const [tiktok, setTiktok] = useState('');
   const [youtube, setYoutube] = useState('');
@@ -37,7 +35,9 @@ export default function Dashboard() {
   const [title, setTitle] = useState('');
   const [address, setAddress] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [totalViews, setTotalViews] = useState(0);
+  const [showMobilePreview, setShowMobilePreview] = useState(false);
 
   const [igInput, setIgInput] = useState('');
   const [ttInput, setTtInput] = useState('');
@@ -53,14 +53,12 @@ export default function Dashboard() {
         setName(data.name || '');
         setBio(data.bio || '');
         setPhoto(data.profileImage || null);
-        setBgColor(data.backgroundColor || '#0a0a0a');
         setBgImage(data.backgroundImage || null);
         setOuterBg(data.outerBackgroundColor || '#C4CFDA');
         setInnerBg(data.innerBackgroundColor || '#ffffff');
         setUseThemeBg(data.useThemeBackground !== false);
         setThemeId(data.themeId || 'boop-classic');
         setLinks(data.links || []);
-        setButtonStyle(data.buttonStyle || 'solid');
         setInstagram(data.instagram || '');
         setTiktok(data.tiktok || '');
         setYoutube(data.youtube || '');
@@ -71,7 +69,6 @@ export default function Dashboard() {
         setTitle(data.title || '');
         setAddress(data.address || '');
         setTotalViews(data.views || 0);
-
         setIgInput(extractHandle(data.instagram, 'instagram.com/'));
         setTtInput(extractHandle(data.tiktok, 'tiktok.com/@'));
         setYtInput(extractHandle(data.youtube, 'youtube.com/@'));
@@ -109,13 +106,8 @@ export default function Dashboard() {
       }
       return;
     }
-
-    if (value.startsWith('@')) {
-      value = platform.prefix + value.slice(1);
-    } else if (!value.startsWith('http')) {
-      value = platform.prefix + value;
-    }
-
+    if (value.startsWith('@')) value = platform.prefix + value.slice(1);
+    else if (!value.startsWith('http')) value = platform.prefix + value;
     if (platform.field === 'instagram') {
       setInstagram(value);
       setIgInput(raw);
@@ -134,8 +126,8 @@ export default function Dashboard() {
     }
   }
 
-  const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> => {
-    return new Promise((resolve, reject) => {
+  const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> =>
+    new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = (e) => {
         const img = new Image();
@@ -148,16 +140,13 @@ export default function Dashboard() {
               height *= maxWidth / width;
               width = maxWidth;
             }
-          } else {
-            if (height > maxHeight) {
-              width *= maxHeight / height;
-              height = maxHeight;
-            }
+          } else if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
           }
           canvas.width = width;
           canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
+          canvas.getContext('2d')?.drawImage(img, 0, 0, width, height);
           resolve(canvas.toDataURL('image/jpeg', 0.75));
         };
         img.src = e.target?.result as string;
@@ -165,14 +154,14 @@ export default function Dashboard() {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-  };
 
   const saveAllChanges = async () => {
     if (!user?.username) {
-      alert('Not logged in');
+      setSaveMsg('Not logged in');
       return;
     }
     setSaving(true);
+    setSaveMsg(null);
     try {
       const res = await fetch('/api/save-dashboard', {
         method: 'POST',
@@ -181,8 +170,6 @@ export default function Dashboard() {
           username: user.username,
           name,
           bio,
-          buttonStyle,
-          backgroundColor: bgColor,
           backgroundImage: bgImage,
           profileImage: photo,
           outerBackgroundColor: outerBg,
@@ -202,13 +189,14 @@ export default function Dashboard() {
         }),
       });
       if (res.ok) {
-        alert('All changes saved successfully!');
+        setSaveMsg('Saved');
+        setTimeout(() => setSaveMsg(null), 2500);
       } else {
         const err = await res.json().catch(() => ({}));
-        alert(err.error || 'Failed to save changes');
+        setSaveMsg(err.error || 'Save failed');
       }
     } catch {
-      alert('Failed to save changes');
+      setSaveMsg('Save failed');
     }
     setSaving(false);
   };
@@ -221,13 +209,7 @@ export default function Dashboard() {
     }
     setLinks([
       ...links,
-      {
-        id: String(Date.now()),
-        title: newTitle.trim(),
-        url: finalUrl,
-        isActive: true,
-        clicks: 0,
-      },
+      { id: String(Date.now()), title: newTitle.trim(), url: finalUrl, isActive: true, clicks: 0 },
     ]);
     setNewTitle('');
     setNewUrl('');
@@ -242,10 +224,9 @@ export default function Dashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const resized = await resizeImage(file, 400, 400);
-      setPhoto(resized);
+      setPhoto(await resizeImage(file, 400, 400));
     } catch {
-      alert('Failed to process image');
+      setSaveMsg('Photo failed');
     }
   };
 
@@ -253,10 +234,9 @@ export default function Dashboard() {
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      const resized = await resizeImage(file, 1200, 1200);
-      setBgImage(resized);
+      setBgImage(await resizeImage(file, 1200, 1200));
     } catch {
-      alert('Failed to process image');
+      setSaveMsg('Background failed');
     }
   };
 
@@ -267,12 +247,10 @@ export default function Dashboard() {
       bio,
       profileImage: photo,
       backgroundImage: bgImage,
-      backgroundColor: bgColor,
       outerBackgroundColor: outerBg,
       innerBackgroundColor: innerBg,
       useThemeBackground: useThemeBg,
       themeId,
-      buttonStyle,
       links,
       instagram,
       tiktok,
@@ -290,12 +268,10 @@ export default function Dashboard() {
       bio,
       photo,
       bgImage,
-      bgColor,
       outerBg,
       innerBg,
       useThemeBg,
       themeId,
-      buttonStyle,
       links,
       instagram,
       tiktok,
@@ -311,39 +287,68 @@ export default function Dashboard() {
 
   const backgroundImages = bgImage ? [bgImage] : [];
   const skins = getAllSkins();
+  const activeSkin = getSkinById(themeId);
+  const totalClicks = links.reduce((sum, l) => sum + (l.clicks || 0), 0);
 
   const tabs = [
-    { id: 'social', label: 'Social Buttons' },
-    { id: 'links', label: 'Links' },
     { id: 'profile', label: 'Profile' },
+    { id: 'social', label: 'Social' },
+    { id: 'links', label: 'Links' },
     { id: 'design', label: 'Design' },
-    { id: 'analytics', label: 'Analytics' },
+    { id: 'insights', label: 'Insights' },
   ];
 
-  return (
-    <div className="min-h-screen bg-zinc-950 text-white p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-          <h1 className="text-3xl md:text-4xl font-bold">
-            {(user?.username || 'USER').toUpperCase()} DASHBOARD
-          </h1>
-          <button
-            onClick={saveAllChanges}
-            disabled={saving}
-            className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-3 rounded-2xl font-semibold disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : 'Save All Changes'}
-          </button>
-        </div>
+  const publicUrl = user?.username ? `/${user.username}` : '#';
 
-        <div className="flex border-b border-zinc-800 mb-8 overflow-x-auto pb-1">
+  return (
+    <div className="min-h-screen bg-zinc-950 text-white">
+      {/* Sticky studio header */}
+      <div className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="text-xs text-zinc-500 tracking-widest uppercase">Boop studio</p>
+            <h1 className="text-xl md:text-2xl font-bold">
+              @{user?.username || '…'}
+            </h1>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {saveMsg && (
+              <span className="text-sm text-emerald-400 font-medium px-2">{saveMsg}</span>
+            )}
+            <a
+              href={publicUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-xl border border-zinc-600 text-sm hover:bg-zinc-900"
+            >
+              View live
+            </a>
+            <button
+              type="button"
+              onClick={() => setShowMobilePreview(true)}
+              className="lg:hidden px-4 py-2 rounded-xl border border-zinc-600 text-sm"
+            >
+              Preview
+            </button>
+            <button
+              type="button"
+              onClick={saveAllChanges}
+              disabled={saving}
+              className="bg-[#E72679] hover:bg-pink-600 text-white px-5 py-2 rounded-xl font-semibold text-sm disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Save'}
+            </button>
+          </div>
+        </div>
+        <div className="max-w-6xl mx-auto px-4 flex overflow-x-auto gap-1 pb-0">
           {tabs.map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-4 border-b-2 font-medium whitespace-nowrap ${
+              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${
                 activeTab === tab.id
-                  ? 'border-white text-white'
+                  ? 'border-[#E72679] text-white'
                   : 'border-transparent text-zinc-400 hover:text-white'
               }`}
             >
@@ -351,343 +356,301 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+      </div>
 
+      <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div>
-            {activeTab === 'social' && (
-              <div className="bg-zinc-900 rounded-3xl p-8 space-y-6">
-                <div>
-                  <h3 className="text-xl mb-1">Social Buttons</h3>
-                  <p className="text-zinc-400 text-sm">
-                    Enter @username — the full link is created automatically
+            {activeTab === 'profile' && (
+              <div className="space-y-6">
+                <Section title="Photo">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-24 h-24 rounded-full border-4 border-white/20 overflow-hidden">
+                      {photo ? (
+                        <img src={photo} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-3xl">🐱</div>
+                      )}
+                    </div>
+                    <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl font-medium text-sm">
+                      Upload photo
+                      <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" />
+                    </label>
+                  </div>
+                </Section>
+                <Section title="Name">
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="w-full bg-zinc-800 p-4 rounded-2xl"
+                    placeholder="Display name"
+                  />
+                </Section>
+                <Section title="Headline / bio" right={`${bio.length}/200`}>
+                  <textarea
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value.slice(0, 200))}
+                    maxLength={200}
+                    className="w-full bg-zinc-800 p-4 rounded-2xl h-28 resize-y"
+                    placeholder="What should people know in one line?"
+                  />
+                </Section>
+                <Section title="Contact card (vCard)">
+                  <p className="text-sm text-zinc-400 mb-3">
+                    Add to Contacts only shows on your public page if you fill phone or email.
                   </p>
-                </div>
-                <div className="space-y-5">
-                  <div>
-                    <label className="text-sm text-zinc-400 mb-2 block">Instagram</label>
-                    <input
-                      type="text"
-                      placeholder="@yourusername"
-                      value={igInput}
-                      onChange={(e) => applySocial(socialPlatforms[0], e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
-                    {instagram && <p className="text-xs text-zinc-500 mt-1 truncate">{instagram}</p>}
+                  <div className="space-y-3">
+                    <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="text" placeholder="Company" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="text" placeholder="Job title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
                   </div>
-                  <div>
-                    <label className="text-sm text-zinc-400 mb-2 block">TikTok</label>
-                    <input
-                      type="text"
-                      placeholder="@yourusername"
-                      value={ttInput}
-                      onChange={(e) => applySocial(socialPlatforms[1], e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
-                    {tiktok && <p className="text-xs text-zinc-500 mt-1 truncate">{tiktok}</p>}
-                  </div>
-                  <div>
-                    <label className="text-sm text-zinc-400 mb-2 block">YouTube</label>
-                    <input
-                      type="text"
-                      placeholder="@yourusername"
-                      value={ytInput}
-                      onChange={(e) => applySocial(socialPlatforms[2], e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
-                    {youtube && <p className="text-xs text-zinc-500 mt-1 truncate">{youtube}</p>}
-                  </div>
-                  <div>
-                    <label className="text-sm text-zinc-400 mb-2 block">Facebook</label>
-                    <input
-                      type="text"
-                      placeholder="@page or username"
-                      value={fbInput}
-                      onChange={(e) => applySocial(socialPlatforms[3], e.target.value)}
-                      className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    />
-                    {facebook && <p className="text-xs text-zinc-500 mt-1 truncate">{facebook}</p>}
-                  </div>
-                </div>
+                </Section>
               </div>
             )}
 
+            {activeTab === 'social' && (
+              <Section title="Social buttons">
+                <p className="text-sm text-zinc-400 mb-4">Enter @username — full URL is built for you.</p>
+                <div className="space-y-4">
+                  {(
+                    [
+                      ['Instagram', igInput, socialPlatforms[0], instagram],
+                      ['TikTok', ttInput, socialPlatforms[1], tiktok],
+                      ['YouTube', ytInput, socialPlatforms[2], youtube],
+                      ['Facebook', fbInput, socialPlatforms[3], facebook],
+                    ] as const
+                  ).map(([label, value, platform, full]) => (
+                    <div key={label}>
+                      <label className="text-sm text-zinc-400 mb-1 block">{label}</label>
+                      <input
+                        type="text"
+                        placeholder="@username"
+                        value={value}
+                        onChange={(e) => applySocial(platform, e.target.value)}
+                        className="w-full bg-zinc-800 p-3 rounded-xl"
+                      />
+                      {full ? <p className="text-xs text-zinc-500 mt-1 truncate">{full}</p> : null}
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            )}
+
             {activeTab === 'links' && (
-              <div className="bg-zinc-900 rounded-3xl p-8">
-                <h3 className="text-xl mb-6">Custom Links</h3>
-                <div className="flex flex-col gap-3 mb-6">
+              <Section title="Links">
+                <div className="flex flex-col gap-2 mb-5">
                   <input
                     type="text"
-                    placeholder="https://your-link.com"
+                    placeholder="https://…"
                     value={newUrl}
                     onChange={(e) => setNewUrl(e.target.value)}
-                    className="bg-zinc-800 p-3 rounded-2xl"
+                    className="bg-zinc-800 p-3 rounded-xl"
                   />
                   <input
                     type="text"
-                    placeholder="Display Title"
+                    placeholder="Title on button"
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
-                    className="bg-zinc-800 p-3 rounded-2xl"
+                    className="bg-zinc-800 p-3 rounded-xl"
                   />
-                  <button onClick={addLink} className="bg-white text-black py-3 rounded-2xl font-medium">
-                    Add Link
+                  <button type="button" onClick={addLink} className="bg-white text-black py-3 rounded-xl font-medium">
+                    Add link
                   </button>
                 </div>
-                {links.length > 0 ? (
-                  <div className="space-y-3">
+                {links.length === 0 ? (
+                  <p className="text-zinc-500 text-sm">No links yet.</p>
+                ) : (
+                  <div className="space-y-2">
                     {links.map((link: any, index: number) => (
                       <div
                         key={link.id}
                         draggable
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', index.toString())}
+                        onDragStart={(e) => e.dataTransfer.setData('text/plain', String(index))}
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => {
                           e.preventDefault();
-                          const dragIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                          const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
                           if (dragIndex === index) return;
                           const next = [...links];
                           const [dragged] = next.splice(dragIndex, 1);
                           next.splice(index, 0, dragged);
                           setLinks(next);
                         }}
-                        className="bg-zinc-800 p-4 rounded-2xl flex justify-between items-center cursor-move"
+                        className="bg-zinc-800 p-3 rounded-xl flex justify-between items-center gap-3 cursor-move"
                       >
                         <div className="min-w-0">
-                          <div className="font-medium">{link.title}</div>
-                          <div className="text-sm text-gray-400 truncate">{link.url}</div>
+                          <div className="font-medium truncate">{link.title}</div>
+                          <div className="text-xs text-zinc-500 truncate">{link.url}</div>
                         </div>
-                        <button onClick={() => deleteLink(link.id)} className="text-red-400 shrink-0 ml-4">
+                        <button type="button" onClick={() => deleteLink(link.id)} className="text-red-400 text-sm shrink-0">
                           Delete
                         </button>
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p className="text-gray-400">No custom links yet.</p>
                 )}
-              </div>
-            )}
-
-            {activeTab === 'profile' && (
-              <div className="space-y-8">
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Profile Photo</h3>
-                  <div className="flex flex-col items-center gap-6">
-                    <div className="w-24 h-24 rounded-full border-4 border-white/30 overflow-hidden">
-                      {photo ? (
-                        <img src={photo} alt="Profile" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-4xl">👤</div>
-                      )}
-                    </div>
-                    <label className="cursor-pointer bg-white text-black px-6 py-3 rounded-2xl font-medium">
-                      Upload Photo
-                      <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" />
-                    </label>
-                  </div>
-                </div>
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Name</h3>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-zinc-800 p-4 rounded-2xl text-lg"
-                    placeholder="Your full name"
-                  />
-                </div>
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl">Headline / Bio</h3>
-                    <span className="text-sm text-gray-400">{bio.length}/200</span>
-                  </div>
-                  <textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value.slice(0, 200))}
-                    maxLength={200}
-                    className="w-full bg-zinc-800 p-4 rounded-2xl h-32 resize-y"
-                    placeholder="Your tagline or bio..."
-                  />
-                </div>
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">vCard Info</h3>
-                  <div className="space-y-4">
-                    <input type="text" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
-                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
-                    <input type="text" placeholder="Company" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
-                    <input type="text" placeholder="Job Title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
-                    <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-4 rounded-2xl" />
-                  </div>
-                </div>
-              </div>
+              </Section>
             )}
 
             {activeTab === 'design' && (
-              <div className="space-y-8">
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Skin / Theme</h3>
+              <div className="space-y-6">
+                <Section title="Skin">
+                  <p className="text-sm text-zinc-400 mb-4">
+                    Full card look (frames + colors). Default is Boop Classic.
+                  </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {skins.map((s) => (
                       <button
                         key={s.id}
                         type="button"
                         onClick={() => setThemeId(s.id)}
-                        className={`text-left p-4 rounded-2xl border transition-all ${
-                          themeId === s.id
-                            ? 'border-white bg-zinc-800'
-                            : 'border-zinc-700 bg-zinc-900 hover:border-zinc-500'
+                        className={`text-left p-3 rounded-2xl border transition-all ${
+                          themeId === s.id ? 'border-[#E72679] bg-zinc-800' : 'border-zinc-700 hover:border-zinc-500'
                         }`}
                       >
-                        {s.assets.preview ? (
-                          <img
-                            src={s.assets.preview}
-                            alt={s.name}
-                            className="w-full h-32 object-cover rounded-xl mb-3"
-                          />
-                        ) : (
-                          <div
-                            className="w-full h-32 rounded-xl mb-3 flex items-center justify-center text-sm font-medium border border-zinc-700"
-                            style={{ backgroundColor: s.tokens.cardBg, color: s.tokens.text }}
-                          >
-                            {s.name}
+                        <div
+                          className="h-20 rounded-xl mb-2 flex items-end p-2 border border-black/20"
+                          style={{ backgroundColor: s.tokens.cardBg, color: s.tokens.text }}
+                        >
+                          <div className="flex gap-1">
+                            <span className="w-4 h-4 rounded-full border border-black/30" style={{ background: s.tokens.accent }} />
+                            <span className="w-4 h-4 rounded-full border border-black/30" style={{ background: s.tokens.pageBg }} />
                           </div>
-                        )}
-                        <div className="font-semibold">{s.name}</div>
-                        <div className="text-sm text-zinc-400">{s.description}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Card background</h3>
-                  <label className="flex items-center gap-3 mb-4 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={useThemeBg}
-                      onChange={(e) => setUseThemeBg(e.target.checked)}
-                      className="w-5 h-5"
-                    />
-                    <span>Use theme card color</span>
-                  </label>
-                  {!useThemeBg && (
-                    <div>
-                      <label className="text-sm text-zinc-400 mb-2 block">Custom card color</label>
-                      <input type="color" value={innerBg} onChange={(e) => setInnerBg(e.target.value)} className="w-16 h-12" />
-                    </div>
-                  )}
-                </div>
-
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Page background (outside card)</h3>
-                  <input type="color" value={outerBg} onChange={(e) => setOuterBg(e.target.value)} className="w-16 h-12" />
-                </div>
-
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Hero / background image</h3>
-                  <div className="flex flex-col items-center gap-4">
-                    {bgImage && (
-                      <div className="w-64 h-36 border border-zinc-700 rounded-2xl overflow-hidden">
-                        <img src={bgImage} alt="Background Preview" className="w-full h-full object-cover" />
-                      </div>
-                    )}
-                    <label className="cursor-pointer bg-white text-black px-6 py-3 rounded-2xl font-medium">
-                      Upload Background Image
-                      <input type="file" accept="image/*" onChange={uploadBgImage} className="hidden" />
-                    </label>
-                    {bgImage && (
-                      <button type="button" onClick={() => setBgImage(null)} className="text-red-400 text-sm">
-                        Remove image
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Legacy background color</h3>
-                  <p className="text-sm text-zinc-400 mb-2">Kept for compatibility; outer/inner colors above control the live page.</p>
-                  <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="w-16 h-12" />
-                </div>
-
-                <div className="bg-zinc-900 rounded-3xl p-8">
-                  <h3 className="text-xl mb-4">Button Style</h3>
-                  <div className="grid grid-cols-3 gap-4">
-                    {['solid', 'outline', 'glass'].map((style) => (
-                      <button
-                        key={style}
-                        onClick={() => setButtonStyle(style)}
-                        className={`py-4 rounded-2xl font-medium border transition-all ${
-                          buttonStyle === style
-                            ? 'bg-white text-black border-white'
-                            : 'bg-transparent border-white/30 text-white/80'
-                        }`}
-                      >
-                        {style.charAt(0).toUpperCase() + style.slice(1)}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-zinc-500 mt-3">Theme styles usually override this on the public page.</p>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'analytics' && (
-              <div className="bg-zinc-900 rounded-3xl p-8 space-y-8">
-                <h3 className="text-2xl mb-6">Analytics Overview</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-zinc-800 rounded-3xl p-8 text-center">
-                    <div className="text-6xl font-bold text-emerald-400 mb-2">{totalViews}</div>
-                    <div className="text-zinc-400">Total Profile Views</div>
-                  </div>
-                  <div className="bg-zinc-800 rounded-3xl p-8 text-center">
-                    <div className="text-6xl font-bold text-emerald-400 mb-2">{links.length}</div>
-                    <div className="text-zinc-400">Active Links</div>
-                  </div>
-                </div>
-                {links.length > 0 && (
-                  <div className="bg-zinc-800 rounded-3xl p-6">
-                    <h4 className="text-lg mb-4">Link Performance</h4>
-                    <div className="space-y-3">
-                      {links.map((link: any) => (
-                        <div key={link.id} className="flex justify-between items-center bg-zinc-900 p-4 rounded-2xl">
-                          <div className="min-w-0">
-                            <div className="font-medium">{link.title}</div>
-                            <div className="text-sm text-gray-400 truncate">{link.url}</div>
-                          </div>
-                          <div className="text-emerald-400 font-mono shrink-0 ml-4">{link.clicks || 0} clicks</div>
                         </div>
-                      ))}
-                    </div>
+                        <div className="font-semibold text-sm">{s.name}</div>
+                        <div className="text-xs text-zinc-400">{s.description}</div>
+                        {s.isDefault && <div className="text-[10px] text-[#E72679] mt-1 uppercase tracking-wide">Default</div>}
+                      </button>
+                    ))}
                   </div>
+                </Section>
+
+                {activeSkin.flags.allowsCustomCardColor && (
+                  <Section title="Card color">
+                    <label className="flex items-center gap-3 mb-3 cursor-pointer text-sm">
+                      <input type="checkbox" checked={useThemeBg} onChange={(e) => setUseThemeBg(e.target.checked)} className="w-4 h-4" />
+                      Use skin card color
+                    </label>
+                    {!useThemeBg && (
+                      <input type="color" value={innerBg} onChange={(e) => setInnerBg(e.target.value)} className="w-14 h-10" />
+                    )}
+                  </Section>
+                )}
+
+                {activeSkin.flags.allowsCustomPageColor && (
+                  <Section title="Page background (outside card)">
+                    <input type="color" value={outerBg} onChange={(e) => setOuterBg(e.target.value)} className="w-14 h-10" />
+                  </Section>
+                )}
+
+                {activeSkin.flags.allowsCustomHeroImage && (
+                  <Section title="Hero image">
+                    <div className="flex flex-col items-center gap-3">
+                      {bgImage && (
+                        <div className="w-full max-w-xs h-28 rounded-xl overflow-hidden border border-zinc-700">
+                          <img src={bgImage} alt="" className="w-full h-full object-cover" />
+                        </div>
+                      )}
+                      <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl text-sm font-medium">
+                        Upload hero
+                        <input type="file" accept="image/*" onChange={uploadBgImage} className="hidden" />
+                      </label>
+                      {bgImage && (
+                        <button type="button" onClick={() => setBgImage(null)} className="text-red-400 text-sm">
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                  </Section>
                 )}
               </div>
             )}
+
+            {activeTab === 'insights' && (
+              <Section title="Insights">
+                <p className="text-sm text-zinc-400 mb-6">
+                  Honest counts from your live page. Link taps update when visitors open links.
+                </p>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
+                    <div className="text-4xl font-bold text-emerald-400">{totalViews}</div>
+                    <div className="text-zinc-400 text-sm mt-1">Card views</div>
+                  </div>
+                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
+                    <div className="text-4xl font-bold text-emerald-400">{totalClicks}</div>
+                    <div className="text-zinc-400 text-sm mt-1">Link taps</div>
+                  </div>
+                </div>
+                {links.length > 0 ? (
+                  <div className="space-y-2">
+                    <h4 className="text-sm text-zinc-400 mb-2">By link</h4>
+                    {[...links]
+                      .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
+                      .map((link: any) => (
+                        <div key={link.id} className="flex justify-between bg-zinc-800 p-3 rounded-xl text-sm">
+                          <span className="truncate pr-3">{link.title}</span>
+                          <span className="text-emerald-400 font-mono shrink-0">{link.clicks || 0}</span>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <p className="text-zinc-500 text-sm">Add links to see tap counts.</p>
+                )}
+              </Section>
+            )}
           </div>
 
-          {/* LIVE PREVIEW = real public profile component */}
+          {/* Desktop live preview */}
           <div className="hidden lg:block">
-            <div className="sticky top-8">
-              <h3 className="text-xl mb-4 text-center text-zinc-400">Live Preview</h3>
-              <div className="rounded-3xl border border-zinc-700 overflow-hidden bg-zinc-900 max-h-[85vh] overflow-y-auto">
-                <div className="origin-top scale-[0.92] w-[108.7%]">
+            <div className="sticky top-28">
+              <p className="text-center text-xs text-zinc-500 mb-3 tracking-widest uppercase">Live card</p>
+              <div className="rounded-3xl border border-zinc-700 overflow-hidden max-h-[80vh] overflow-y-auto bg-zinc-900">
+                <div className="origin-top scale-[0.9] w-[111%]">
                   <ClientPublicProfile user={liveUser} backgroundImages={backgroundImages} />
                 </div>
               </div>
-              <p className="text-center text-xs text-zinc-500 mt-3">
-                Same component as your public page (including Add to Contacts)
-              </p>
             </div>
           </div>
         </div>
-
-        <button
-          onClick={saveAllChanges}
-          disabled={saving}
-          className="w-full bg-emerald-500 py-4 rounded-2xl font-semibold mt-8 disabled:opacity-50"
-        >
-          {saving ? 'Saving...' : 'Save All Changes'}
-        </button>
       </div>
+
+      {/* Mobile preview overlay */}
+      {showMobilePreview && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex flex-col lg:hidden">
+          <div className="flex justify-between items-center p-4 border-b border-zinc-800">
+            <span className="font-medium">Preview</span>
+            <button type="button" onClick={() => setShowMobilePreview(false)} className="text-sm px-3 py-1 rounded-lg bg-zinc-800">
+              Close
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <ClientPublicProfile user={liveUser} backgroundImages={backgroundImages} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Section({
+  title,
+  right,
+  children,
+}: {
+  title: string;
+  right?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="bg-zinc-900 rounded-3xl p-6 md:p-8">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        {right ? <span className="text-sm text-zinc-500">{right}</span> : null}
+      </div>
+      {children}
     </div>
   );
 }
