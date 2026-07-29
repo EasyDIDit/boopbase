@@ -31,7 +31,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
   // Top of card
   const heroImage = userHero || skinHero;
 
-  // Bottom of card (under links) — prefer cover, else reuse hero art so themed skins always extend
+  // Footer band between links and “Powered by Boop”
   const footerArt = skinCover || skinHero;
 
   const useThemeBG = user?.useThemeBackground !== false;
@@ -123,7 +123,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
 
         {/* MAIN CONTENT */}
         <div
-          className={`pt-16 pb-8 px-6 ${skin.contentAreaClass || ''}`}
+          className={`pt-16 px-6 ${skin.contentAreaClass || ''}`}
           style={{ backgroundColor: cardColor, color: skin.tokens.text }}
         >
           <div className="text-center mb-6">
@@ -202,37 +202,46 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
               </button>
             ))}
           </div>
-
-          <p className="text-center text-[10px] mt-10 mb-2 tracking-[0.2em] opacity-40 uppercase">
-            Powered by Boop · Bridging Opportunities
-          </p>
         </div>
 
         {/*
-          SKIN FOOTER — inside the card, under links.
-          Card extends so themed art sits underneath the content stack.
+          FOOTER ZONE (inside card):
+          links → skin art → Powered by Boop
         */}
-        {footerArt && (
-          <div
-            className="relative w-full h-36 sm:h-44"
-            style={{
-              backgroundImage: `url(${footerArt})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              backgroundRepeat: 'no-repeat',
-              backgroundColor: cardColor,
-            }}
-            aria-hidden
-          >
-            {/* Soft blend from content color into the art */}
+        <div className="relative" style={{ backgroundColor: cardColor }}>
+          {footerArt && (
             <div
-              className="absolute inset-x-0 top-0 h-16 pointer-events-none"
+              className="relative w-full h-32 sm:h-40 mt-6"
               style={{
-                background: `linear-gradient(to bottom, ${cardColor}, transparent)`,
+                backgroundImage: `url(${footerArt})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
               }}
-            />
-          </div>
-        )}
+              aria-hidden
+            >
+              <div
+                className="absolute inset-x-0 top-0 h-12 pointer-events-none"
+                style={{
+                  background: `linear-gradient(to bottom, ${cardColor}, transparent)`,
+                }}
+              />
+              <div
+                className="absolute inset-x-0 bottom-0 h-14 pointer-events-none"
+                style={{
+                  background: `linear-gradient(to top, ${cardColor}, transparent)`,
+                }}
+              />
+            </div>
+          )}
+
+          <p
+            className="text-center text-[10px] py-5 tracking-[0.2em] opacity-40 uppercase"
+            style={{ color: skin.tokens.text }}
+          >
+            Powered by Boop · Bridging Opportunities
+          </p>
+        </div>
       </div>
     </div>
   );
