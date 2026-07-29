@@ -31,7 +31,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
   // Top of card
   const heroImage = userHero || skinHero;
 
-  // Footer band between links and “Powered by Boop”
+  // Footer band between links and tagline
   const footerArt = skinCover || skinHero;
 
   const useThemeBG = user?.useThemeBackground !== false;
@@ -206,7 +206,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
 
         {/*
           FOOTER ZONE (inside card):
-          links → skin art → Powered by Boop
+          links → skin art → official tagline only
         */}
         <div className="relative" style={{ backgroundColor: cardColor }}>
           {footerArt && (
@@ -236,10 +236,10 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
           )}
 
           <p
-            className="text-center text-[10px] py-5 tracking-[0.2em] opacity-40 uppercase"
+            className="text-center text-[10px] py-5 tracking-[0.18em] opacity-45"
             style={{ color: skin.tokens.text }}
           >
-            Powered by Boop · Bridging Opportunities
+            Bridging Opportunities One Profile at a time
           </p>
         </div>
       </div>
