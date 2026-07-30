@@ -12,6 +12,7 @@ const ALLOWED_FIELDS = [
   'useThemeBackground',
   'themeId',
   'links',
+  'socials',
   'instagram',
   'tiktok',
   'youtube',
@@ -43,6 +44,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Keep legacy flat fields in sync when socials[] is saved (backward compatible reads)
+    if (Array.isArray(body.socials)) {
+      const by = (id: string) =>
+        body.socials.find((s: { platform?: string; url?: string }) => s?.platform === id)?.url || '';
+      updateData.instagram = by('instagram');
+      updateData.tiktok = by('tiktok');
+      updateData.youtube = by('youtube');
+      updateData.facebook = by('facebook');
+    }
+
     const user = await User.findOneAndUpdate(
       { username },
       { $set: updateData },
@@ -53,7 +64,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
-    // Do not return the full user (profile images can be multi‑MB base64).
     return NextResponse.json({ success: true, username: user.username });
   } catch (error) {
     console.error('Save error:', error);

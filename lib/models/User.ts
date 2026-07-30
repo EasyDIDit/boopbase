@@ -19,6 +19,13 @@ const UserSchema = new mongoose.Schema({
     isActive: { type: Boolean, default: true },
     clicks: { type: Number, default: 0 }
   }],
+  /** Flexible social buttons — only entries here appear on the public card */
+  socials: [{
+    id: { type: String },
+    platform: { type: String },
+    url: { type: String },
+  }],
+  // Legacy fields kept for older profiles; new edits prefer socials[]
   instagram: { type: String, default: '' },
   tiktok: { type: String, default: '' },
   youtube: { type: String, default: '' },
