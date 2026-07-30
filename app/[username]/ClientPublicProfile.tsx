@@ -239,7 +239,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             className="text-center text-[10px] py-5 tracking-[0.18em] opacity-45"
             style={{ color: skin.tokens.text }}
           >
-            Bridging Opportunities One Profile at a time
+            Building Opportunities One Profile at a time
           </p>
         </div>
       </div>
