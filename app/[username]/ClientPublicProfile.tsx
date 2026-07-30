@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { getSkinById } from '@/lib/skins';
-import { InstagramIcon, TikTokIcon, YouTubeIcon, FacebookIcon } from '@/components/icons';
+import { legacySocialsToEntries } from '@/lib/socialPlatforms';
+import { SocialGlyph } from '@/components/icons/SocialGlyph';
 
 interface ClientPublicProfileProps {
   user: any;
@@ -22,22 +23,16 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
 
-  // Custom upload ALWAYS wins. Remove/clear hero in Design to see the skin’s default hero.
   const hasUserHero = backgroundImages.length > 0 && Boolean(backgroundImages[0]);
   const userHero = hasUserHero ? backgroundImages[currentBgIndex] : null;
   const skinHero = skin.assets.hero || null;
   const skinCover = skin.assets.cover || null;
 
-  // Top of card
   const heroImage = userHero || skinHero;
-
-  // Footer band between links and tagline
   const footerArt = skinCover || skinHero;
 
   const useThemeBG = user?.useThemeBackground !== false;
   const cardColor = useThemeBG ? skin.tokens.cardBg : user?.innerBackgroundColor || '#ffffff';
-
-  // Outside card: solid only
   const pageColor = user?.outerBackgroundColor || '#C4CFDA';
 
   const hasContact =
@@ -46,6 +41,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     Boolean(user?.company?.trim());
 
   const activeLinks = (user?.links || []).filter((l: any) => l.isActive !== false);
+  const socials = legacySocialsToEntries(user || {});
 
   const trackAndOpen = async (link: { id: string; url: string }) => {
     try {
@@ -68,12 +64,10 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
       className="min-h-screen flex justify-center items-start pt-6 pb-12 px-4"
       style={{ backgroundColor: pageColor }}
     >
-      {/* CARD */}
       <div
         className="max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border border-black/15"
         style={{ backgroundColor: cardColor }}
       >
-        {/* HERO */}
         <div
           className="relative h-72 sm:h-80 flex items-end pb-10"
           style={{
@@ -121,7 +115,6 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
           </div>
         </div>
 
-        {/* MAIN CONTENT */}
         <div
           className={`pt-16 px-6 ${skin.contentAreaClass || ''}`}
           style={{ backgroundColor: cardColor, color: skin.tokens.text }}
@@ -135,28 +128,22 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             </p>
           </div>
 
-          <div className="flex justify-center flex-wrap gap-3 mb-6">
-            {user?.instagram && (
-              <a href={user.instagram} target="_blank" rel="noopener noreferrer" className={skin.socialIconClass}>
-                <InstagramIcon className="w-6 h-6" />
-              </a>
-            )}
-            {user?.tiktok && (
-              <a href={user.tiktok} target="_blank" rel="noopener noreferrer" className={skin.socialIconClass}>
-                <TikTokIcon className="w-6 h-6" />
-              </a>
-            )}
-            {user?.youtube && (
-              <a href={user.youtube} target="_blank" rel="noopener noreferrer" className={skin.socialIconClass}>
-                <YouTubeIcon className="w-6 h-6" />
-              </a>
-            )}
-            {user?.facebook && (
-              <a href={user.facebook} target="_blank" rel="noopener noreferrer" className={skin.socialIconClass}>
-                <FacebookIcon className="w-6 h-6" />
-              </a>
-            )}
-          </div>
+          {socials.length > 0 && (
+            <div className="flex justify-center flex-wrap gap-3 mb-6">
+              {socials.map((s) => (
+                <a
+                  key={s.id}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={skin.socialIconClass}
+                  title={s.platform}
+                >
+                  <SocialGlyph platform={s.platform} className="w-6 h-6" />
+                </a>
+              ))}
+            </div>
+          )}
 
           {hasContact && (
             <div className="flex justify-center mb-8">
@@ -204,10 +191,6 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
           </div>
         </div>
 
-        {/*
-          FOOTER ZONE (inside card):
-          links → skin art → official tagline only
-        */}
         <div className="relative" style={{ backgroundColor: cardColor }}>
           {footerArt && (
             <div
@@ -222,15 +205,11 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             >
               <div
                 className="absolute inset-x-0 top-0 h-12 pointer-events-none"
-                style={{
-                  background: `linear-gradient(to bottom, ${cardColor}, transparent)`,
-                }}
+                style={{ background: `linear-gradient(to bottom, ${cardColor}, transparent)` }}
               />
               <div
                 className="absolute inset-x-0 bottom-0 h-14 pointer-events-none"
-                style={{
-                  background: `linear-gradient(to top, ${cardColor}, transparent)`,
-                }}
+                style={{ background: `linear-gradient(to top, ${cardColor}, transparent)` }}
               />
             </div>
           )}

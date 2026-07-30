@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import ClientPublicProfile from '@/app/[username]/ClientPublicProfile';
 import { getAllSkins, getSkinById } from '@/lib/skins';
-
-const socialPlatforms = [
-  { name: 'Instagram', prefix: 'https://instagram.com/', field: 'instagram' as const },
-  { name: 'TikTok', prefix: 'https://tiktok.com/@', field: 'tiktok' as const },
-  { name: 'YouTube', prefix: 'https://youtube.com/@', field: 'youtube' as const },
-  { name: 'Facebook', prefix: 'https://facebook.com/', field: 'facebook' as const },
-];
+import {
+  SOCIAL_PLATFORMS,
+  buildSocialUrl,
+  legacySocialsToEntries,
+  getPlatform,
+  type SocialEntry,
+  type SocialPlatformId,
+} from '@/lib/socialPlatforms';
+import { SocialGlyph } from '@/components/icons/SocialGlyph';
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -23,12 +25,9 @@ export default function Dashboard() {
   const [useThemeBg, setUseThemeBg] = useState(true);
   const [themeId, setThemeId] = useState('boop-classic');
   const [links, setLinks] = useState<any[]>([]);
+  const [socials, setSocials] = useState<SocialEntry[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [newUrl, setNewUrl] = useState('');
-  const [instagram, setInstagram] = useState('');
-  const [tiktok, setTiktok] = useState('');
-  const [youtube, setYoutube] = useState('');
-  const [facebook, setFacebook] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [company, setCompany] = useState('');
@@ -40,10 +39,14 @@ export default function Dashboard() {
   const [totalViews, setTotalViews] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
-  const [igInput, setIgInput] = useState('');
-  const [ttInput, setTtInput] = useState('');
-  const [ytInput, setYtInput] = useState('');
-  const [fbInput, setFbInput] = useState('');
+  // Social add form
+  const [pickPlatform, setPickPlatform] = useState<SocialPlatformId>('instagram');
+  const [socialInput, setSocialInput] = useState('');
+
+  // Preview scale-to-fit
+  const previewShellRef = useRef<HTMLDivElement>(null);
+  const previewInnerRef = useRef<HTMLDivElement>(null);
+  const [previewScale, setPreviewScale] = useState(0.85);
 
   useEffect(() => {
     fetch('/api/me')
@@ -60,72 +63,47 @@ export default function Dashboard() {
         setUseThemeBg(data.useThemeBackground !== false);
         setThemeId(data.themeId || 'boop-classic');
         setLinks(data.links || []);
-        setInstagram(data.instagram || '');
-        setTiktok(data.tiktok || '');
-        setYoutube(data.youtube || '');
-        setFacebook(data.facebook || '');
+        setSocials(legacySocialsToEntries(data));
         setPhone(data.phone || '');
         setEmail(data.email || '');
         setCompany(data.company || '');
         setTitle(data.title || '');
         setAddress(data.address || '');
         setTotalViews(data.views || 0);
-        setIgInput(extractHandle(data.instagram, 'instagram.com/'));
-        setTtInput(extractHandle(data.tiktok, 'tiktok.com/@'));
-        setYtInput(extractHandle(data.youtube, 'youtube.com/@'));
-        setFbInput(extractHandle(data.facebook, 'facebook.com/'));
       })
       .catch(console.error);
   }, []);
 
-  function extractHandle(url: string, marker: string) {
-    if (!url) return '';
-    if (url.startsWith('@')) return url;
-    const idx = url.indexOf(marker);
-    if (idx === -1) return url;
-    return '@' + url.slice(idx + marker.length).replace(/\/$/, '');
-  }
+  // Fit live preview to available height (no scroll inside preview)
+  useEffect(() => {
+    const shell = previewShellRef.current;
+    const inner = previewInnerRef.current;
+    if (!shell || !inner) return;
 
-  function applySocial(platform: (typeof socialPlatforms)[number], raw: string) {
-    let value = raw.trim();
-    if (!value) {
-      if (platform.field === 'instagram') {
-        setInstagram('');
-        setIgInput('');
-      }
-      if (platform.field === 'tiktok') {
-        setTiktok('');
-        setTtInput('');
-      }
-      if (platform.field === 'youtube') {
-        setYoutube('');
-        setYtInput('');
-      }
-      if (platform.field === 'facebook') {
-        setFacebook('');
-        setFbInput('');
-      }
-      return;
-    }
-    if (value.startsWith('@')) value = platform.prefix + value.slice(1);
-    else if (!value.startsWith('http')) value = platform.prefix + value;
-    if (platform.field === 'instagram') {
-      setInstagram(value);
-      setIgInput(raw);
-    }
-    if (platform.field === 'tiktok') {
-      setTiktok(value);
-      setTtInput(raw);
-    }
-    if (platform.field === 'youtube') {
-      setYoutube(value);
-      setYtInput(raw);
-    }
-    if (platform.field === 'facebook') {
-      setFacebook(value);
-      setFbInput(raw);
-    }
-  }
+    const measure = () => {
+      const shellH = shell.clientHeight;
+      const shellW = shell.clientWidth;
+      // Natural card width ~ max-w-md (28rem) but profile is full width of scaled root
+      const contentH = inner.scrollHeight;
+      const contentW = inner.scrollWidth || shellW;
+      if (!contentH || !shellH) return;
+      const scaleH = (shellH - 8) / contentH;
+      const scaleW = (shellW - 8) / contentW;
+      const next = Math.min(1, scaleH, scaleW);
+      // Floor so it never becomes unreadably tiny
+      setPreviewScale(Math.max(0.35, Number(next.toFixed(3))));
+    };
+
+    measure();
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(shell);
+    ro.observe(inner);
+    window.addEventListener('resize', measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', measure);
+    };
+  }, [name, bio, photo, bgImage, themeId, links, socials, outerBg, innerBg, useThemeBg, phone, email]);
 
   const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> =>
     new Promise((resolve, reject) => {
@@ -179,10 +157,7 @@ export default function Dashboard() {
           useThemeBackground: useThemeBg,
           themeId,
           links,
-          instagram,
-          tiktok,
-          youtube,
-          facebook,
+          socials,
           phone,
           email,
           company,
@@ -211,6 +186,24 @@ export default function Dashboard() {
       setSaveMsg('Save failed');
     }
     setSaving(false);
+  };
+
+  const addSocial = () => {
+    const url = buildSocialUrl(pickPlatform, socialInput);
+    if (!url) return;
+    // One entry per platform — replace if already exists
+    const next = socials.filter((s) => s.platform !== pickPlatform);
+    next.push({
+      id: `${pickPlatform}-${Date.now()}`,
+      platform: pickPlatform,
+      url,
+    });
+    setSocials(next);
+    setSocialInput('');
+  };
+
+  const removeSocial = (id: string) => {
+    setSocials(socials.filter((s) => s.id !== id));
   };
 
   const addLink = () => {
@@ -266,10 +259,7 @@ export default function Dashboard() {
       useThemeBackground: useThemeBg,
       themeId,
       links,
-      instagram,
-      tiktok,
-      youtube,
-      facebook,
+      socials,
       phone,
       email,
       company,
@@ -287,10 +277,7 @@ export default function Dashboard() {
       useThemeBg,
       themeId,
       links,
-      instagram,
-      tiktok,
-      youtube,
-      facebook,
+      socials,
       phone,
       email,
       company,
@@ -303,6 +290,10 @@ export default function Dashboard() {
   const skins = getAllSkins();
   const activeSkin = getSkinById(themeId);
   const totalClicks = links.reduce((sum, l) => sum + (l.clicks || 0), 0);
+  const selectedPlatform = getPlatform(pickPlatform);
+
+  // Platforms not yet added (optional: still allow re-add to replace)
+  const availablePlatforms = SOCIAL_PLATFORMS;
 
   const tabs = [
     { id: 'profile', label: 'Profile' },
@@ -426,28 +417,72 @@ export default function Dashboard() {
 
             {activeTab === 'social' && (
               <Section title="Social buttons">
-                <p className="text-sm text-zinc-400 mb-4">Enter @username — full URL is built for you.</p>
-                <div className="space-y-4">
-                  {(
-                    [
-                      ['Instagram', igInput, socialPlatforms[0], instagram],
-                      ['TikTok', ttInput, socialPlatforms[1], tiktok],
-                      ['YouTube', ytInput, socialPlatforms[2], youtube],
-                      ['Facebook', fbInput, socialPlatforms[3], facebook],
-                    ] as const
-                  ).map(([label, value, platform, full]) => (
-                    <div key={label}>
-                      <label className="text-sm text-zinc-400 mb-1 block">{label}</label>
-                      <input
-                        type="text"
-                        placeholder="@username"
-                        value={value}
-                        onChange={(e) => applySocial(platform, e.target.value)}
-                        className="w-full bg-zinc-800 p-3 rounded-xl"
-                      />
-                      {full ? <p className="text-xs text-zinc-500 mt-1 truncate">{full}</p> : null}
-                    </div>
-                  ))}
+                <p className="text-sm text-zinc-400 mb-4">
+                  Pick a platform, add your @ or URL, then Add. Only platforms you add show on your card.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2 mb-3">
+                  <select
+                    value={pickPlatform}
+                    onChange={(e) => setPickPlatform(e.target.value as SocialPlatformId)}
+                    className="bg-zinc-800 p-3 rounded-xl sm:w-44 shrink-0"
+                  >
+                    {availablePlatforms.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={socialInput}
+                    onChange={(e) => setSocialInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') addSocial();
+                    }}
+                    placeholder={selectedPlatform?.placeholder || '@username'}
+                    className="flex-1 bg-zinc-800 p-3 rounded-xl"
+                  />
+                  <button
+                    type="button"
+                    onClick={addSocial}
+                    className="bg-white text-black px-5 py-3 rounded-xl font-medium shrink-0"
+                  >
+                    Add
+                  </button>
+                </div>
+
+                <div className="space-y-2 mt-6">
+                  {socials.length === 0 ? (
+                    <p className="text-zinc-500 text-sm">No social buttons yet — add your first above.</p>
+                  ) : (
+                    socials.map((s) => {
+                      const meta = getPlatform(s.platform);
+                      return (
+                        <div
+                          key={s.id}
+                          className="bg-zinc-800 p-3 rounded-xl flex items-center justify-between gap-3"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <span className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-600 flex items-center justify-center shrink-0">
+                              <SocialGlyph platform={s.platform} className="w-5 h-5" />
+                            </span>
+                            <div className="min-w-0">
+                              <div className="font-medium text-sm">{meta?.name || s.platform}</div>
+                              <div className="text-xs text-zinc-500 truncate">{s.url}</div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeSocial(s.id)}
+                            className="text-red-400 text-sm shrink-0"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </Section>
             )}
@@ -604,12 +639,26 @@ export default function Dashboard() {
             )}
           </div>
 
+          {/* LIVE PREVIEW — scaled to fit viewport height, no inner scroll */}
           <div className="hidden lg:block">
             <div className="sticky top-28">
               <p className="text-center text-xs text-zinc-500 mb-3 tracking-widest uppercase">Live card</p>
-              <div className="rounded-3xl border border-zinc-700 overflow-hidden max-h-[80vh] overflow-y-auto bg-zinc-900">
-                <div className="origin-top scale-[0.9] w-[111%]">
-                  <ClientPublicProfile user={liveUser} backgroundImages={backgroundImages} />
+              <div
+                ref={previewShellRef}
+                className="rounded-3xl border border-zinc-700 overflow-hidden bg-zinc-900 flex justify-center"
+                style={{ height: 'calc(100vh - 9rem)' }}
+              >
+                <div
+                  style={{
+                    transform: `scale(${previewScale})`,
+                    transformOrigin: 'top center',
+                    width: '100%',
+                    maxWidth: '28rem',
+                  }}
+                >
+                  <div ref={previewInnerRef}>
+                    <ClientPublicProfile user={liveUser} backgroundImages={backgroundImages} />
+                  </div>
                 </div>
               </div>
             </div>
@@ -625,8 +674,13 @@ export default function Dashboard() {
               Close
             </button>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <ClientPublicProfile user={liveUser} backgroundImages={backgroundImages} />
+          <div className="flex-1 overflow-hidden flex justify-center">
+            <div
+              className="w-full max-w-md origin-top"
+              style={{ transform: 'scale(0.72)', transformOrigin: 'top center' }}
+            >
+              <ClientPublicProfile user={liveUser} backgroundImages={backgroundImages} />
+            </div>
           </div>
         </div>
       )}
