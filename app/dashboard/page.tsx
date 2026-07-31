@@ -39,6 +39,10 @@ export default function Dashboard() {
   const [totalViews, setTotalViews] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
+  // Links drag-and-drop
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+  const [insertAt, setInsertAt] = useState<number | null>(null); // 0..links.length
+
   // Social add form
   const [pickPlatform, setPickPlatform] = useState<SocialPlatformId>('instagram');
   const [socialInput, setSocialInput] = useState('');
@@ -74,7 +78,6 @@ export default function Dashboard() {
       .catch(console.error);
   }, []);
 
-  // Fit live preview to available height (no scroll inside preview)
   useEffect(() => {
     const shell = previewShellRef.current;
     const inner = previewInnerRef.current;
@@ -83,14 +86,12 @@ export default function Dashboard() {
     const measure = () => {
       const shellH = shell.clientHeight;
       const shellW = shell.clientWidth;
-      // Natural card width ~ max-w-md (28rem) but profile is full width of scaled root
       const contentH = inner.scrollHeight;
       const contentW = inner.scrollWidth || shellW;
       if (!contentH || !shellH) return;
       const scaleH = (shellH - 8) / contentH;
       const scaleW = (shellW - 8) / contentW;
       const next = Math.min(1, scaleH, scaleW);
-      // Floor so it never becomes unreadably tiny
       setPreviewScale(Math.max(0.35, Number(next.toFixed(3))));
     };
 
@@ -191,7 +192,6 @@ export default function Dashboard() {
   const addSocial = () => {
     const url = buildSocialUrl(pickPlatform, socialInput);
     if (!url) return;
-    // One entry per platform — replace if already exists
     const next = socials.filter((s) => s.platform !== pickPlatform);
     next.push({
       id: `${pickPlatform}-${Date.now()}`,
@@ -223,6 +223,51 @@ export default function Dashboard() {
   const deleteLink = (id: string | number) => {
     if (!confirm('Delete this link?')) return;
     setLinks(links.filter((l) => l.id !== id));
+  };
+
+  const clearDrag = () => {
+    setDragIndex(null);
+    setInsertAt(null);
+  };
+
+  const onLinkDragStart = (index: number, e: React.DragEvent) => {
+    setDragIndex(index);
+    setInsertAt(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+    // Slight delay so browser paints drag image from full-opacity row
+    requestAnimationFrame(() => {
+      // state already set; row will fade via class
+    });
+  };
+
+  const onLinkDragOver = (index: number, e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragIndex === null) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const mid = rect.top + rect.height / 2;
+    const nextInsert = e.clientY < mid ? index : index + 1;
+    if (nextInsert !== insertAt) setInsertAt(nextInsert);
+  };
+
+  const onLinkDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (dragIndex === null || insertAt === null) {
+      clearDrag();
+      return;
+    }
+    // No-op if landing in same slot
+    if (insertAt === dragIndex || insertAt === dragIndex + 1) {
+      clearDrag();
+      return;
+    }
+    const next = [...links];
+    const [moved] = next.splice(dragIndex, 1);
+    const target = insertAt > dragIndex ? insertAt - 1 : insertAt;
+    next.splice(target, 0, moved);
+    setLinks(next);
+    clearDrag();
   };
 
   const uploadPhoto = async (e: any) => {
@@ -291,9 +336,8 @@ export default function Dashboard() {
   const activeSkin = getSkinById(themeId);
   const totalClicks = links.reduce((sum, l) => sum + (l.clicks || 0), 0);
   const selectedPlatform = getPlatform(pickPlatform);
-
-  // Platforms not yet added (optional: still allow re-add to replace)
   const availablePlatforms = SOCIAL_PLATFORMS;
+  const isDragging = dragIndex !== null;
 
   const tabs = [
     { id: 'profile', label: 'Profile' },
@@ -304,6 +348,19 @@ export default function Dashboard() {
   ];
 
   const publicUrl = user?.username ? `/${user.username}` : '#';
+
+  const DropGap = ({ show }: { show: boolean }) => (
+    <div
+      className={`transition-all duration-150 ease-out overflow-hidden ${
+        show ? 'h-14 opacity-100 my-1' : 'h-0 opacity-0 my-0'
+      }`}
+      aria-hidden
+    >
+      <div className="h-full rounded-xl border-2 border-dashed border-[#E72679] bg-[#E72679]/15 flex items-center justify-center">
+        <span className="text-[10px] tracking-widest uppercase text-[#E72679] font-semibold">Drop here</span>
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -489,6 +546,9 @@ export default function Dashboard() {
 
             {activeTab === 'links' && (
               <Section title="Links">
+                <p className="text-sm text-zinc-400 mb-4">
+                  Drag the handle to reorder. A pink gap shows exactly where the link will land.
+                </p>
                 <div className="flex flex-col gap-2 mb-5">
                   <input type="text" placeholder="https://…" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
                   <input type="text" placeholder="Title on button" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
@@ -499,33 +559,72 @@ export default function Dashboard() {
                 {links.length === 0 ? (
                   <p className="text-zinc-500 text-sm">No links yet.</p>
                 ) : (
-                  <div className="space-y-2">
-                    {links.map((link: any, index: number) => (
-                      <div
-                        key={link.id}
-                        draggable
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', String(index))}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                          e.preventDefault();
-                          const dragIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-                          if (dragIndex === index) return;
-                          const next = [...links];
-                          const [dragged] = next.splice(dragIndex, 1);
-                          next.splice(index, 0, dragged);
-                          setLinks(next);
-                        }}
-                        className="bg-zinc-800 p-3 rounded-xl flex justify-between items-center gap-3 cursor-move"
-                      >
-                        <div className="min-w-0">
-                          <div className="font-medium truncate">{link.title}</div>
-                          <div className="text-xs text-zinc-500 truncate">{link.url}</div>
+                  <div
+                    className="flex flex-col"
+                    onDragOver={(e) => e.preventDefault()}
+                    onDrop={onLinkDrop}
+                    onDragEnd={clearDrag}
+                  >
+                    {/* Gap before first item */}
+                    <DropGap show={isDragging && insertAt === 0} />
+
+                    {links.map((link: any, index: number) => {
+                      const isActiveDrag = dragIndex === index;
+                      // Hide the natural gap next to the dragged row's original neighbors when insert would be redundant
+                      const showGapAfter =
+                        isDragging &&
+                        insertAt === index + 1 &&
+                        !(dragIndex === index); // don't show gap right under the item you're lifting from its own slot visual
+
+                      return (
+                        <div key={link.id}>
+                          <div
+                            draggable
+                            onDragStart={(e) => onLinkDragStart(index, e)}
+                            onDragOver={(e) => onLinkDragOver(index, e)}
+                            className={`p-3 rounded-xl flex items-center gap-3 transition-all duration-150 ${
+                              isActiveDrag
+                                ? 'opacity-40 border-2 border-solid border-[#E72679] bg-zinc-800 scale-[0.98]'
+                                : isDragging
+                                  ? 'border-2 border-dashed border-zinc-600 bg-zinc-800/80'
+                                  : 'border-2 border-transparent bg-zinc-800'
+                            }`}
+                          >
+                            {/* Drag handle */}
+                            <span
+                              className="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-white shrink-0 select-none px-1"
+                              title="Drag to reorder"
+                              aria-label="Drag to reorder"
+                            >
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                                <circle cx="9" cy="6" r="1.5" />
+                                <circle cx="15" cy="6" r="1.5" />
+                                <circle cx="9" cy="12" r="1.5" />
+                                <circle cx="15" cy="12" r="1.5" />
+                                <circle cx="9" cy="18" r="1.5" />
+                                <circle cx="15" cy="18" r="1.5" />
+                              </svg>
+                            </span>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium truncate">{link.title}</div>
+                              <div className="text-xs text-zinc-500 truncate">{link.url}</div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => deleteLink(link.id)}
+                              className="text-red-400 text-sm shrink-0"
+                            >
+                              Delete
+                            </button>
+                          </div>
+
+                          {/* Gap after this item (between this and next) */}
+                          <DropGap show={!!showGapAfter} />
                         </div>
-                        <button type="button" onClick={() => deleteLink(link.id)} className="text-red-400 text-sm shrink-0">
-                          Delete
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </Section>
@@ -639,7 +738,6 @@ export default function Dashboard() {
             )}
           </div>
 
-          {/* LIVE PREVIEW — scaled to fit viewport height, no inner scroll */}
           <div className="hidden lg:block">
             <div className="sticky top-28">
               <p className="text-center text-xs text-zinc-500 mb-3 tracking-widest uppercase">Live card</p>
