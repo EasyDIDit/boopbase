@@ -39,9 +39,9 @@ export default function Dashboard() {
   const [totalViews, setTotalViews] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
-  // Links drag-and-drop
-  const [dragIndex, setDragIndex] = useState<number | null>(null);
-  const [insertAt, setInsertAt] = useState<number | null>(null); // 0..links.length
+  // Links drag — refs are source of truth during gesture (React state alone races with dragEnd)
+  const dragFromRef = useRef<number | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
 
   // Social add form
   const [pickPlatform, setPickPlatform] = useState<SocialPlatformId>('instagram');
@@ -225,49 +225,40 @@ export default function Dashboard() {
     setLinks(links.filter((l) => l.id !== id));
   };
 
-  const clearDrag = () => {
-    setDragIndex(null);
-    setInsertAt(null);
-  };
-
-  const onLinkDragStart = (index: number, e: React.DragEvent) => {
-    setDragIndex(index);
-    setInsertAt(index);
+  /** Start drag — store index in ref so drop/reorder never loses it */
+  const onLinkDragStart = (index: number, linkId: string, e: React.DragEvent) => {
+    dragFromRef.current = index;
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', String(index));
-    // Slight delay so browser paints drag image from full-opacity row
-    requestAnimationFrame(() => {
-      // state already set; row will fade via class
+    // Delay visual state so the browser can capture the drag image first
+    requestAnimationFrame(() => setDraggingId(linkId));
+  };
+
+  /**
+   * Live reorder while hovering another row.
+   * List shifts immediately so you see the slot open between neighbors.
+   */
+  const onLinkDragOver = (overIndex: number, e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const from = dragFromRef.current;
+    if (from === null || from === overIndex) return;
+
+    setLinks((prev) => {
+      if (from < 0 || from >= prev.length || overIndex < 0 || overIndex >= prev.length) {
+        return prev;
+      }
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      next.splice(overIndex, 0, moved);
+      dragFromRef.current = overIndex;
+      return next;
     });
   };
 
-  const onLinkDragOver = (index: number, e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    if (dragIndex === null) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const mid = rect.top + rect.height / 2;
-    const nextInsert = e.clientY < mid ? index : index + 1;
-    if (nextInsert !== insertAt) setInsertAt(nextInsert);
-  };
-
-  const onLinkDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (dragIndex === null || insertAt === null) {
-      clearDrag();
-      return;
-    }
-    // No-op if landing in same slot
-    if (insertAt === dragIndex || insertAt === dragIndex + 1) {
-      clearDrag();
-      return;
-    }
-    const next = [...links];
-    const [moved] = next.splice(dragIndex, 1);
-    const target = insertAt > dragIndex ? insertAt - 1 : insertAt;
-    next.splice(target, 0, moved);
-    setLinks(next);
-    clearDrag();
+  const onLinkDragEnd = () => {
+    dragFromRef.current = null;
+    setDraggingId(null);
   };
 
   const uploadPhoto = async (e: any) => {
@@ -337,7 +328,7 @@ export default function Dashboard() {
   const totalClicks = links.reduce((sum, l) => sum + (l.clicks || 0), 0);
   const selectedPlatform = getPlatform(pickPlatform);
   const availablePlatforms = SOCIAL_PLATFORMS;
-  const isDragging = dragIndex !== null;
+  const isDragging = draggingId !== null;
 
   const tabs = [
     { id: 'profile', label: 'Profile' },
@@ -348,19 +339,6 @@ export default function Dashboard() {
   ];
 
   const publicUrl = user?.username ? `/${user.username}` : '#';
-
-  const DropGap = ({ show }: { show: boolean }) => (
-    <div
-      className={`transition-all duration-150 ease-out overflow-hidden ${
-        show ? 'h-14 opacity-100 my-1' : 'h-0 opacity-0 my-0'
-      }`}
-      aria-hidden
-    >
-      <div className="h-full rounded-xl border-2 border-dashed border-[#E72679] bg-[#E72679]/15 flex items-center justify-center">
-        <span className="text-[10px] tracking-widest uppercase text-[#E72679] font-semibold">Drop here</span>
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white">
@@ -547,7 +525,7 @@ export default function Dashboard() {
             {activeTab === 'links' && (
               <Section title="Links">
                 <p className="text-sm text-zinc-400 mb-4">
-                  Drag the handle to reorder. A pink gap shows exactly where the link will land.
+                  Drag any row to reorder. Other links shift live so you can see the new position. Save when done.
                 </p>
                 <div className="flex flex-col gap-2 mb-5">
                   <input type="text" placeholder="https://…" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
@@ -559,69 +537,53 @@ export default function Dashboard() {
                 {links.length === 0 ? (
                   <p className="text-zinc-500 text-sm">No links yet.</p>
                 ) : (
-                  <div
-                    className="flex flex-col"
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={onLinkDrop}
-                    onDragEnd={clearDrag}
-                  >
-                    {/* Gap before first item */}
-                    <DropGap show={isDragging && insertAt === 0} />
-
+                  <div className="flex flex-col gap-2" onDragEnd={onLinkDragEnd}>
                     {links.map((link: any, index: number) => {
-                      const isActiveDrag = dragIndex === index;
-                      // Hide the natural gap next to the dragged row's original neighbors when insert would be redundant
-                      const showGapAfter =
-                        isDragging &&
-                        insertAt === index + 1 &&
-                        !(dragIndex === index); // don't show gap right under the item you're lifting from its own slot visual
-
+                      const isActive = draggingId === link.id;
                       return (
-                        <div key={link.id}>
-                          <div
-                            draggable
-                            onDragStart={(e) => onLinkDragStart(index, e)}
-                            onDragOver={(e) => onLinkDragOver(index, e)}
-                            className={`p-3 rounded-xl flex items-center gap-3 transition-all duration-150 ${
-                              isActiveDrag
-                                ? 'opacity-40 border-2 border-solid border-[#E72679] bg-zinc-800 scale-[0.98]'
-                                : isDragging
-                                  ? 'border-2 border-dashed border-zinc-600 bg-zinc-800/80'
-                                  : 'border-2 border-transparent bg-zinc-800'
-                            }`}
+                        <div
+                          key={link.id}
+                          draggable
+                          onDragStart={(e) => onLinkDragStart(index, String(link.id), e)}
+                          onDragOver={(e) => onLinkDragOver(index, e)}
+                          onDrop={(e) => e.preventDefault()}
+                          className={`p-3 rounded-xl flex items-center gap-3 select-none transition-all duration-150 ${
+                            isActive
+                              ? 'opacity-50 border-2 border-solid border-[#E72679] bg-zinc-800 shadow-lg shadow-pink-500/10 scale-[1.01]'
+                              : isDragging
+                                ? 'border-2 border-dashed border-zinc-600 bg-zinc-800/90'
+                                : 'border-2 border-transparent bg-zinc-800 hover:border-zinc-700'
+                          }`}
+                        >
+                          <span
+                            className="cursor-grab active:cursor-grabbing text-zinc-400 hover:text-white shrink-0 px-1 touch-none"
+                            title="Drag to reorder"
+                            aria-label="Drag to reorder"
                           >
-                            {/* Drag handle */}
-                            <span
-                              className="cursor-grab active:cursor-grabbing text-zinc-500 hover:text-white shrink-0 select-none px-1"
-                              title="Drag to reorder"
-                              aria-label="Drag to reorder"
-                            >
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-                                <circle cx="9" cy="6" r="1.5" />
-                                <circle cx="15" cy="6" r="1.5" />
-                                <circle cx="9" cy="12" r="1.5" />
-                                <circle cx="15" cy="12" r="1.5" />
-                                <circle cx="9" cy="18" r="1.5" />
-                                <circle cx="15" cy="18" r="1.5" />
-                              </svg>
-                            </span>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                              <circle cx="9" cy="6" r="1.5" />
+                              <circle cx="15" cy="6" r="1.5" />
+                              <circle cx="9" cy="12" r="1.5" />
+                              <circle cx="15" cy="12" r="1.5" />
+                              <circle cx="9" cy="18" r="1.5" />
+                              <circle cx="15" cy="18" r="1.5" />
+                            </svg>
+                          </span>
 
-                            <div className="min-w-0 flex-1">
-                              <div className="font-medium truncate">{link.title}</div>
-                              <div className="text-xs text-zinc-500 truncate">{link.url}</div>
-                            </div>
-
-                            <button
-                              type="button"
-                              onClick={() => deleteLink(link.id)}
-                              className="text-red-400 text-sm shrink-0"
-                            >
-                              Delete
-                            </button>
+                          <div className="min-w-0 flex-1 pointer-events-none">
+                            <div className="font-medium truncate">{link.title}</div>
+                            <div className="text-xs text-zinc-500 truncate">{link.url}</div>
                           </div>
 
-                          {/* Gap after this item (between this and next) */}
-                          <DropGap show={!!showGapAfter} />
+                          <button
+                            type="button"
+                            onClick={() => deleteLink(link.id)}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className="text-red-400 text-sm shrink-0 px-2 py-1"
+                          >
+                            Delete
+                          </button>
                         </div>
                       );
                     })}
