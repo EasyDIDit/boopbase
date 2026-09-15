@@ -1,0 +1,82 @@
+import { NextRequest, NextResponse } from 'next/server';
+import connectDB from '@/lib/mongodb';
+import Device from '@/lib/models/Device';
+
+const OWNER_USERNAMES = (process.env.OWNER_USERNAMES || 'easydidit,pez')
+  .split(',')
+  .map((s) => s.trim().toLowerCase())
+  .filter(Boolean);
+
+function makeCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += alphabet[Math.floor(Math.random() * alphabet.length)];
+  }
+  return code;
+}
+
+function isOwner(username: string | undefined) {
+  if (!username) return false;
+  return OWNER_USERNAMES.includes(username.toLowerCase());
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const username = request.cookies.get('user')?.value;
+    if (!isOwner(username)) {
+      return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
+    }
+
+    await connectDB();
+    const devices = await Device.find({}).sort({ createdAt: -1 }).lean();
+    return NextResponse.json({ devices });
+  } catch (error) {
+    console.error('List devices error:', error);
+    return NextResponse.json({ error: 'Failed to list devices' }, { status: 500 });
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const username = request.cookies.get('user')?.value;
+    if (!isOwner(username)) {
+      return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
+    }
+
+    const body = await request.json().catch(() => ({}));
+    const productType = ['band', 'card', 'sticker'].includes(body.productType)
+      ? body.productType
+      : 'band';
+    const orderEmail = (body.orderEmail || '').toLowerCase().trim();
+
+    await connectDB();
+
+    let code = makeCode();
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const exists = await Device.findOne({ code });
+      if (!exists) break;
+      code = makeCode();
+    }
+
+    const programmedUrl = `https://boopbase.com/p/${code}`;
+
+    const device = await Device.create({
+      code,
+      productType,
+      status: 'ready',
+      orderEmail,
+      programmedUrl,
+    });
+
+    return NextResponse.json({
+      code: device.code,
+      productType: device.productType,
+      status: device.status,
+      programmedUrl: device.programmedUrl,
+    });
+  } catch (error) {
+    console.error('Create device error:', error);
+    return NextResponse.json({ error: 'Failed to create device' }, { status: 500 });
+  }
+}
