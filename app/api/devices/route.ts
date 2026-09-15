@@ -16,6 +16,10 @@ function makeCode() {
   return code;
 }
 
+function cleanCustomCode(raw: string) {
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
 function isOwner(username: string | undefined) {
   if (!username) return false;
   return OWNER_USERNAMES.includes(username.toLowerCase());
@@ -49,14 +53,26 @@ export async function POST(request: NextRequest) {
       ? body.productType
       : 'band';
     const orderEmail = (body.orderEmail || '').toLowerCase().trim();
+    const requested = cleanCustomCode(String(body.code || ''));
 
     await connectDB();
 
-    let code = makeCode();
-    for (let attempt = 0; attempt < 8; attempt++) {
+    let code = requested;
+    if (code) {
+      if (code.length < 4 || code.length > 12) {
+        return NextResponse.json({ error: 'Custom code must be 4 to 12 letters or numbers' }, { status: 400 });
+      }
       const exists = await Device.findOne({ code });
-      if (!exists) break;
+      if (exists) {
+        return NextResponse.json({ error: `${code} is already used` }, { status: 409 });
+      }
+    } else {
       code = makeCode();
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const exists = await Device.findOne({ code });
+        if (!exists) break;
+        code = makeCode();
+      }
     }
 
     const programmedUrl = `https://boopbase.com/p/${code}`;
