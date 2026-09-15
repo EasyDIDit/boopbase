@@ -10,8 +10,11 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  
+
   const router = useRouter();
+  const pendingCode = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('code') || ''
+    : '';
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,8 +31,8 @@ export default function Register() {
       const data = await res.json();
 
       if (res.ok) {
-        alert('Account created successfully! Please login.');
-        router.push('/login');
+        const next = pendingCode ? `/login?code=${pendingCode}` : '/login';
+        router.push(next);
       } else {
         setError(data.error || 'Something went wrong');
       }
@@ -45,7 +48,10 @@ export default function Register() {
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-10">
           <h1 className="text-4xl font-bold">Create Account</h1>
-          <p className="text-gray-400 mt-2">Join BOOPbase - Your NFC Linktree</p>
+          <p className="text-gray-400 mt-2">Join BOOPbase</p>
+          {pendingCode && (
+            <p className="text-emerald-400 mt-3 font-mono">Your code {pendingCode.toUpperCase()} is waiting</p>
+          )}
         </div>
 
         <form onSubmit={handleRegister} className="space-y-6">
@@ -80,7 +86,7 @@ export default function Register() {
               className="w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3 focus:outline-none focus:border-white"
               required
             />
-            <p className="text-xs text-gray-500 mt-1">Example: yourname or yourbusiness</p>
+            <p className="text-xs text-gray-500 mt-1">This becomes boopbase.com/yourname</p>
           </div>
 
           <div>
@@ -107,7 +113,12 @@ export default function Register() {
 
         <p className="text-center mt-6 text-gray-400">
           Already have an account?{' '}
-          <a href="/login" className="text-white hover:underline">Login here</a>
+          <a
+            href={pendingCode ? `/login?code=${pendingCode}` : '/login'}
+            className="text-white hover:underline"
+          >
+            Login here
+          </a>
         </p>
       </div>
     </div>
