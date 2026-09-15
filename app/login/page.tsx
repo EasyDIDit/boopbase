@@ -9,6 +9,10 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const pendingCode = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('code') || ''
+    : '';
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -24,6 +28,14 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
+        const code = new URLSearchParams(window.location.search).get('code');
+        if (code) {
+          await fetch('/api/devices/claim', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code }),
+          });
+        }
         window.location.href = '/dashboard';
       } else {
         setError(data.error || 'Login failed');
@@ -40,6 +52,9 @@ export default function LoginPage() {
         <div className="text-center mb-10">
           <h1 className="text-5xl font-black tracking-tighter">BOOPBASE</h1>
           <p className="text-zinc-400 mt-2">Sign in to your profile</p>
+          {pendingCode && (
+            <p className="text-emerald-400 mt-3 font-mono">Claiming {pendingCode.toUpperCase()}</p>
+          )}
         </div>
 
         <form onSubmit={handleLogin} className="space-y-6">
@@ -79,7 +94,10 @@ export default function LoginPage() {
         <div className="text-center mt-8">
           <p className="text-zinc-400">
             Don't have an account?{' '}
-            <Link href="/register" className="text-white hover:underline font-medium">
+            <Link
+              href={pendingCode ? `/register?code=${pendingCode}` : '/register'}
+              className="text-white hover:underline font-medium"
+            >
               Create one here
             </Link>
           </p>
