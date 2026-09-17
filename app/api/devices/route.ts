@@ -51,8 +51,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => ({}));
     const productType = ['band', 'card', 'sticker'].includes(body.productType)
       ? body.productType
-      : 'band';
+      : 'card';
     const orderEmail = (body.orderEmail || '').toLowerCase().trim();
+    const ownerUsername = (body.ownerUsername || '').toLowerCase().trim();
     const requested = cleanCustomCode(String(body.code || ''));
 
     await connectDB();
@@ -80,9 +81,11 @@ export async function POST(request: NextRequest) {
     const device = await Device.create({
       code,
       productType,
-      status: 'ready',
+      status: ownerUsername ? 'claimed' : 'ready',
       orderEmail,
+      ownerUsername,
       programmedUrl,
+      claimedAt: ownerUsername ? new Date() : null,
     });
 
     return NextResponse.json({
@@ -90,6 +93,8 @@ export async function POST(request: NextRequest) {
       productType: device.productType,
       status: device.status,
       programmedUrl: device.programmedUrl,
+      orderEmail: device.orderEmail,
+      ownerUsername: device.ownerUsername,
     });
   } catch (error) {
     console.error('Create device error:', error);
