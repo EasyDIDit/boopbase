@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 80" role="img" aria-label="Boop">
+  <g fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M28 16v48"/>
+    <path d="M28 16h22c10 0 18 7 18 16s-8 16-18 16H28"/>
+    <path d="M28 48h24c11 0 20 7 20 16s-9 16-20 16H28"/>
+    <circle cx="118" cy="40" r="22"/>
+    <circle cx="148" cy="40" r="22"/>
+    <path d="M185 28v40"/>
+    <circle cx="202" cy="44" r="16"/>
+  </g>
+</svg>
