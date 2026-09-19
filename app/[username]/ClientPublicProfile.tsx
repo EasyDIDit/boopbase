@@ -239,28 +239,28 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
           )}
 
           <footer
-            className="flex flex-col items-center gap-2.5 px-6 pt-4 pb-6"
+            className="flex flex-col items-center gap-1.5 px-6 pt-4 pb-6"
             style={{ color: footerTextColor }}
           >
             <p className="text-center text-[10px] tracking-[0.18em] opacity-45 m-0">
               Building Opportunities One Profile at a time
             </p>
-            <p className="text-center text-[11px] tracking-[0.12em] opacity-55 m-0">
-              Boop by EasyDidIt
-            </p>
             <a
               href="https://easydidit.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-0.5 opacity-70 hover:opacity-100 transition-opacity"
+              className="mt-1 opacity-80 hover:opacity-100 transition-opacity"
               aria-label="Boop by EasyDidIt"
             >
               <img
                 src={logoSrc}
                 alt="Boop"
-                className="h-7 w-auto max-w-[9rem] object-contain"
+                className="h-8 w-auto max-w-[10rem] object-contain"
               />
             </a>
+            <p className="text-center text-[11px] tracking-[0.12em] opacity-55 m-0">
+              by EasyDidIt
+            </p>
           </footer>
         </div>
       </div>
