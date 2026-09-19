@@ -1,5 +1,3 @@
-/** Official Boop wordmark (black + white). Embedded for reliable deploy. */
-export const BOOP_LOGO_BLACK =
-  'data:image/png;base64,PLACEHOLDER_BLACK';
-export const BOOP_LOGO_WHITE =
-  'data:image/png;base64,PLACEHOLDER_WHITE';
+/** Official Boop wordmarks (black + white). Embedded for reliable deploy. */
+export { BOOP_LOGO_BLACK } from './brandLogoBlack';
+export { BOOP_LOGO_WHITE } from './brandLogoWhite';
