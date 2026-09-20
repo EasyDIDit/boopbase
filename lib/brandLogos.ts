@@ -1,3 +1,4 @@
-/** Official Boop wordmarks — owner-supplied art. */
-export { BOOP_LOGO_BLACK } from './brandLogoBlack';
-export { BOOP_LOGO_WHITE } from './brandLogoWhite';
+/** Official Boop wordmarks (owner SVG). */
+export const BOOP_LOGO_BLACK = '/brand/boop-logo-black.svg';
+export const BOOP_LOGO_WHITE = '/brand/boop-logo-white.svg';
+export const BOOP_LOGO_GREY = '/brand/boop-logo-grey.svg';
