@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import BoopLogo from '@/components/BoopLogo';
 
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState('');
@@ -9,9 +10,10 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const pendingCode = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('code') || ''
-    : '';
+  const pendingCode =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('code') || ''
+      : '';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +42,7 @@ export default function LoginPage() {
       } else {
         setError(data.error || 'Login failed');
       }
-    } catch (err) {
+    } catch {
       setError('Something went wrong. Please try again.');
     }
     setLoading(false);
@@ -50,10 +52,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
-          <h1 className="text-5xl font-black tracking-tighter">BOOPBASE</h1>
-          <p className="text-zinc-400 mt-2">Sign in to your profile</p>
+          <div className="flex justify-center mb-6">
+            <BoopLogo variant="white" className="h-10 w-auto max-w-[9rem]" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
+          <p className="text-zinc-400 mt-2">Your Boop profile</p>
           {pendingCode && (
-            <p className="text-emerald-400 mt-3 font-mono">Claiming {pendingCode.toUpperCase()}</p>
+            <p className="text-emerald-400 mt-3 font-mono text-sm">
+              Claiming {pendingCode.toUpperCase()}
+            </p>
           )}
         </div>
 

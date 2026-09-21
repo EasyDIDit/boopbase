@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import BoopLogo from '@/components/BoopLogo';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -38,7 +39,6 @@ export default function Register() {
       const data = await res.json();
 
       if (res.ok) {
-        // Session cookie is set by the API; go straight to dashboard
         router.push('/dashboard');
       } else {
         setError(data.error || 'Something went wrong');
@@ -54,10 +54,13 @@ export default function Register() {
     <div className="min-h-screen bg-black text-white flex items-center justify-center">
       <div className="w-full max-w-md p-8">
         <div className="text-center mb-10">
-          <h1 className="text-4xl font-bold">Create Account</h1>
+          <div className="flex justify-center mb-6">
+            <BoopLogo variant="white" className="h-10 w-auto max-w-[9rem]" />
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Create Account</h1>
           <p className="text-gray-400 mt-2">Join BOOPbase</p>
           {pendingCode && (
-            <p className="text-emerald-400 mt-3 font-mono">
+            <p className="text-emerald-400 mt-3 font-mono text-sm">
               Your code {pendingCode.toUpperCase()} is waiting
             </p>
           )}
