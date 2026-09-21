@@ -3,6 +3,9 @@ import connectDB from '@/lib/mongodb';
 import Device from '@/lib/models/Device';
 import { isOwner } from '@/lib/ownerAuth';
 
+/** Live host — apex boopbase.com can 402 when that deployment is paused */
+const PUBLIC_ORIGIN = 'https://www.boopbase.com';
+
 function makeCode() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
@@ -70,7 +73,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const programmedUrl = `https://boopbase.com/p/${code}`;
+    const programmedUrl = `${PUBLIC_ORIGIN}/p/${code}`;
 
     const device = await Device.create({
       code,
