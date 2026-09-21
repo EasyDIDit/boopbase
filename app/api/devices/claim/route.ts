@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Device from '@/lib/models/Device';
 import User from '@/lib/models/User';
+import Customer from '@/lib/models/Customer';
 
 export async function POST(request: NextRequest) {
   try {
@@ -33,6 +34,18 @@ export async function POST(request: NextRequest) {
     }
 
     if (device.status === 'claimed' && device.ownerUsername === username) {
+      // Still ensure Customer row exists for owner client list
+      if (user.email) {
+        await Customer.findOneAndUpdate(
+          { email: user.email.toLowerCase() },
+          {
+            email: user.email.toLowerCase(),
+            username,
+            updatedAt: new Date(),
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      }
       return NextResponse.json({
         message: 'Already yours',
         code: device.code,
@@ -47,7 +60,23 @@ export async function POST(request: NextRequest) {
     device.status = 'claimed';
     device.ownerUsername = username;
     device.claimedAt = new Date();
+    if (user.email) {
+      device.orderEmail = user.email.toLowerCase();
+    }
     await device.save();
+
+    // Pull customer into CDP from account login data — no manual owner entry required
+    if (user.email) {
+      await Customer.findOneAndUpdate(
+        { email: user.email.toLowerCase() },
+        {
+          email: user.email.toLowerCase(),
+          username,
+          updatedAt: new Date(),
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
 
     return NextResponse.json({
       message: 'This Boop is now yours',

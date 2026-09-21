@@ -12,9 +12,10 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const router = useRouter();
-  const pendingCode = typeof window !== 'undefined'
-    ? new URLSearchParams(window.location.search).get('code') || ''
-    : '';
+  const pendingCode =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('code') || ''
+      : '';
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,18 +26,24 @@ export default function Register() {
       const res = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, username, password }),
+        body: JSON.stringify({
+          name,
+          email,
+          username,
+          password,
+          code: pendingCode || undefined,
+        }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        const next = pendingCode ? `/login?code=${pendingCode}` : '/login';
-        router.push(next);
+        // Session cookie is set by the API; go straight to dashboard
+        router.push('/dashboard');
       } else {
         setError(data.error || 'Something went wrong');
       }
-    } catch (err) {
+    } catch {
       setError('Failed to connect to server');
     } finally {
       setLoading(false);
@@ -50,7 +57,9 @@ export default function Register() {
           <h1 className="text-4xl font-bold">Create Account</h1>
           <p className="text-gray-400 mt-2">Join BOOPbase</p>
           {pendingCode && (
-            <p className="text-emerald-400 mt-3 font-mono">Your code {pendingCode.toUpperCase()} is waiting</p>
+            <p className="text-emerald-400 mt-3 font-mono">
+              Your code {pendingCode.toUpperCase()} is waiting
+            </p>
           )}
         </div>
 
@@ -107,7 +116,11 @@ export default function Register() {
             disabled={loading}
             className="w-full bg-white text-black font-semibold py-4 rounded-2xl hover:bg-gray-200 transition disabled:opacity-50"
           >
-            {loading ? 'Creating Account...' : 'Create Account'}
+            {loading
+              ? 'Creating Account...'
+              : pendingCode
+                ? 'Create Account & Claim Boop'
+                : 'Create Account'}
           </button>
         </form>
 
