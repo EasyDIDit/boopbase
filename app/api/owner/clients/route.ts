@@ -2,16 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Customer from '@/lib/models/Customer';
 import Device from '@/lib/models/Device';
-
-const OWNER_USERNAMES = (process.env.OWNER_USERNAMES || 'easydidit,pez')
-  .split(',')
-  .map((s) => s.trim().toLowerCase())
-  .filter(Boolean);
-
-function isOwner(username: string | undefined) {
-  if (!username) return false;
-  return OWNER_USERNAMES.includes(username.toLowerCase());
-}
+import { isOwner } from '@/lib/ownerAuth';
 
 export async function GET(request: NextRequest) {
   try {

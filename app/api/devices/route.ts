@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Device from '@/lib/models/Device';
-
-const OWNER_USERNAMES = (process.env.OWNER_USERNAMES || 'easydidit,pez')
-  .split(',')
-  .map((s) => s.trim().toLowerCase())
-  .filter(Boolean);
+import { isOwner } from '@/lib/ownerAuth';
 
 function makeCode() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -18,11 +14,6 @@ function makeCode() {
 
 function cleanCustomCode(raw: string) {
   return raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
-}
-
-function isOwner(username: string | undefined) {
-  if (!username) return false;
-  return OWNER_USERNAMES.includes(username.toLowerCase());
 }
 
 export async function GET(request: NextRequest) {
@@ -61,7 +52,10 @@ export async function POST(request: NextRequest) {
     let code = requested;
     if (code) {
       if (code.length < 4 || code.length > 12) {
-        return NextResponse.json({ error: 'Custom code must be 4 to 12 letters or numbers' }, { status: 400 });
+        return NextResponse.json(
+          { error: 'Custom code must be 4 to 12 letters or numbers' },
+          { status: 400 }
+        );
       }
       const exists = await Device.findOne({ code });
       if (exists) {
