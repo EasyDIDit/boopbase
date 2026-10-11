@@ -10,6 +10,8 @@ const UserSchema = new mongoose.Schema({
   outerBackgroundColor: { type: String, default: '#C4CFDA' },
   innerBackgroundColor: { type: String, default: '#ffffff' },
   useThemeBackground: { type: Boolean, default: true },
+  /** When true, the selected skin hero wins over an uploaded hero. */
+  themeOverridesHero: { type: Boolean, default: false },
   themeId: { type: String, default: 'boop-classic' },
   buttonStyle: { type: String, default: 'solid' },
   links: [{
