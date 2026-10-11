@@ -246,11 +246,9 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
               Building Opportunities One Profile at a time
             </p>
             <a
-              href="https://easydidit.com"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/login"
               className="mt-1 opacity-80 hover:opacity-100 transition-opacity"
-              aria-label="Boop by EasyDidIt"
+              aria-label="Boop login"
             >
               <img
                 src={logoSrc}
