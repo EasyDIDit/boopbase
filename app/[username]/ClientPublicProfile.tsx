@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { getSkinById } from '@/lib/skins';
 import { legacySocialsToEntries } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
@@ -33,6 +34,7 @@ function isLightColor(color: string | undefined): boolean {
 
 export default function ClientPublicProfile({ user, backgroundImages }: ClientPublicProfileProps) {
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
+  const [isOwner, setIsOwner] = useState(false);
   const skin = getSkinById(user?.themeId || 'boop-classic');
 
   useEffect(() => {
@@ -43,6 +45,26 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     );
     return () => clearInterval(interval);
   }, [backgroundImages.length]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const check = async () => {
+      try {
+        const res = await fetch('/api/me');
+        if (!res.ok) return;
+        const me = await res.json();
+        if (!cancelled && me?.username && user?.username && me.username.toLowerCase() === user.username.toLowerCase()) {
+          setIsOwner(true);
+        }
+      } catch {
+        // public visitors stay without the edit control
+      }
+    };
+    check();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.username]);
 
   const hasUserHero = backgroundImages.length > 0 && Boolean(backgroundImages[0]);
   const userHero = hasUserHero ? backgroundImages[currentBgIndex] : null;
@@ -89,9 +111,18 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
       style={{ backgroundColor: pageColor }}
     >
       <div
-        className="max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border border-black/15"
+        className="max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border border-black/15 relative"
         style={{ backgroundColor: cardColor }}
       >
+        {isOwner && (
+          <Link
+            href="/dashboard"
+            className="absolute top-3 right-3 z-20 rounded-full bg-black px-4 py-2 text-sm font-bold text-white shadow-lg"
+          >
+            Edit my page
+          </Link>
+        )}
+
         <div
           className="relative h-72 sm:h-80 flex items-end pb-10"
           style={{
@@ -246,7 +277,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
               Building Opportunities One Profile at a time
             </p>
             <a
-              href="/login"
+              href="https://www.boopbase.com/login"
               className="mt-1 opacity-80 hover:opacity-100 transition-opacity"
               aria-label="Boop login"
             >
