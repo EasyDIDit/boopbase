@@ -34,20 +34,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
     }
 
-    // Update last login
     user.lastLogin = new Date();
     await user.save();
 
-    const response = NextResponse.json({ 
-      message: 'Login successful', 
-      user: { username: user.username, name: user.name } 
+    const response = NextResponse.json({
+      message: 'Login successful',
+      user: { username: user.username, name: user.name }
     });
 
-    response.cookies.set('user', user.username, { 
-      httpOnly: true, 
+    const host = request.headers.get('host') || '';
+    const onBoopbase = host.endsWith('boopbase.com');
+
+    response.cookies.set('user', user.username, {
+      httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/'
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7,
+      path: '/',
+      ...(onBoopbase ? { domain: '.boopbase.com' } : {}),
     });
 
     return response;
