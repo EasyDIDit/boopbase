@@ -23,6 +23,7 @@ export default function Dashboard() {
   const [outerBg, setOuterBg] = useState('#C4CFDA');
   const [innerBg, setInnerBg] = useState('#ffffff');
   const [useThemeBg, setUseThemeBg] = useState(true);
+  const [themeOverridesHero, setThemeOverridesHero] = useState(false);
   const [themeId, setThemeId] = useState('boop-classic');
   const [links, setLinks] = useState<any[]>([]);
   const [socials, setSocials] = useState<SocialEntry[]>([]);
@@ -65,6 +66,7 @@ export default function Dashboard() {
         setOuterBg(data.outerBackgroundColor || '#C4CFDA');
         setInnerBg(data.innerBackgroundColor || '#ffffff');
         setUseThemeBg(data.useThemeBackground !== false);
+        setThemeOverridesHero(data.themeOverridesHero === true);
         setThemeId(data.themeId || 'boop-classic');
         setLinks(data.links || []);
         setSocials(legacySocialsToEntries(data));
@@ -156,6 +158,7 @@ export default function Dashboard() {
           outerBackgroundColor: outerBg,
           innerBackgroundColor: innerBg,
           useThemeBackground: useThemeBg,
+          themeOverridesHero,
           themeId,
           links,
           socials,
@@ -293,6 +296,7 @@ export default function Dashboard() {
       outerBackgroundColor: outerBg,
       innerBackgroundColor: innerBg,
       useThemeBackground: useThemeBg,
+      themeOverridesHero,
       themeId,
       links,
       socials,
@@ -311,6 +315,7 @@ export default function Dashboard() {
       outerBg,
       innerBg,
       useThemeBg,
+      themeOverridesHero,
       themeId,
       links,
       socials,
@@ -415,6 +420,27 @@ export default function Dashboard() {
                       Upload photo
                       <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" />
                     </label>
+                  </div>
+                </Section>
+                <Section title="Hero image">
+                  <p className="text-sm text-zinc-400 mb-3">
+                    The wide image behind your photo. Theme can override this from Design.
+                  </p>
+                  <div className="flex flex-col items-center gap-3">
+                    {bgImage && (
+                      <div className="w-full max-w-xs h-28 rounded-xl overflow-hidden border border-zinc-700">
+                        <img src={bgImage} alt="" className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl text-sm font-medium">
+                      Upload hero
+                      <input type="file" accept="image/*" onChange={uploadBgImage} className="hidden" />
+                    </label>
+                    {bgImage && (
+                      <button type="button" onClick={() => setBgImage(null)} className="text-red-400 text-sm">
+                        Remove
+                      </button>
+                    )}
                   </div>
                 </Section>
                 <Section title="Name">
@@ -643,26 +669,22 @@ export default function Dashboard() {
                   </Section>
                 )}
 
-                {activeSkin.flags.allowsCustomHeroImage && (
-                  <Section title="Hero image">
-                    <div className="flex flex-col items-center gap-3">
-                      {bgImage && (
-                        <div className="w-full max-w-xs h-28 rounded-xl overflow-hidden border border-zinc-700">
-                          <img src={bgImage} alt="" className="w-full h-full object-cover" />
-                        </div>
-                      )}
-                      <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl text-sm font-medium">
-                        Upload hero
-                        <input type="file" accept="image/*" onChange={uploadBgImage} className="hidden" />
-                      </label>
-                      {bgImage && (
-                        <button type="button" onClick={() => setBgImage(null)} className="text-red-400 text-sm">
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  </Section>
-                )}
+                <Section title="Theme and your hero">
+                  <label className="flex items-start gap-3 cursor-pointer text-sm">
+                    <input
+                      type="checkbox"
+                      checked={themeOverridesHero}
+                      onChange={(e) => setThemeOverridesHero(e.target.checked)}
+                      className="mt-1 w-4 h-4"
+                    />
+                    <span>
+                      <span className="block font-medium">Theme overrides hero image</span>
+                      <span className="block text-zinc-400 mt-1">
+                        On: the skin hero shows, even if you uploaded one. Off: your hero wins.
+                      </span>
+                    </span>
+                  </label>
+                </Section>
               </div>
             )}
 
