@@ -66,7 +66,8 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     };
   }, [user?.username]);
 
-  const hasUserHero = backgroundImages.length > 0 && Boolean(backgroundImages[0]);
+  const themeOverridesHero = user?.themeOverridesHero === true;
+  const hasUserHero = !themeOverridesHero && backgroundImages.length > 0 && Boolean(backgroundImages[0]);
   const userHero = hasUserHero ? backgroundImages[currentBgIndex] : null;
   const skinHero = skin.assets.hero || null;
   const skinCover = skin.assets.cover || null;
