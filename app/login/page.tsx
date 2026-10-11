@@ -49,66 +49,61 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <div className="flex justify-center mb-6">
+    <div className="min-h-screen bg-zinc-950 px-5 py-8 text-white">
+      <div className="mx-auto w-full max-w-md">
+        <div className="mb-6 text-center">
+          <div className="mb-5 flex justify-center">
             <BoopLogo variant="white" className="h-10 w-auto max-w-[9rem]" />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Sign in</h1>
-          <p className="text-zinc-400 mt-2">Your Boop profile</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">
+            {pendingCode ? 'Claim with your page' : 'Welcome back'}
+          </p>
+          <h1 className="mt-2 text-3xl font-bold tracking-tight">
+            {pendingCode ? 'Sign in. The card locks to you.' : 'Sign in'}
+          </h1>
           {pendingCode && (
-            <p className="text-emerald-400 mt-3 font-mono text-sm">
+            <p className="mt-4 rounded-2xl bg-emerald-400/10 px-4 py-3 font-mono text-lg text-emerald-300">
               Claiming {pendingCode.toUpperCase()}
             </p>
           )}
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div>
-            <input
-              type="text"
-              placeholder="Username or Email"
-              value={emailOrUsername}
-              onChange={(e) => setEmailOrUsername(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-6 py-4 focus:outline-none focus:border-white"
-              required
-            />
-          </div>
-
-          <div>
-            <input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-6 py-4 focus:outline-none focus:border-white"
-              required
-            />
-          </div>
-
-          {error && <p className="text-red-500 text-center">{error}</p>}
-
+        <form onSubmit={handleLogin} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Username or email"
+            value={emailOrUsername}
+            onChange={(e) => setEmailOrUsername(e.target.value)}
+            className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 px-6 py-4 focus:border-white focus:outline-none"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 px-6 py-4 focus:border-white focus:outline-none"
+            required
+          />
+          {error && <p className="text-center text-red-400">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-white text-black font-semibold py-4 rounded-2xl hover:bg-yellow-300 transition-all disabled:opacity-50"
+            className="min-h-14 w-full rounded-2xl bg-white text-lg font-bold text-black disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'Signing in...' : pendingCode ? 'Sign in and claim' : 'Sign in'}
           </button>
         </form>
 
-        <div className="text-center mt-8">
-          <p className="text-zinc-400">
-            Don't have an account?{' '}
-            <Link
-              href={pendingCode ? `/register?code=${pendingCode}` : '/register'}
-              className="text-white hover:underline font-medium"
-            >
-              Create one here
-            </Link>
-          </p>
-        </div>
+        <p className="mt-8 text-center text-sm text-white/50">
+          No page yet?{' '}
+          <Link
+            href={pendingCode ? `/register?code=${pendingCode}` : '/register'}
+            className="font-semibold text-white underline"
+          >
+            Create one and claim this card
+          </Link>
+        </p>
       </div>
     </div>
   );
