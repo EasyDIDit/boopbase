@@ -4,16 +4,25 @@ import { useState } from 'react';
 import Link from 'next/link';
 import BoopLogo from '@/components/BoopLogo';
 
+function safeNext(raw: string | null) {
+  if (!raw) return '';
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '';
+  return raw;
+}
+
 export default function LoginPage() {
   const [emailOrUsername, setEmailOrUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const pendingCode =
+  const params =
     typeof window !== 'undefined'
-      ? new URLSearchParams(window.location.search).get('code') || ''
-      : '';
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const pendingCode = params.get('code') || '';
+  const nextPath = safeNext(params.get('next'));
+  const minting = nextPath.startsWith('/owner');
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +47,8 @@ export default function LoginPage() {
             body: JSON.stringify({ code }),
           });
         }
-        window.location.href = '/dashboard';
+        const next = safeNext(new URLSearchParams(window.location.search).get('next'));
+        window.location.href = next || '/dashboard';
       } else {
         setError(data.error || 'Login failed');
       }
@@ -56,11 +66,20 @@ export default function LoginPage() {
             <BoopLogo variant="white" className="h-10 w-auto max-w-[9rem]" />
           </div>
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-emerald-300">
-            {pendingCode ? 'Claim with your page' : 'Welcome back'}
+            {minting ? 'Mint desk' : pendingCode ? 'Claim with your page' : 'Welcome back'}
           </p>
           <h1 className="mt-2 text-3xl font-bold tracking-tight">
-            {pendingCode ? 'Sign in. The card locks to you.' : 'Sign in'}
+            {minting
+              ? 'Sign in to mint'
+              : pendingCode
+                ? 'Sign in. The card locks to you.'
+                : 'Sign in'}
           </h1>
+          {minting && (
+            <p className="mt-3 text-sm text-white/50">
+              Owner only. You will land on the mint list after this.
+            </p>
+          )}
           {pendingCode && (
             <p className="mt-4 rounded-2xl bg-emerald-400/10 px-4 py-3 font-mono text-lg text-emerald-300">
               Claiming {pendingCode.toUpperCase()}
@@ -76,6 +95,8 @@ export default function LoginPage() {
             onChange={(e) => setEmailOrUsername(e.target.value)}
             className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 px-6 py-4 focus:border-white focus:outline-none"
             required
+            autoCapitalize="none"
+            autoCorrect="off"
           />
           <input
             type="password"
@@ -91,19 +112,21 @@ export default function LoginPage() {
             disabled={loading}
             className="min-h-14 w-full rounded-2xl bg-white text-lg font-bold text-black disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : pendingCode ? 'Sign in and claim' : 'Sign in'}
+            {loading ? 'Signing in...' : minting ? 'Sign in to mint' : pendingCode ? 'Sign in and claim' : 'Sign in'}
           </button>
         </form>
 
-        <p className="mt-8 text-center text-sm text-white/50">
-          No page yet?{' '}
-          <Link
-            href={pendingCode ? `/register?code=${pendingCode}` : '/register'}
-            className="font-semibold text-white underline"
-          >
-            Create one and claim this card
-          </Link>
-        </p>
+        {!minting && (
+          <p className="mt-8 text-center text-sm text-white/50">
+            No page yet?{' '}
+            <Link
+              href={pendingCode ? `/register?code=${pendingCode}` : '/register'}
+              className="font-semibold text-white underline"
+            >
+              Create one and claim this card
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );
