@@ -10,6 +10,7 @@ const ALLOWED_FIELDS = [
   'outerBackgroundColor',
   'innerBackgroundColor',
   'useThemeBackground',
+  'themeOverridesHero',
   'themeId',
   'links',
   'socials',
