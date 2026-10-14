@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { getSessionUsername, unauthorized } from '@/lib/session';
 
 const ALLOWED_FIELDS = [
   'name',
@@ -29,14 +30,13 @@ const ALLOWED_FIELDS = [
 
 export async function POST(request: NextRequest) {
   try {
+    // Only the signed-in user can save; any username in the body is ignored.
+    const username = getSessionUsername(request);
+    if (!username) return unauthorized();
+
     await connectDB();
 
     const body = await request.json();
-    const username = typeof body.username === 'string' ? body.username.toLowerCase().trim() : '';
-
-    if (!username) {
-      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
-    }
 
     const updateData: Record<string, unknown> = {};
     for (const key of ALLOWED_FIELDS) {

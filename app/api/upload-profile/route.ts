@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import jwt from 'jsonwebtoken';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { getSessionUsername, unauthorized } from '@/lib/session';
 import { writeFile } from 'fs/promises';
 import path from 'path';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this-in-production';
-
 export async function POST(request: NextRequest) {
   try {
+    // Signed session only; any username sent with the request is ignored.
+    const username = getSessionUsername(request);
+    if (!username) return unauthorized();
+
     await connectDB();
 
-    const token = request.headers.get('authorization')?.split(' ')[1];
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-    const decoded: any = jwt.verify(token, JWT_SECRET);
+    const sessionUser = await User.findOne({ username }).select('_id');
+    if (!sessionUser) return unauthorized();
+    const userId = String(sessionUser._id);
 
     const formData = await request.formData();
     const file = formData.get('file') as File;
@@ -28,7 +29,7 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(bytes);
 
     // Create unique filename
-    const filename = `${decoded.userId}-${Date.now()}${path.extname(file.name)}`;
+    const filename = `${userId}-${Date.now()}${path.extname(file.name)}`;
     const filepath = path.join(process.cwd(), 'public/uploads', filename);
 
     // Ensure uploads folder exists
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Update user
     const user = await User.findByIdAndUpdate(
-      decoded.userId,
+      userId,
       { profileImage: imageUrl },
       { new: true }
     );
