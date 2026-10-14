@@ -3,10 +3,11 @@ import connectDB from '@/lib/mongodb';
 import Customer from '@/lib/models/Customer';
 import Device from '@/lib/models/Device';
 import { isOwner } from '@/lib/ownerAuth';
+import { getSessionUsername } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   try {
-    const username = request.cookies.get('user')?.value;
+    const username = getSessionUsername(request);
     if (!isOwner(username)) {
       return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
     }
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const username = request.cookies.get('user')?.value;
+    const username = getSessionUsername(request);
     if (!isOwner(username)) {
       return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
     }

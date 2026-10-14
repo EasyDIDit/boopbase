@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import Device from '@/lib/models/Device';
 import Customer from '@/lib/models/Customer';
+import { setSessionCookie } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
@@ -91,12 +92,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Session so they land in dashboard without a second login step
-    response.cookies.set('user', user.username, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-    });
+    setSessionCookie(request, response, user.username);
 
     return response;
   } catch (error: unknown) {

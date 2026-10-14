@@ -1,21 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { getSessionUsername } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   try {
-    await connectDB();
-
-    const username = request.cookies.get('user')?.value;
+    const username = getSessionUsername(request);
 
     if (!username) {
       return NextResponse.json({ error: 'Not logged in' }, { status: 401 });
     }
 
-    const user = await User.findOne({ username: username.toLowerCase() }).lean();
+    await connectDB();
+    const user = await User.findOne({ username }).select('-password').lean();
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Not logged in' }, { status: 401 });
     }
 
     return NextResponse.json(user);

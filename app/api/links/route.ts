@@ -1,24 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { getSessionUsername, unauthorized } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
+    const username = getSessionUsername(request);
+    if (!username) return unauthorized();
     await connectDB();
 
-    const { username, title, url } = await request.json();
+    const { title, url } = await request.json();
 
-    if (!username || !title || !url) {
+    if (!title || !url) {
       return NextResponse.json(
-        { error: 'Username, title, and url are required' },
+        { error: 'Title and url are required' },
         { status: 400 }
       );
     }
 
-    const user = await User.findOne({ username: username.toLowerCase() });
+    const user = await User.findOne({ username });
 
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Not logged in' }, { status: 401 });
     }
 
     const newLink = {

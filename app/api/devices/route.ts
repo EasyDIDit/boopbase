@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Device from '@/lib/models/Device';
 import { isOwner } from '@/lib/ownerAuth';
+import { getSessionUsername } from '@/lib/session';
 
 /** Live host — apex boopbase.com can 402 when that deployment is paused */
 const PUBLIC_ORIGIN = 'https://www.boopbase.com';
@@ -21,7 +22,7 @@ function cleanCustomCode(raw: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    const username = request.cookies.get('user')?.value;
+    const username = getSessionUsername(request);
     if (!isOwner(username)) {
       return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
     }
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const username = request.cookies.get('user')?.value;
+    const username = getSessionUsername(request);
     if (!isOwner(username)) {
       return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
     }

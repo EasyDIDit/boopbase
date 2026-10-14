@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { isSessionAdmin } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
 
-    const username = request.cookies.get('user')?.value;
-
-    // Only allow pez or easydidit for now
-    if (username !== 'pez' && username !== 'easydidit') {
+    // Only allow pez or easydidit for now (from the verified session)
+    if (!isSessionAdmin(request)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
