@@ -3,10 +3,11 @@ import connectDB from '@/lib/mongodb';
 import Device from '@/lib/models/Device';
 import User from '@/lib/models/User';
 import Customer from '@/lib/models/Customer';
+import { getSessionUsername } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
-    const username = request.cookies.get('user')?.value?.toLowerCase();
+    const username = getSessionUsername(request);
     if (!username) {
       return NextResponse.json({ error: 'Sign in to claim this Boop' }, { status: 401 });
     }

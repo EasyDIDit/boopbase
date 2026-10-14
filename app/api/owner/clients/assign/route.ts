@@ -3,10 +3,11 @@ import connectDB from '@/lib/mongodb';
 import Customer from '@/lib/models/Customer';
 import Device from '@/lib/models/Device';
 import { isOwner } from '@/lib/ownerAuth';
+import { getSessionUsername } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
-    const shopUser = request.cookies.get('user')?.value;
+    const shopUser = getSessionUsername(request);
     if (!isOwner(shopUser)) {
       return NextResponse.json({ error: 'Not allowed' }, { status: 403 });
     }

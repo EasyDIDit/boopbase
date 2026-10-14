@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { setSessionCookie } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    const { emailOrUsername, password } = await request.json();
+    const body = await request.json().catch(() => ({}));
+    const emailOrUsername = String(body.emailOrUsername || '').toLowerCase().trim();
+    const password = String(body.password || '');
 
     if (!emailOrUsername || !password) {
       return NextResponse.json({ error: 'Email/Username and password are required' }, { status: 400 });
@@ -15,8 +18,8 @@ export async function POST(request: NextRequest) {
 
     const user = await User.findOne({
       $or: [
-        { username: emailOrUsername.toLowerCase() },
-        { email: emailOrUsername.toLowerCase() }
+        { username: emailOrUsername },
+        { email: emailOrUsername }
       ]
     });
 
@@ -42,17 +45,7 @@ export async function POST(request: NextRequest) {
       user: { username: user.username, name: user.name }
     });
 
-    const host = request.headers.get('host') || '';
-    const onBoopbase = host.endsWith('boopbase.com');
-
-    response.cookies.set('user', user.username, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7,
-      path: '/',
-      ...(onBoopbase ? { domain: '.boopbase.com' } : {}),
-    });
+    setSessionCookie(request, response, user.username);
 
     return response;
   } catch (error) {

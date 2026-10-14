@@ -3,24 +3,20 @@ import { writeFile } from 'fs/promises';
 import path from 'path';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { getSessionUsername, unauthorized } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
+    const username = getSessionUsername(request);
+    if (!username) return unauthorized();
     await connectDB();
 
     const formData = await request.formData();
     const file = formData.get('file') as File | null;
     const backgroundColor = formData.get('backgroundColor') as string | null;
-    const username = formData.get('username') as string;
-
-    if (!username) {
-      return NextResponse.json({ error: 'Username is required' }, { status: 400 });
-    }
-
-    const user = await User.findOne({ username: username.toLowerCase() });
-    if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    }
+    // Any username in the form data is ignored; the session decides.
+    const user = await User.findOne({ username });
+    if (!user) return unauthorized();
 
     // Handle background color update
     if (backgroundColor) {
