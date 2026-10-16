@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { normalizeLinkUrl } from '@/lib/safeUrl';
 import Link from 'next/link';
 import { getSkinById } from '@/lib/skins';
 import { legacySocialsToEntries } from '@/lib/socialPlatforms';
@@ -103,7 +104,9 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     } catch {
       // never block navigation
     }
-    window.open(link.url, '_blank', 'noopener,noreferrer');
+    const safe = normalizeLinkUrl(link.url);
+    if (!safe) return;
+    window.open(safe, '_blank', 'noopener,noreferrer');
   };
 
   return (

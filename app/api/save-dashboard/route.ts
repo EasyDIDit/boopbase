@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { getSessionUsername, unauthorized } from '@/lib/session';
+import { normalizeLinkUrl } from '@/lib/safeUrl';
 
 const ALLOWED_FIELDS = [
   'name',
@@ -42,6 +43,22 @@ export async function POST(request: NextRequest) {
     for (const key of ALLOWED_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(body, key) && body[key] !== undefined) {
         updateData[key] = body[key];
+      }
+    }
+
+    // Only allow http(s) link URLs; bare domains get https://, anything else is rejected.
+    if (Array.isArray(updateData.links)) {
+      const bad: string[] = [];
+      updateData.links = (updateData.links as Array<Record<string, unknown>>).map((l) => {
+        const url = normalizeLinkUrl(l?.url);
+        if (!url) bad.push(String(l?.title ?? l?.url ?? ''));
+        return { ...l, url };
+      });
+      if (bad.length) {
+        return NextResponse.json(
+          { error: `Links must start with http:// or https:// (check: ${bad.join(', ')})` },
+          { status: 400 }
+        );
       }
     }
 
