@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import Link from 'next/link';
 import ClientPublicProfile from '@/app/[username]/ClientPublicProfile';
 import { getAllSkins, getSkinById } from '@/lib/skins';
 import {
@@ -12,6 +13,9 @@ import {
   type SocialPlatformId,
 } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
+import { IMAGE_ACCEPT, prepareImage } from '@/lib/imageResize';
+
+type ImageStatus = { kind: 'idle' | 'busy' | 'ready' | 'error'; msg?: string };
 
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -37,6 +41,9 @@ export default function Dashboard() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [saveOk, setSaveOk] = useState(false);
+  const [needsLogin, setNeedsLogin] = useState(false);
+  const [photoStatus, setPhotoStatus] = useState<ImageStatus>({ kind: 'idle' });
+  const [bgStatus, setBgStatus] = useState<ImageStatus>({ kind: 'idle' });
   const [totalViews, setTotalViews] = useState(0);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
 
@@ -108,35 +115,6 @@ export default function Dashboard() {
     };
   }, [name, bio, photo, bgImage, themeId, links, socials, outerBg, innerBg, useThemeBg, phone, email]);
 
-  const resizeImage = (file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          let width = img.width;
-          let height = img.height;
-          if (width > height) {
-            if (width > maxWidth) {
-              height *= maxWidth / width;
-              width = maxWidth;
-            }
-          } else if (height > maxHeight) {
-            width *= maxHeight / height;
-            height = maxHeight;
-          }
-          canvas.width = width;
-          canvas.height = height;
-          canvas.getContext('2d')?.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.75));
-        };
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-
   const saveAllChanges = async () => {
     if (!user?.username) {
       setSaveOk(false);
@@ -145,6 +123,7 @@ export default function Dashboard() {
     }
     setSaving(true);
     setSaveMsg(null);
+    setNeedsLogin(false);
     try {
       const res = await fetch('/api/save-dashboard', {
         method: 'POST',
@@ -180,7 +159,13 @@ export default function Dashboard() {
       if (res.ok && (data?.success === true || data?.success === undefined)) {
         setSaveOk(true);
         setSaveMsg('Saved');
+        setPhotoStatus((s) => (s.kind === 'ready' ? { kind: 'idle' } : s));
+        setBgStatus((s) => (s.kind === 'ready' ? { kind: 'idle' } : s));
         setTimeout(() => setSaveMsg(null), 2500);
+      } else if (res.status === 401) {
+        setSaveOk(false);
+        setNeedsLogin(true);
+        setSaveMsg('Please log in again');
       } else {
         setSaveOk(false);
         setSaveMsg(data?.error || `Save failed (${res.status})`);
@@ -264,25 +249,31 @@ export default function Dashboard() {
     setDraggingId(null);
   };
 
-  const uploadPhoto = async (e: any) => {
-    const file = e.target.files?.[0];
+  const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    input.value = ''; // allow re-picking the same file after an error
     if (!file) return;
+    setPhotoStatus({ kind: 'busy', msg: 'Processing photo…' });
     try {
-      setPhoto(await resizeImage(file, 400, 400));
-    } catch {
-      setSaveOk(false);
-      setSaveMsg('Photo failed');
+      setPhoto(await prepareImage(file, 400, 400));
+      setPhotoStatus({ kind: 'ready', msg: 'Photo ready — press Save' });
+    } catch (err) {
+      setPhotoStatus({ kind: 'error', msg: err instanceof Error ? err.message : 'Photo failed' });
     }
   };
 
-  const uploadBgImage = async (e: any) => {
-    const file = e.target.files?.[0];
+  const uploadBgImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    input.value = '';
     if (!file) return;
+    setBgStatus({ kind: 'busy', msg: 'Processing image…' });
     try {
-      setBgImage(await resizeImage(file, 1200, 1200));
-    } catch {
-      setSaveOk(false);
-      setSaveMsg('Background failed');
+      setBgImage(await prepareImage(file, 1200, 1200));
+      setBgStatus({ kind: 'ready', msg: 'Hero image ready — press Save' });
+    } catch (err) {
+      setBgStatus({ kind: 'error', msg: err instanceof Error ? err.message : 'Image failed' });
     }
   };
 
@@ -357,6 +348,14 @@ export default function Dashboard() {
             {saveMsg && (
               <span className={`text-sm font-medium px-2 ${saveOk ? 'text-emerald-400' : 'text-red-400'}`}>
                 {saveMsg}
+                {needsLogin && (
+                  <>
+                    {' '}
+                    <Link href="/login" className="underline">
+                      Log in
+                    </Link>
+                  </>
+                )}
               </span>
             )}
             <a
@@ -417,9 +416,16 @@ export default function Dashboard() {
                       )}
                     </div>
                     <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl font-medium text-sm">
-                      Upload photo
-                      <input type="file" accept="image/*" onChange={uploadPhoto} className="hidden" />
+                      {photoStatus.kind === 'busy' ? 'Processing…' : 'Upload photo'}
+                      <input
+                        type="file"
+                        accept={IMAGE_ACCEPT}
+                        onChange={uploadPhoto}
+                        disabled={photoStatus.kind === 'busy'}
+                        className="hidden"
+                      />
                     </label>
+                    <ImageStatusNote status={photoStatus} />
                   </div>
                 </Section>
                 <Section title="Hero image">
@@ -433,9 +439,16 @@ export default function Dashboard() {
                       </div>
                     )}
                     <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl text-sm font-medium">
-                      Upload hero
-                      <input type="file" accept="image/*" onChange={uploadBgImage} className="hidden" />
+                      {bgStatus.kind === 'busy' ? 'Processing…' : 'Upload hero'}
+                      <input
+                        type="file"
+                        accept={IMAGE_ACCEPT}
+                        onChange={uploadBgImage}
+                        disabled={bgStatus.kind === 'busy'}
+                        className="hidden"
+                      />
                     </label>
+                    <ImageStatusNote status={bgStatus} />
                     {bgImage && (
                       <button type="button" onClick={() => setBgImage(null)} className="text-red-400 text-sm">
                         Remove
@@ -787,5 +800,16 @@ function Section({
       </div>
       {children}
     </div>
+  );
+}
+
+function ImageStatusNote({ status }: { status: ImageStatus }) {
+  if (status.kind === 'idle' || !status.msg) return null;
+  const color =
+    status.kind === 'error' ? 'text-red-400' : status.kind === 'ready' ? 'text-emerald-400' : 'text-zinc-400';
+  return (
+    <p role="status" aria-live="polite" className={`text-sm text-center max-w-xs ${color}`}>
+      {status.msg}
+    </p>
   );
 }
