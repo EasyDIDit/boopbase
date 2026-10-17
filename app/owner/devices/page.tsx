@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import ShortfallNotice from '@/components/ShortfallNotice';
 
 type DeviceRow = {
   _id: string;
@@ -121,6 +122,7 @@ export default function OwnerDevicesPage() {
       <div className="mx-auto max-w-3xl">
         <p className="text-xs tracking-[4px] text-white/40">MINT</p>
         <h1 className="mt-2 text-3xl font-bold">Boop codes</h1>
+        <div className="mt-4"><ShortfallNotice /></div>
         <p className="mt-2 text-sm text-white/60">
           Make a code, write only this URL on the chip, then pack it.
         </p>

@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import BoopLogo from '@/components/BoopLogo';
+import ResendLinkButton from '@/components/ResendLinkButton';
 
 type Props = {
   code: string;
@@ -63,6 +64,7 @@ export default function ClaimReadyScreen({ code, productType, soldToEmail }: Pro
             Use the same email you used at checkout so this {thing} links to you.
           </p>
         )}
+        {soldToEmail && <ResendLinkButton code={code} label="Email me a setup link instead" />}
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/40">

@@ -1,6 +1,5 @@
 import Device from '@/lib/models/Device';
 import Customer from '@/lib/models/Customer';
-import BoopOrder from '@/lib/models/BoopOrder';
 import { maySignedInUserClaim } from '@/lib/provision';
 
 export type ClaimResult = { status: number; body: Record<string, unknown> };
@@ -17,12 +16,6 @@ export async function upsertCustomer(email: string | undefined, username: string
   );
 }
 
-/** True when this user redeemed a claim link for an order placed with `orderEmail`. */
-async function redeemedOrderFor(orderEmail: string, username: string): Promise<boolean> {
-  if (!orderEmail) return false;
-  return !!(await BoopOrder.exists({ email: orderEmail.toLowerCase(), claimedUsername: username }));
-}
-
 /** Pre-check without writing (used by /register before creating the account). */
 export async function checkClaimable(code: string, username: string, email: string): Promise<ClaimResult | null> {
   const device = await Device.findOne({ code });
@@ -31,7 +24,7 @@ export async function checkClaimable(code: string, username: string, email: stri
   if (device.ownerUsername && device.ownerUsername !== username) {
     return { status: 409, body: { error: 'This Boop is already claimed' } };
   }
-  if (!device.ownerUsername && !maySignedInUserClaim(device, { email }, false)) {
+  if (!device.ownerUsername && !maySignedInUserClaim(device, { email })) {
     return { status: 403, body: { error: SOLD_TO_OTHER_MESSAGE, reason: 'sold_to_other' } };
   }
   return null;
@@ -62,9 +55,7 @@ export async function claimDevice(
     return { status: 409, body: { error: 'This Boop is already claimed' } };
   }
 
-  const allowed =
-    opts.viaClaimLink ||
-    maySignedInUserClaim(device, user, await redeemedOrderFor(device.orderEmail || '', username));
+  const allowed = opts.viaClaimLink || maySignedInUserClaim(device, user);
   if (!allowed) return { status: 403, body: { error: SOLD_TO_OTHER_MESSAGE, reason: 'sold_to_other' } };
 
   const set: Record<string, unknown> = { status: 'claimed', ownerUsername: username, claimedAt: new Date() };
@@ -72,7 +63,7 @@ export async function claimDevice(
   const updated = await Device.findOneAndUpdate(
     { _id: device._id, status: device.status, $or: [{ ownerUsername: '' }, { ownerUsername: null }, { ownerUsername: { $exists: false } }] },
     { $set: set },
-    { new: true }
+    { returnDocument: 'after' }
   );
   if (!updated) return { status: 409, body: { error: 'This Boop is already claimed' } };
 

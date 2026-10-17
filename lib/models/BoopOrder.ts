@@ -8,14 +8,10 @@ const BoopOrderSchema = new mongoose.Schema({
   productType: { type: String, enum: ['band', 'card', 'sticker'], default: 'card' },
   quantity: { type: Number, default: 1 },
   livemode: { type: Boolean, default: false },
-  /** Random salt; the claim token is derived from it and BOOPBASE_PROVISION_SECRET. Only the hash is stored. */
-  tokenSalt: { type: String, required: true },
-  tokenHash: { type: String, required: true, unique: true },
-  expiresAt: { type: Date, required: true },
-  /** Device codes reserved at sale (stock mode only). Usually empty: EASY assigns codes when packing. */
+  /** Codes reserved from ready stock for this order (each has its own setup link on the Device). */
   deviceCodes: { type: [String], default: [] },
-  claimedUsername: { type: String, default: '', lowercase: true },
-  claimedAt: { type: Date, default: null },
+  /** Cards still owed because stock was short at sale. Owner screen shows these; "Fill" assigns new stock. */
+  shortfall: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 }, { collection: 'boop_orders' });
 

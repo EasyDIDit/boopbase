@@ -1,44 +1,40 @@
-import BoopOrder from '@/lib/models/BoopOrder';
 import Device from '@/lib/models/Device';
 import { hashClaimToken } from '@/lib/provision';
-import { claimDevice, upsertCustomer, type ClaimResult } from '@/lib/claimDevice';
+import { claimDevice, type ClaimResult } from '@/lib/claimDevice';
 
-export function isClaimLinkExpired(expiresAt: Date, now = Date.now()): boolean {
-  return expiresAt.getTime() < now;
+export function isClaimLinkExpired(expiresAt: Date | null | undefined, now = Date.now()): boolean {
+  return !expiresAt || expiresAt.getTime() < now;
 }
 
-export async function findOrderByToken(token: string) {
-  if (!/^[A-Za-z0-9_-]{20,100}$/.test(token)) return null;
-  return BoopOrder.findOne({ tokenHash: hashClaimToken(token) });
+function validTokenShape(token: string) {
+  return /^[A-Za-z0-9_-]{20,100}$/.test(token);
 }
 
-/** Redeems a setup link for the signed-in user. One account per link; repeat by the same account is fine. */
+/** The card a setup link belongs to: { device, state } where state is current | replaced. */
+export async function findDeviceByToken(token: string) {
+  if (!validTokenShape(token)) return null;
+  const h = hashClaimToken(token);
+  const current = await Device.findOne({ claimTokenHash: h });
+  if (current) return { device: current, state: 'current' as const };
+  const old = await Device.findOne({ prevTokenHashes: h });
+  if (old) return { device: old, state: 'replaced' as const };
+  return null;
+}
+
+/** Redeems one card's setup link for the signed-in user. Any account may redeem (forwarded links are allowed). */
 export async function redeemClaimToken(token: string, user: { username: string; email?: string }): Promise<ClaimResult> {
-  const order = await findOrderByToken(token);
-  if (!order) return { status: 404, body: { error: 'This setup link is not valid. Reply to your order email for a new one.' } };
-  if (order.claimedUsername && order.claimedUsername !== user.username) {
-    return { status: 409, body: { error: 'This setup link was already used by another account.' } };
+  const found = await findDeviceByToken(token);
+  if (!found) return { status: 404, body: { error: 'This setup link is not valid. Reply to your order email for a new one.' } };
+  const { device, state } = found;
+  if (device.ownerUsername === user.username) return { status: 200, body: { message: 'Already yours', code: device.code } };
+  if (device.ownerUsername || device.status === 'claimed') {
+    return { status: 409, body: { error: 'This card was already set up by another account.' } };
   }
-  if (!order.claimedUsername) {
-    if (isClaimLinkExpired(order.expiresAt)) {
-      return { status: 410, body: { error: 'This setup link expired. Reply to your order email and we will send a new one.' } };
-    }
-    const res = await BoopOrder.updateOne(
-      { _id: order._id, claimedUsername: '' },
-      { $set: { claimedUsername: user.username, claimedAt: new Date() } }
-    );
-    if (res.modifiedCount !== 1) return { status: 409, body: { error: 'This setup link was already used by another account.' } };
+  if (state === 'replaced') {
+    return { status: 410, body: { error: 'A newer setup link was sent for this card. Use the newest email, or request a new link.', reason: 'replaced' } };
   }
-  await upsertCustomer(user.email, user.username);
-  // Devices already tied to this order (stock mode or assigned at packing) attach now; later ones attach on tap.
-  const devices = await Device.find({ orderId: order.orderId, status: 'sold' });
-  const claimed: string[] = [];
-  for (const d of devices) {
-    const r = await claimDevice(d.code, user, { viaClaimLink: true });
-    if (r.status === 200) claimed.push(d.code);
+  if (isClaimLinkExpired(device.claimExpiresAt)) {
+    return { status: 410, body: { error: 'This setup link expired. Request a new one, or tap the card and sign in with your checkout email.', reason: 'expired' } };
   }
-  return {
-    status: 200,
-    body: { message: 'Your BOOP is linked to your page', claimedCodes: claimed, quantity: order.quantity },
-  };
+  return claimDevice(device.code, user, { viaClaimLink: true });
 }

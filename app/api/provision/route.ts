@@ -1,26 +1,17 @@
-import crypto from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import BoopOrder from '@/lib/models/BoopOrder';
 import Device from '@/lib/models/Device';
-import {
-  CLAIM_TTL_MS,
-  claimTokenFor,
-  claimUrl,
-  hashClaimToken,
-  parseProvisionBody,
-  provisionSecret,
-  verifyProvisionSignature,
-} from '@/lib/provision';
+import { parseProvisionBody, provisionSecret, verifyProvisionSignature } from '@/lib/provision';
+import { currentLink, publicBase, reserveFromStock, type CardLink } from '@/lib/cardLinks';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Store → boopbase: "this Boop was sold". HMAC-signed (BOOPBASE_PROVISION_SECRET), idempotent on orderId.
- * Default: records the order + claim link only. Device codes are assigned when EASY packs
- * (owner assign screen marks them sold to orderEmail), so tap-to-claim keeps working.
- * PROVISION_RESERVE_STOCK=1 additionally reserves `quantity` ready devices as sold.
+ * Store → boopbase: "this Boop sold". HMAC-signed (BOOPBASE_PROVISION_SECRET), idempotent on orderId.
+ * Reserves `quantity` pre-programmed ready devices as sold to the checkout email, each with its own 30-day
+ * setup link. Short stock never fails the sale: the gap is recorded as `shortfall` and shown on the owner screen.
  */
 export async function POST(request: NextRequest) {
   const secret = provisionSecret();
@@ -42,10 +33,8 @@ export async function POST(request: NextRequest) {
 
   try {
     await connectDB();
-    const base = process.env.BOOPBASE_PUBLIC_URL?.trim() || request.nextUrl.origin;
+    const base = publicBase(request.nextUrl.origin);
 
-    const salt = crypto.randomBytes(16).toString('hex');
-    const token = claimTokenFor(secret, body.orderId, salt);
     let created = false;
     try {
       const res = await BoopOrder.updateOne(
@@ -58,9 +47,7 @@ export async function POST(request: NextRequest) {
             productType: body.productType,
             quantity: body.quantity,
             livemode: body.livemode,
-            tokenSalt: salt,
-            tokenHash: hashClaimToken(token),
-            expiresAt: new Date(Date.now() + CLAIM_TTL_MS),
+            shortfall: body.quantity,
           },
         },
         { upsert: true }
@@ -70,32 +57,30 @@ export async function POST(request: NextRequest) {
       if ((err as { code?: number }).code !== 11000) throw err;
     }
 
+    if (created) {
+      const links = await reserveFromStock(secret, base, body, body.quantity);
+      await BoopOrder.updateOne({ orderId: body.orderId }, { $set: { shortfall: body.quantity - links.length } });
+      if (links.length < body.quantity) {
+        console.warn(JSON.stringify({ msg: 'provision.stock_shortfall', orderId: body.orderId, quantity: body.quantity, reserved: links.length }));
+      }
+    }
+
     const order = await BoopOrder.findOne({ orderId: body.orderId });
     if (!order) throw new Error('order missing after upsert');
-
-    if (created && process.env.PROVISION_RESERVE_STOCK === '1') {
-      const codes: string[] = [];
-      for (let i = 0; i < order.quantity; i++) {
-        const d = await Device.findOneAndUpdate(
-          { status: 'ready', productType: order.productType, $or: [{ ownerUsername: '' }, { ownerUsername: null }] },
-          { $set: { status: 'sold', orderEmail: order.email, orderId: order.orderId } },
-          { new: true, sort: { createdAt: 1 } }
-        );
-        if (!d) break; // not enough stock: EASY assigns the rest when packing
-        codes.push(d.code);
-      }
-      order.deviceCodes = codes;
-      await order.save();
-    }
+    const devices = await Device.find({ orderId: order.orderId }).sort({ soldAt: 1 });
+    const cards = devices
+      .filter((d) => d.status === 'sold' && !d.ownerUsername && d.claimExpiresAt && d.claimExpiresAt.getTime() > Date.now())
+      .map((d) => currentLink(secret, base, d))
+      .filter((l): l is CardLink => !!l);
 
     return NextResponse.json({
       ok: true,
       created,
       orderId: order.orderId,
-      claimUrl: claimUrl(base, claimTokenFor(secret, order.orderId, order.tokenSalt)),
-      expiresAt: order.expiresAt,
-      deviceCodes: order.deviceCodes,
-      claimed: !!order.claimedUsername,
+      quantity: order.quantity,
+      cards, // one { code, claimUrl, expiresAt } per unclaimed card with a live link
+      claimedCodes: devices.filter((d) => d.ownerUsername).map((d) => d.code),
+      shortfall: order.shortfall,
     });
   } catch (error) {
     console.error('Provision error:', (error as Error).message);
