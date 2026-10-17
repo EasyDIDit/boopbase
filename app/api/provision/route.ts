@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import BoopOrder from '@/lib/models/BoopOrder';
 import Device from '@/lib/models/Device';
+import Customer from '@/lib/models/Customer';
 import { parseProvisionBody, provisionSecret, verifyProvisionSignature } from '@/lib/provision';
 import { currentLink, publicBase, reserveFromStock, type CardLink } from '@/lib/cardLinks';
 
@@ -58,6 +59,12 @@ export async function POST(request: NextRequest) {
     }
 
     if (created) {
+      // Buyer shows up in the existing /owner/clients list right away (username fills in when they claim).
+      await Customer.updateOne(
+        { email: body.email },
+        { $setOnInsert: { email: body.email, createdAt: new Date() }, $set: { updatedAt: new Date() } },
+        { upsert: true }
+      );
       const links = await reserveFromStock(secret, base, body, body.quantity);
       await BoopOrder.updateOne({ orderId: body.orderId }, { $set: { shortfall: body.quantity - links.length } });
       if (links.length < body.quantity) {
