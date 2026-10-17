@@ -51,6 +51,8 @@ export async function POST(request: NextRequest) {
             quantity: body.quantity,
             livemode: body.livemode,
             shortfall: body.quantity,
+            lines: body.lines.map((l) => ({ ...l, owed: l.quantity })),
+            toMake: 0,
           },
         },
         { upsert: true }
@@ -67,10 +69,21 @@ export async function POST(request: NextRequest) {
         { $setOnInsert: { email: body.email, source: 'online_order', createdAt: new Date() }, $set: { updatedAt: new Date() } },
         { upsert: true }
       );
-      const links = await reserveFromStock(secret, base, body, body.quantity);
-      await BoopOrder.updateOne({ orderId: body.orderId }, { $set: { shortfall: body.quantity - links.length } });
-      if (links.length < body.quantity) {
-        console.warn(JSON.stringify({ msg: 'provision.stock_shortfall', orderId: body.orderId, quantity: body.quantity, reserved: links.length }));
+      // Stock lines reserve from online stock of their color. Logo (custom) lines are printed fresh per order:
+      // never auto-assigned, they go on EASY's to-make list on /owner/devices.
+      const lines = body.lines.map((l) => ({ ...l, owed: l.quantity }));
+      let reserved = 0;
+      for (const l of lines) {
+        if (l.custom) continue;
+        const links = await reserveFromStock(secret, base, body, l.quantity, l.color);
+        l.owed -= links.length;
+        reserved += links.length;
+      }
+      const shortfall = lines.filter((l) => !l.custom).reduce((n, l) => n + l.owed, 0);
+      const toMake = lines.filter((l) => l.custom).reduce((n, l) => n + l.owed, 0);
+      await BoopOrder.updateOne({ orderId: body.orderId }, { $set: { lines, shortfall, toMake } });
+      if (shortfall) {
+        console.warn(JSON.stringify({ msg: 'provision.stock_shortfall', orderId: body.orderId, quantity: body.quantity, reserved, byColor: lines.filter((l) => !l.custom && l.owed).map((l) => `${l.color || 'any'}:${l.owed}`) }));
       }
     }
 
@@ -90,6 +103,7 @@ export async function POST(request: NextRequest) {
       cards, // one { code, claimUrl, expiresAt } per unclaimed card with a live link
       claimedCodes: devices.filter((d) => d.ownerUsername).map((d) => d.code),
       shortfall: order.shortfall,
+      toMake: order.toMake || 0, // logo cards being printed for this order
     });
   } catch (error) {
     console.error('Provision error:', (error as Error).message);

@@ -20,6 +20,8 @@ const DeviceSchema = new mongoose.Schema({
     enum: ['ready', 'sold', 'claimed', 'disabled'],
     default: 'ready',
   },
+  /** Physical color. Black and White are separate stock; '' = not set (older cards). */
+  color: { type: String, enum: ['', 'black', 'white'], default: '' },
   ownerUsername: {
     type: String,
     default: '',

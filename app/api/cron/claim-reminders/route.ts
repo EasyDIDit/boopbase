@@ -20,8 +20,8 @@ function authorized(request: NextRequest): boolean {
 }
 
 /**
- * Daily (vercel.json). For each sold, unclaimed card: reminder with a fresh link at ~day 7, 25, 55 after sale.
- * Max 3; stops once claimed. No-op unless CRON_SECRET, BOOPBASE_PROVISION_SECRET, STORE_NOTIFY_URL are set AND the
+ * Daily (vercel.json). For each sold, unclaimed card: reminder with a fresh link at day 7, 18, 25, 29 after sale (REMINDER_DAYS).
+ * Max 4; stops once claimed. No-op unless CRON_SECRET, BOOPBASE_PROVISION_SECRET, STORE_NOTIFY_URL are set AND the
  * store reports Resend configured (signed health check). Links rotate only after the store confirms the email was sent.
  */
 export async function GET(request: NextRequest) {

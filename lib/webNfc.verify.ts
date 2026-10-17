@@ -48,8 +48,15 @@ async function main() {
   assert.equal(bad.readUrl, 'https://evil.example/');
   FakeReader.prototype.write = origWrite;
 
+  // Erase writes one empty record and verifies it
+  const er = await m.eraseTag();
+  assert.equal(er.verified, true);
+  assert.deepEqual(tag?.map((r) => r.recordType), ['empty']);
+  await m.writeAndVerifyUrl(url); // rewrite after erase works
+
   await m.lockTag();
   assert.ok(locked);
+  await assert.rejects(m.eraseTag(), (e: { name: string }) => e.name === 'InvalidStateError');
   await assert.rejects(m.writeAndVerifyUrl(url), (e: { name: string }) => e.name === 'InvalidStateError');
   assert.match(m.nfcErrorMessage({ name: 'InvalidStateError' }), /locked/);
   assert.match(m.nfcErrorMessage({ name: 'NotAllowedError' }), /Permissions/);

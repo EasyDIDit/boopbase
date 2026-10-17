@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { canMakeReadOnly, lockTag, nfcErrorMessage, webNfcSupported, writeAndVerifyUrl } from '@/lib/webNfc';
+import { canMakeReadOnly, eraseTag, lockTag, nfcErrorMessage, webNfcSupported, writeAndVerifyUrl } from '@/lib/webNfc';
 
 type Props = {
   code: string;
@@ -91,6 +91,20 @@ export default function NfcWritePanel({ code, url, onWritten }: Props) {
     }
   };
 
+  const erase = async () => {
+    if (!window.confirm('Erase this card? Whatever is on it now (its link) is wiped, so tapping it will open nothing until you write it again. Locked cards cannot be erased.')) return;
+    setPhase('writing');
+    setNote('Hold the card flat on the back of the phone and keep it there…');
+    try {
+      const r = await eraseTag();
+      setPhase(r.verified ? 'done' : 'unverified');
+      setNote(r.verified ? 'Card erased and checked. It is blank now. Tap Write to card to put a link back on it.' : 'Erase sent, but the read-back did not see the card. Hold it still and tap Erase again.');
+    } catch (err) {
+      setPhase('error');
+      setNote(nfcErrorMessage(err));
+    }
+  };
+
   const busy = phase === 'writing' || phase === 'saving';
   return (
     <div className="mt-3 rounded-2xl bg-zinc-800 p-3">
@@ -101,12 +115,19 @@ export default function NfcWritePanel({ code, url, onWritten }: Props) {
       >
         {busy ? (phase === 'saving' ? 'Saving…' : 'Hold card to phone…') : phase === 'done' ? 'Write again' : 'Write to card'}
       </button>
+      <button onClick={erase} disabled={busy} className="mt-2 min-h-10 w-full rounded-xl bg-zinc-700 text-sm font-semibold disabled:opacity-60">
+        Erase card
+      </button>
       {canMakeReadOnly() && (
         <label className="mt-2 flex items-center gap-2 text-xs text-white/60">
           <input type="checkbox" checked={lock} onChange={(e) => toggleLock(e.target.checked)} disabled={busy} />
           Lock card read-only after writing (permanent)
         </label>
       )}
+      <p className="mt-2 text-xs text-white/50">
+        Password protect: Chrome can&apos;t set or remove a card password. Use NFC Tools (Other → Set password / Remove
+        password). The lock above is not a password: it is permanent and can never be undone.
+      </p>
       {note && (
         <p
           role="status"

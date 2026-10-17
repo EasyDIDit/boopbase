@@ -16,6 +16,7 @@ type DeviceRow = {
   chipWrittenAt?: string;
   chipLocked?: boolean;
   onlineStock?: boolean;
+  color?: string;
   saleType?: string;
   ownerNote?: string;
   saleChannel?: string;
@@ -28,6 +29,7 @@ type Filter = 'all' | 'ready' | 'claimed' | 'handed';
 export default function OwnerDevicesPage() {
   const [devices, setDevices] = useState<DeviceRow[]>([]);
   const [productType, setProductType] = useState('card');
+  const [color, setColor] = useState('');
   const [code, setCode] = useState('');
   const [orderEmail, setOrderEmail] = useState('');
   const [ownerUsername, setOwnerUsername] = useState('');
@@ -54,6 +56,18 @@ export default function OwnerDevicesPage() {
   };
 
   const isInStock = (d: DeviceRow) => d.status === 'ready' && !d.ownerUsername;
+
+  const setColorFor = async (codes: string[], c: string) => {
+    if (!codes.length) return;
+    const res = await fetch('/api/owner/device-color', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codes, color: c }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setMessage(res.ok ? `${data.updated} card(s) set to ${c || 'no color'}` : data.error || 'Could not set color');
+    if (res.ok) load();
+  };
 
   const setOnline = async (codes: string[], online: boolean) => {
     if (!codes.length) return;
@@ -98,6 +112,7 @@ export default function OwnerDevicesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         productType,
+        color,
         code,
         orderEmail,
         ownerUsername,
@@ -112,7 +127,7 @@ export default function OwnerDevicesPage() {
     }
     setLastUrl(data.programmedUrl);
     setLastCode(data.code);
-    setMessage(`${data.productType} ${data.code} is ${data.status}`);
+    setMessage(`${data.color ? `${data.color} ` : ''}${data.productType} ${data.code} is ${data.status}`);
     setCode('');
     load();
   };
@@ -191,6 +206,18 @@ export default function OwnerDevicesPage() {
             </select>
           </label>
           <label className="block">
+            <span className="text-sm text-white/50">Color (Black and White are separate stock)</span>
+            <select
+              value={color}
+              onChange={(e) => setColor(e.target.value)}
+              className="mt-2 block min-h-12 w-full rounded-xl bg-zinc-800 px-4 py-3"
+            >
+              <option value="">Not set</option>
+              <option value="black">Black</option>
+              <option value="white">White</option>
+            </select>
+          </label>
+          <label className="block">
             <span className="text-sm text-white/50">Custom code (optional)</span>
             <input
               value={code}
@@ -259,6 +286,12 @@ export default function OwnerDevicesPage() {
             <button onClick={() => setOnline(picked, true)} className="rounded-xl bg-sky-300 px-3 py-2 font-bold text-black">
               Move to online stock
             </button>
+            <button onClick={() => setColorFor(picked, 'black')} className="rounded-xl bg-zinc-700 px-3 py-2 font-semibold">
+              Set Black
+            </button>
+            <button onClick={() => setColorFor(picked, 'white')} className="rounded-xl bg-zinc-700 px-3 py-2 font-semibold">
+              Set White
+            </button>
             <button onClick={() => setOnline(picked, false)} className="rounded-xl bg-zinc-700 px-3 py-2 font-semibold">
               Back to in-person
             </button>
@@ -279,7 +312,7 @@ export default function OwnerDevicesPage() {
                 <div>
                   <p className="font-mono text-2xl">{d.code}</p>
                   <p className="mt-1 text-sm text-white/50">
-                    {d.productType} · {d.status === 'claimed' ? 'claimed' : 'ready'}
+                    {d.color ? `${d.color} ` : ''}{d.productType} · {d.status === 'claimed' ? 'claimed' : 'ready'}
                     {d.ownerUsername ? ` · @${d.ownerUsername}` : ''}
                     {d.orderEmail && filter !== 'handed' ? ` · ${d.orderEmail}` : ''}
                     {filter === 'handed' && d.soldAt ? ` · handed out ${new Date(d.soldAt).toLocaleDateString()}` : ''}
@@ -326,6 +359,16 @@ export default function OwnerDevicesPage() {
                       >
                         {d.onlineStock ? 'Online stock ✓' : 'Make online stock'}
                       </button>
+                      <select
+                        value={d.color || ''}
+                        onChange={(e) => setColorFor([d.code], e.target.value)}
+                        className="rounded-lg bg-zinc-800 px-2 py-1"
+                        aria-label="Card color"
+                      >
+                        <option value="">Color…</option>
+                        <option value="black">Black</option>
+                        <option value="white">White</option>
+                      </select>
                     </div>
                   )}
                 </div>

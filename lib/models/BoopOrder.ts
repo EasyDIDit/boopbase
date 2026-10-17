@@ -17,8 +17,18 @@ const BoopOrderSchema = new mongoose.Schema({
   livemode: { type: Boolean, default: false },
   /** Codes reserved from ready stock for this order (each has its own setup link on the Device). */
   deviceCodes: { type: [String], default: [] },
-  /** Cards still owed because stock was short at sale. Owner screen shows these; "Fill" assigns new stock. */
+  /** Stock cards still owed because stock (of that color) was short at sale. Excludes logo cards (toMake). Owner screen shows these; "Fill" assigns new stock. */
   shortfall: { type: Number, default: 0 },
+  /**
+   * Per-color lines (online orders). `owed` = cards of that line not yet assigned.
+   * custom = logo card printed fresh for this order: never taken from stock; EASY prints + programs, then links it.
+   */
+  lines: {
+    type: [{ _id: false, color: { type: String, default: '' }, quantity: Number, custom: { type: Boolean, default: false }, owed: { type: Number, default: 0 } }],
+    default: [],
+  },
+  /** Logo cards still to print + program + link (sum of owed on custom lines). Not counted in shortfall. */
+  toMake: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now },
 }, { collection: 'boop_orders' });
 

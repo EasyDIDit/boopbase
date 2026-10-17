@@ -53,7 +53,33 @@ export type ProvisionBody = {
   productType: 'band' | 'card' | 'sticker';
   quantity: number;
   livemode: boolean;
+  /** Per-color lines; quantity is their sum. Older callers without lines get one any-color line. */
+  lines: ProvisionLine[];
 };
+
+export const CARD_COLORS = ['black', 'white'] as const;
+export type CardColor = (typeof CARD_COLORS)[number] | '';
+export type ProvisionLine = { color: CardColor; quantity: number; custom: boolean };
+
+export function normalizeColor(v: unknown): CardColor | null {
+  const c = String(v ?? '').toLowerCase().trim();
+  if (!c) return '';
+  return (CARD_COLORS as readonly string[]).includes(c) ? (c as CardColor) : null;
+}
+
+function parseLines(raw: unknown): ProvisionLine[] | null {
+  if (!Array.isArray(raw) || raw.length < 1 || raw.length > 20) return null;
+  const out: ProvisionLine[] = [];
+  for (const l of raw) {
+    if (!l || typeof l !== 'object') return null;
+    const r = l as Record<string, unknown>;
+    const color = normalizeColor(r.color);
+    const quantity = Number(r.quantity);
+    if (color === null || !Number.isInteger(quantity) || quantity < 1 || quantity > 50) return null;
+    out.push({ color, quantity, custom: r.custom === true });
+  }
+  return out;
+}
 
 export function parseProvisionBody(raw: unknown): ProvisionBody | null {
   if (!raw || typeof raw !== 'object') return null;
@@ -66,6 +92,12 @@ export function parseProvisionBody(raw: unknown): ProvisionBody | null {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 254) return null;
   if (!['band', 'card', 'sticker'].includes(productType)) return null;
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > 50) return null;
+  let lines: ProvisionLine[] = [{ color: '', quantity, custom: false }];
+  if (b.lines !== undefined) {
+    const parsed = parseLines(b.lines);
+    if (!parsed || parsed.reduce((n, l) => n + l.quantity, 0) !== quantity) return null;
+    lines = parsed;
+  }
   return {
     orderId,
     email,
@@ -73,6 +105,7 @@ export function parseProvisionBody(raw: unknown): ProvisionBody | null {
     productType: productType as ProvisionBody['productType'],
     quantity,
     livemode: b.livemode === true,
+    lines,
   };
 }
 
@@ -91,8 +124,8 @@ export function maySignedInUserClaim(device: { status: string; orderEmail?: stri
 }
 
 const DAY = 24 * 60 * 60 * 1000;
-/** Reminder schedule from soldAt: ~day 7, ~day 25 (before the first link expires), ~day 55. Max 3. */
-export const REMINDER_DAYS = [7, 25, 55] as const;
+/** Reminder schedule from soldAt (EASY, Oct 17): day 7, 18, 25 and 29 — all inside the 30-day link window. Max 4. */
+export const REMINDER_DAYS = [7, 18, 25, 29] as const;
 
 export function reminderDue(
   device: { status: string; ownerUsername?: string; soldAt?: Date | null; remindersSent?: number; orderEmail?: string },

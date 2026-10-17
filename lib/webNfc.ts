@@ -97,3 +97,33 @@ export async function lockTag(timeoutMs = 20000): Promise<void> {
   if (!r?.makeReadOnly) throw Object.assign(new Error('Locking is not supported in this browser'), { name: 'NotSupportedError' });
   await r.makeReadOnly({ signal: AbortSignal.timeout(timeoutMs) });
 }
+
+/**
+ * Erase, like NFC Tools' "Erase tag": overwrites the tag with a single empty NDEF record, then reads back to check.
+ * Fails on a locked (read-only) tag. Does not touch NTAG password settings — Web NFC has no access to those.
+ */
+export async function eraseTag(opts: { timeoutMs?: number } = {}): Promise<{ verified: boolean; serial: string | null }> {
+  const C = ctor();
+  if (!C) throw Object.assign(new Error('Web NFC not supported'), { name: 'NotSupportedError' });
+  const writer = new C();
+  await writer.write({ records: [{ recordType: 'empty' }] }, { overwrite: true, signal: AbortSignal.timeout(opts.timeoutMs ?? 20000) });
+  const reader = new C();
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), 6000);
+  try {
+    const ev = await new Promise<NdefReadingEvent>((resolve, reject) => {
+      reader.addEventListener('reading', (e) => resolve(e as NdefReadingEvent), { once: true });
+      reader.addEventListener('readingerror', () => reject(Object.assign(new Error('read failed'), { name: 'NotReadableError' })), { once: true });
+      ctl.signal.addEventListener('abort', () => reject(Object.assign(new Error('read timeout'), { name: 'TimeoutError' })));
+      reader.scan({ signal: ctl.signal }).catch(reject);
+    });
+    const recs = ev.message.records;
+    return { verified: recs.length === 0 || recs.every((r) => r.recordType === 'empty'), serial: ev.serialNumber || null };
+  } catch (err) {
+    if ((err as { name?: string }).name === 'TimeoutError') return { verified: false, serial: null };
+    throw err;
+  } finally {
+    clearTimeout(timer);
+    ctl.abort();
+  }
+}

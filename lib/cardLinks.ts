@@ -65,19 +65,23 @@ export async function issueFreshLink(secret: string, base: string, d: DeviceDoc,
 }
 
 /**
- * Reserves up to `n` ready devices of `productType` that EASY marked as online stock (never in-person stock) for an order (atomic per device) and gives each its own link.
+ * Reserves up to `n` ready devices of `productType` (and `color`, when given) that EASY marked as online stock (never in-person stock) for an order (atomic per device) and gives each its own link.
  * Returns the links issued; the caller records any shortfall.
  */
 export async function reserveFromStock(
   secret: string,
   base: string,
   order: { orderId: string; email: string; productType: string },
-  n: number
+  n: number,
+  color: string = ''
 ): Promise<CardLink[]> {
   const links: CardLink[] = [];
+  // Black and White are separate stock: a colored line only takes cards marked that color.
+  // A line without a color (older store calls) takes any online-stock card, as before.
+  const colorFilter = color ? { color } : {};
   for (let i = 0; i < n; i++) {
     const d = await Device.findOneAndUpdate(
-      { status: 'ready', onlineStock: true, productType: order.productType, $or: [{ ownerUsername: '' }, { ownerUsername: null }, { ownerUsername: { $exists: false } }] },
+      { status: 'ready', onlineStock: true, productType: order.productType, ...colorFilter, $or: [{ ownerUsername: '' }, { ownerUsername: null }, { ownerUsername: { $exists: false } }] },
       { $set: { status: 'sold', saleChannel: 'online', orderEmail: order.email, orderId: order.orderId, soldAt: new Date(), remindersSent: 0 } },
       { returnDocument: 'after', sort: { createdAt: 1 } }
     );

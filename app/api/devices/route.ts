@@ -47,6 +47,7 @@ export async function POST(request: NextRequest) {
     const productType = ['band', 'card', 'sticker'].includes(body.productType)
       ? body.productType
       : 'card';
+    const color = ['black', 'white'].includes(body.color) ? body.color : '';
     const orderEmail = (body.orderEmail || '').toLowerCase().trim();
     const ownerUsername = (body.ownerUsername || '').toLowerCase().trim();
     const requested = cleanCustomCode(String(body.code || ''));
@@ -79,6 +80,7 @@ export async function POST(request: NextRequest) {
     const device = await Device.create({
       code,
       productType,
+      color,
       status: ownerUsername ? 'claimed' : 'ready',
       orderEmail,
       ownerUsername,
@@ -89,6 +91,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       code: device.code,
       productType: device.productType,
+      color: device.color,
       status: device.status,
       programmedUrl: device.programmedUrl,
       orderEmail: device.orderEmail,
