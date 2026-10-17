@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
-import Device from '@/lib/models/Device';
+import { checkClaimable, claimDevice } from '@/lib/claimDevice';
 import Customer from '@/lib/models/Customer';
 import { setSessionCookie } from '@/lib/session';
 
@@ -39,18 +39,9 @@ export async function POST(request: NextRequest) {
     }
 
     // If a device code is present, validate before creating the account
-    let device = null;
     if (code) {
-      device = await Device.findOne({ code });
-      if (!device) {
-        return NextResponse.json({ error: 'That code is not in our shop' }, { status: 404 });
-      }
-      if (device.status === 'disabled') {
-        return NextResponse.json({ error: 'This Boop is retired' }, { status: 400 });
-      }
-      if (device.status === 'claimed' && device.ownerUsername && device.ownerUsername !== username) {
-        return NextResponse.json({ error: 'This Boop is already claimed' }, { status: 409 });
-      }
+      const blocked = await checkClaimable(code, username, email);
+      if (blocked) return NextResponse.json(blocked.body, { status: blocked.status });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -74,13 +65,11 @@ export async function POST(request: NextRequest) {
     );
 
     let claimedCode: string | null = null;
-    if (device) {
-      device.status = 'claimed';
-      device.ownerUsername = username;
-      device.orderEmail = email;
-      device.claimedAt = new Date();
-      await device.save();
-      claimedCode = device.code;
+    let claimError: string | null = null;
+    if (code) {
+      const result = await claimDevice(code, { username, email });
+      if (result.status === 200) claimedCode = code;
+      else claimError = String(result.body.error || 'Could not claim this Boop');
     }
 
     const response = NextResponse.json({
@@ -89,6 +78,7 @@ export async function POST(request: NextRequest) {
         : 'Account created successfully',
       user: { username: user.username, name: user.name, email: user.email },
       claimedCode,
+      claimError,
     });
 
     // Session so they land in dashboard without a second login step
