@@ -11,7 +11,8 @@ export async function upsertCustomer(email: string | undefined, username: string
   if (!email) return;
   await Customer.findOneAndUpdate(
     { email: email.toLowerCase() },
-    { email: email.toLowerCase(), username, updatedAt: new Date() },
+    // Never touches marketingOptOut; source only set when the row is new.
+    { $set: { email: email.toLowerCase(), username, updatedAt: new Date() }, $setOnInsert: { source: 'claim' } },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
 }

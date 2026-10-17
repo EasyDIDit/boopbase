@@ -15,10 +15,15 @@ type DeviceRow = {
   programmedUrl?: string;
   chipWrittenAt?: string;
   chipLocked?: boolean;
+  onlineStock?: boolean;
+  saleType?: string;
+  ownerNote?: string;
+  saleChannel?: string;
+  soldAt?: string;
   createdAt?: string;
 };
 
-type Filter = 'all' | 'ready' | 'claimed';
+type Filter = 'all' | 'ready' | 'claimed' | 'handed';
 
 export default function OwnerDevicesPage() {
   const [devices, setDevices] = useState<DeviceRow[]>([]);
@@ -34,6 +39,38 @@ export default function OwnerDevicesPage() {
   const [lastCode, setLastCode] = useState('');
   const [batch, setBatch] = useState(false);
   const [writingCode, setWritingCode] = useState('');
+  const [picked, setPicked] = useState<string[]>([]);
+
+  const saveSaleInfo = async (d: DeviceRow, saleType: string, ownerNote: string) => {
+    if (d.status === 'ready' && saleType && !window.confirm(`Mark ${d.code} as handed out (${saleType})? It leaves ready stock.`)) return;
+    const res = await fetch('/api/owner/sale-info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: d.code, saleType, ownerNote }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setMessage(res.ok ? `${d.code}: ${data.saleType || 'type cleared'}${data.ownerNote ? ` · ${data.ownerNote}` : ''}` : data.error || 'Could not save');
+    if (res.ok) load();
+  };
+
+  const isInStock = (d: DeviceRow) => d.status === 'ready' && !d.ownerUsername;
+
+  const setOnline = async (codes: string[], online: boolean) => {
+    if (!codes.length) return;
+    const res = await fetch('/api/owner/online-stock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codes, online }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMessage(data.error || 'Could not update online stock');
+      return;
+    }
+    setMessage(`${data.updated} card(s) ${online ? 'moved to online stock' : 'back to in-person stock'}`);
+    setPicked([]);
+    load();
+  };
 
   const load = async () => {
     const res = await fetch('/api/devices');
@@ -92,12 +129,14 @@ export default function OwnerDevicesPage() {
   const counts = useMemo(() => {
     const ready = devices.filter((d) => d.status !== 'claimed').length;
     const claimed = devices.filter((d) => d.status === 'claimed').length;
-    return { all: devices.length, ready, claimed };
+    const handed = devices.filter((d) => d.status === 'sold' && !d.ownerUsername).length;
+    return { all: devices.length, ready, claimed, handed };
   }, [devices]);
 
   const visible = devices.filter((d) => {
     if (filter === 'ready') return d.status !== 'claimed';
     if (filter === 'claimed') return d.status === 'claimed';
+    if (filter === 'handed') return d.status === 'sold' && !d.ownerUsername;
     return true;
   });
 
@@ -201,7 +240,7 @@ export default function OwnerDevicesPage() {
         {message && <p className="mt-4 text-yellow-300">{message}</p>}
 
         <div className="mt-8 flex gap-2 text-sm">
-          {(['all', 'ready', 'claimed'] as Filter[]).map((key) => (
+          {(['all', 'ready', 'claimed', 'handed'] as Filter[]).map((key) => (
             <button
               key={key}
               onClick={() => setFilter(key)}
@@ -209,10 +248,26 @@ export default function OwnerDevicesPage() {
                 filter === key ? 'bg-white text-black' : 'bg-zinc-800 text-white/70'
               }`}
             >
-              {key} {counts[key]}
+              {key === 'handed' ? 'Handed out, unclaimed' : key} {counts[key]}
             </button>
           ))}
         </div>
+
+        {picked.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl bg-zinc-900 p-3 text-sm">
+            <span className="font-semibold">{picked.length} selected</span>
+            <button onClick={() => setOnline(picked, true)} className="rounded-xl bg-sky-300 px-3 py-2 font-bold text-black">
+              Move to online stock
+            </button>
+            <button onClick={() => setOnline(picked, false)} className="rounded-xl bg-zinc-700 px-3 py-2 font-semibold">
+              Back to in-person
+            </button>
+            <button onClick={() => setPicked([])} className="ml-auto text-white/60 underline">Clear</button>
+          </div>
+        )}
+        <p className="mt-3 text-xs text-white/40">
+          Web orders only use cards in online stock. Everything else stays your in-person stock.
+        </p>
 
         <div className="mt-4 space-y-3">
           {visible.length === 0 && (
@@ -226,8 +281,53 @@ export default function OwnerDevicesPage() {
                   <p className="mt-1 text-sm text-white/50">
                     {d.productType} · {d.status === 'claimed' ? 'claimed' : 'ready'}
                     {d.ownerUsername ? ` · @${d.ownerUsername}` : ''}
-                    {d.orderEmail ? ` · ${d.orderEmail}` : ''}
+                    {d.orderEmail && filter !== 'handed' ? ` · ${d.orderEmail}` : ''}
+                    {filter === 'handed' && d.soldAt ? ` · handed out ${new Date(d.soldAt).toLocaleDateString()}` : ''}
+                    {isInStock(d) && d.onlineStock ? ' · online stock' : ''}
+                    {d.saleType ? ` · ${d.saleType}` : ''}
                   </p>
+                  {d.saleChannel !== 'online' && d.status !== 'disabled' && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                      <select
+                        value={d.saleType || ''}
+                        onChange={(e) => saveSaleInfo(d, e.target.value, d.ownerNote || '')}
+                        className="rounded-lg bg-zinc-800 px-2 py-1"
+                        aria-label="In-person sale type"
+                      >
+                        <option value="">Sale type…</option>
+                        <option value="sale">Sale</option>
+                        <option value="giveaway">Giveaway</option>
+                      </select>
+                      <input
+                        defaultValue={d.ownerNote || ''}
+                        placeholder="Note: who / phone (private)"
+                        onBlur={(e) => {
+                          if (e.target.value.trim() !== (d.ownerNote || '')) saveSaleInfo(d, d.saleType || '', e.target.value);
+                        }}
+                        className="min-w-0 flex-1 rounded-lg bg-zinc-800 px-2 py-1"
+                      />
+                    </div>
+                  )}
+                  {isInStock(d) && (
+                    <div className="mt-2 flex items-center gap-3 text-xs">
+                      <label className="flex items-center gap-1 text-white/60">
+                        <input
+                          type="checkbox"
+                          checked={picked.includes(d.code)}
+                          onChange={(e) =>
+                            setPicked((p) => (e.target.checked ? [...p, d.code] : p.filter((c) => c !== d.code)))
+                          }
+                        />
+                        Select
+                      </label>
+                      <button
+                        onClick={() => setOnline([d.code], !d.onlineStock)}
+                        className={`rounded-full px-2 py-1 font-semibold ${d.onlineStock ? 'bg-sky-300/20 text-sky-200' : 'bg-zinc-800 text-white/60'}`}
+                      >
+                        {d.onlineStock ? 'Online stock ✓' : 'Make online stock'}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${

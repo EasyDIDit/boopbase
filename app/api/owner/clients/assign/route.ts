@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Customer from '@/lib/models/Customer';
 import Device from '@/lib/models/Device';
+import BoopOrder from '@/lib/models/BoopOrder';
 import { isOwner } from '@/lib/ownerAuth';
 import { getSessionUsername } from '@/lib/session';
 
@@ -51,7 +52,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // A card leaving stock here (ready → sold/claimed) is an in-person sale: log it in the shared sales log.
+    const isNewSale = device.status === 'ready' && !device.ownerUsername;
     device.orderEmail = email;
+    if (isNewSale) device.saleChannel = 'in_person';
     if (profileUsername) {
       device.ownerUsername = profileUsername;
       device.status = 'claimed';
@@ -61,12 +65,31 @@ export async function POST(request: NextRequest) {
     }
     await device.save();
 
+    if (isNewSale) {
+      const orderId = `inperson-${device.code}-${Date.now()}`;
+      await BoopOrder.create({
+        orderId,
+        channel: 'in_person',
+        saleType: device.saleType || '',
+        email,
+        productType: device.productType,
+        quantity: 1,
+        livemode: true,
+        deviceCodes: [device.code],
+        shortfall: 0,
+      });
+      if (!device.orderId) {
+        device.orderId = orderId;
+        device.soldAt = device.soldAt || new Date();
+        await device.save();
+      }
+    }
+
     const customer = await Customer.findOneAndUpdate(
       { email },
       {
-        email,
-        username: profileUsername || undefined,
-        updatedAt: new Date(),
+        $set: { email, ...(profileUsername ? { username: profileUsername } : {}), updatedAt: new Date() },
+        $setOnInsert: { source: 'in_person_sale' },
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
