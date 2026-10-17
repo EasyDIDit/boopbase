@@ -46,6 +46,11 @@ const DeviceSchema = new mongoose.Schema({
   lastLinkSentAt: { type: Date, default: null },
   linkSendsDay: { type: String, default: '' },
   linkSendsCount: { type: Number, default: 0 },
+  /** Set when the URL was written to the physical chip from /owner/devices (Web NFC) and read back OK. */
+  chipWrittenAt: { type: Date, default: null },
+  chipWrittenUrl: { type: String, default: '' },
+  chipSerial: { type: String, default: '' },
+  chipLocked: { type: Boolean, default: false },
   programmedUrl: {
     type: String,
     default: '',

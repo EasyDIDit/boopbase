@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import ShortfallNotice from '@/components/ShortfallNotice';
+import NfcWritePanel from '@/components/NfcWritePanel';
 
 type DeviceRow = {
   _id: string;
@@ -12,6 +13,8 @@ type DeviceRow = {
   ownerUsername?: string;
   orderEmail?: string;
   programmedUrl?: string;
+  chipWrittenAt?: string;
+  chipLocked?: boolean;
   createdAt?: string;
 };
 
@@ -28,6 +31,9 @@ export default function OwnerDevicesPage() {
   const [loading, setLoading] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
+  const [lastCode, setLastCode] = useState('');
+  const [batch, setBatch] = useState(false);
+  const [writingCode, setWritingCode] = useState('');
 
   const load = async () => {
     const res = await fetch('/api/devices');
@@ -68,6 +74,7 @@ export default function OwnerDevicesPage() {
       return;
     }
     setLastUrl(data.programmedUrl);
+    setLastCode(data.code);
     setMessage(`${data.productType} ${data.code} is ${data.status}`);
     setCode('');
     load();
@@ -161,6 +168,10 @@ export default function OwnerDevicesPage() {
           >
             {loading ? 'Making…' : `Make ${productType}`}
           </button>
+          <label className="flex items-center gap-2 text-sm text-white/60 sm:col-span-2">
+            <input type="checkbox" checked={batch} onChange={(e) => setBatch(e.target.checked)} />
+            Batch: after a card is written, make the next code automatically
+          </label>
         </div>
 
         {lastUrl && (
@@ -173,6 +184,17 @@ export default function OwnerDevicesPage() {
             >
               Copy URL
             </button>
+            {lastCode && (
+              <NfcWritePanel
+                key={lastCode}
+                code={lastCode}
+                url={lastUrl}
+                onWritten={() => {
+                  load();
+                  if (batch) mint();
+                }}
+              />
+            )}
           </div>
         )}
 
@@ -224,6 +246,24 @@ export default function OwnerDevicesPage() {
                 >
                   Copy chip URL
                 </button>
+              )}
+              {d.chipWrittenAt && (
+                <p className="mt-2 text-xs text-sky-200/80">
+                  Chip written {new Date(d.chipWrittenAt).toLocaleString()}
+                  {d.chipLocked ? ' · locked' : ''}
+                </p>
+              )}
+              {d.programmedUrl && d.status === 'ready' && !d.ownerUsername && !d.chipLocked && (
+                writingCode === d.code ? (
+                  <NfcWritePanel code={d.code} url={d.programmedUrl} onWritten={() => load()} />
+                ) : (
+                  <button
+                    onClick={() => setWritingCode(d.code)}
+                    className="mt-2 min-h-11 w-full rounded-xl border border-sky-300/40 text-sm font-semibold text-sky-200"
+                  >
+                    Write to card
+                  </button>
+                )
               )}
             </div>
           ))}
