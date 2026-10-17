@@ -39,6 +39,10 @@ const DeviceSchema = new mongoose.Schema({
   onlineStock: { type: Boolean, default: false },
   /** How it was sold. Existing records without a value read as in_person (not rewritten). */
   saleChannel: { type: String, enum: ['in_person', 'online'], default: 'in_person' },
+  /** In-person: free giveaway or paid sale. Separate from claim status. '' = not recorded (existing data). */
+  saleType: { type: String, enum: ['', 'sale', 'giveaway'], default: '' },
+  /** Owner's free-text note (who he gave it to, phone…). Never shown publicly; nothing is sent from it. */
+  ownerNote: { type: String, default: '', trim: true },
   soldAt: { type: Date, default: null },
   /** Per-card setup link. Token = HMAC(secret, orderId.code.salt); only the hash is stored. */
   claimTokenSalt: { type: String, default: '' },

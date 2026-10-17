@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       await BoopOrder.create({
         orderId,
         channel: 'in_person',
+        saleType: device.saleType || '',
         email,
         productType: device.productType,
         quantity: 1,

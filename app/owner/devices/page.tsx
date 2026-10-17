@@ -13,10 +13,14 @@ type DeviceRow = {
   orderEmail?: string;
   programmedUrl?: string;
   onlineStock?: boolean;
+  saleType?: string;
+  ownerNote?: string;
+  saleChannel?: string;
+  soldAt?: string;
   createdAt?: string;
 };
 
-type Filter = 'all' | 'ready' | 'claimed';
+type Filter = 'all' | 'ready' | 'claimed' | 'handed';
 
 export default function OwnerDevicesPage() {
   const [devices, setDevices] = useState<DeviceRow[]>([]);
@@ -30,6 +34,18 @@ export default function OwnerDevicesPage() {
   const [signedOut, setSignedOut] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const [picked, setPicked] = useState<string[]>([]);
+
+  const saveSaleInfo = async (d: DeviceRow, saleType: string, ownerNote: string) => {
+    if (d.status === 'ready' && saleType && !window.confirm(`Mark ${d.code} as handed out (${saleType})? It leaves ready stock.`)) return;
+    const res = await fetch('/api/owner/sale-info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: d.code, saleType, ownerNote }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setMessage(res.ok ? `${d.code}: ${data.saleType || 'type cleared'}${data.ownerNote ? ` · ${data.ownerNote}` : ''}` : data.error || 'Could not save');
+    if (res.ok) load();
+  };
 
   const isInStock = (d: DeviceRow) => d.status === 'ready' && !d.ownerUsername;
 
@@ -106,12 +122,14 @@ export default function OwnerDevicesPage() {
   const counts = useMemo(() => {
     const ready = devices.filter((d) => d.status !== 'claimed').length;
     const claimed = devices.filter((d) => d.status === 'claimed').length;
-    return { all: devices.length, ready, claimed };
+    const handed = devices.filter((d) => d.status === 'sold' && !d.ownerUsername).length;
+    return { all: devices.length, ready, claimed, handed };
   }, [devices]);
 
   const visible = devices.filter((d) => {
     if (filter === 'ready') return d.status !== 'claimed';
     if (filter === 'claimed') return d.status === 'claimed';
+    if (filter === 'handed') return d.status === 'sold' && !d.ownerUsername;
     return true;
   });
 
@@ -200,7 +218,7 @@ export default function OwnerDevicesPage() {
         {message && <p className="mt-4 text-yellow-300">{message}</p>}
 
         <div className="mt-8 flex gap-2 text-sm">
-          {(['all', 'ready', 'claimed'] as Filter[]).map((key) => (
+          {(['all', 'ready', 'claimed', 'handed'] as Filter[]).map((key) => (
             <button
               key={key}
               onClick={() => setFilter(key)}
@@ -208,7 +226,7 @@ export default function OwnerDevicesPage() {
                 filter === key ? 'bg-white text-black' : 'bg-zinc-800 text-white/70'
               }`}
             >
-              {key} {counts[key]}
+              {key === 'handed' ? 'Handed out, unclaimed' : key} {counts[key]}
             </button>
           ))}
         </div>
@@ -241,9 +259,33 @@ export default function OwnerDevicesPage() {
                   <p className="mt-1 text-sm text-white/50">
                     {d.productType} · {d.status === 'claimed' ? 'claimed' : 'ready'}
                     {d.ownerUsername ? ` · @${d.ownerUsername}` : ''}
-                    {d.orderEmail ? ` · ${d.orderEmail}` : ''}
+                    {d.orderEmail && filter !== 'handed' ? ` · ${d.orderEmail}` : ''}
+                    {filter === 'handed' && d.soldAt ? ` · handed out ${new Date(d.soldAt).toLocaleDateString()}` : ''}
                     {isInStock(d) && d.onlineStock ? ' · online stock' : ''}
+                    {d.saleType ? ` · ${d.saleType}` : ''}
                   </p>
+                  {d.saleChannel !== 'online' && d.status !== 'disabled' && (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                      <select
+                        value={d.saleType || ''}
+                        onChange={(e) => saveSaleInfo(d, e.target.value, d.ownerNote || '')}
+                        className="rounded-lg bg-zinc-800 px-2 py-1"
+                        aria-label="In-person sale type"
+                      >
+                        <option value="">Sale type…</option>
+                        <option value="sale">Sale</option>
+                        <option value="giveaway">Giveaway</option>
+                      </select>
+                      <input
+                        defaultValue={d.ownerNote || ''}
+                        placeholder="Note: who / phone (private)"
+                        onBlur={(e) => {
+                          if (e.target.value.trim() !== (d.ownerNote || '')) saveSaleInfo(d, d.saleType || '', e.target.value);
+                        }}
+                        className="min-w-0 flex-1 rounded-lg bg-zinc-800 px-2 py-1"
+                      />
+                    </div>
+                  )}
                   {isInStock(d) && (
                     <div className="mt-2 flex items-center gap-3 text-xs">
                       <label className="flex items-center gap-1 text-white/60">

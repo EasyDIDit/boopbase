@@ -8,7 +8,9 @@ const BoopOrderSchema = new mongoose.Schema({
   orderId: { type: String, required: true, unique: true },
   /** One sales log for both channels. Records without a value read as in_person (safe default). */
   channel: { type: String, enum: ['in_person', 'online'], default: 'in_person' },
-  email: { type: String, required: true, lowercase: true, trim: true },
+  /** In-person: sale or giveaway. Online orders are always 'sale'. '' = not recorded. */
+  saleType: { type: String, enum: ['', 'sale', 'giveaway'], default: '' },
+  email: { type: String, default: '', lowercase: true, trim: true },
   name: { type: String, default: '' },
   productType: { type: String, enum: ['band', 'card', 'sticker'], default: 'card' },
   quantity: { type: Number, default: 1 },

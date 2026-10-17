@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
           $setOnInsert: {
             orderId: body.orderId,
             channel: 'online',
+            saleType: 'sale',
             email: body.email,
             name: body.name,
             productType: body.productType,
