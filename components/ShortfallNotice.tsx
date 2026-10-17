@@ -32,7 +32,7 @@ export default function ShortfallNotice() {
     setBusy(false);
     if (!res.ok) return setMsg(data.error || 'Could not fill');
     const n = (data.filled || []).reduce((a: number, f: { assigned: number }) => a + f.assigned, 0);
-    setMsg(n ? `Assigned ${n} card(s) from ready stock and emailed the buyers their links.` : 'No ready stock to assign. Mint/program more cards first.');
+    setMsg(n ? `Assigned ${n} card(s) from online stock and emailed the buyers their links.` : 'No online stock to assign. Move ready cards into online stock below (or mint more), then try again.');
     load();
   };
   return (
@@ -49,7 +49,7 @@ export default function ShortfallNotice() {
             ))}
           </ul>
           <button onClick={fill} disabled={busy} className="mt-3 rounded-xl bg-amber-300 px-3 py-2 font-bold text-black disabled:opacity-60">
-            {busy ? 'Assigning…' : 'Assign from ready stock now'}
+            {busy ? 'Assigning…' : 'Assign from online stock now'}
           </button>
         </>
       )}

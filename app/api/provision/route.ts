@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 /**
  * Store → boopbase: "this Boop sold". HMAC-signed (BOOPBASE_PROVISION_SECRET), idempotent on orderId.
- * Reserves `quantity` pre-programmed ready devices as sold to the checkout email, each with its own 30-day
+ * Reserves `quantity` pre-programmed ready devices marked onlineStock (in-person stock is never touched) as sold to the checkout email, each with its own 30-day
  * setup link. Short stock never fails the sale: the gap is recorded as `shortfall` and shown on the owner screen.
  */
 export async function POST(request: NextRequest) {
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
         {
           $setOnInsert: {
             orderId: body.orderId,
+            channel: 'online',
             email: body.email,
             name: body.name,
             productType: body.productType,
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
       // Buyer shows up in the existing /owner/clients list right away (username fills in when they claim).
       await Customer.updateOne(
         { email: body.email },
-        { $setOnInsert: { email: body.email, createdAt: new Date() }, $set: { updatedAt: new Date() } },
+        { $setOnInsert: { email: body.email, source: 'online_order', createdAt: new Date() }, $set: { updatedAt: new Date() } },
         { upsert: true }
       );
       const links = await reserveFromStock(secret, base, body, body.quantity);

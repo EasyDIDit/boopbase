@@ -12,6 +12,7 @@ type DeviceRow = {
   ownerUsername?: string;
   orderEmail?: string;
   programmedUrl?: string;
+  onlineStock?: boolean;
   createdAt?: string;
 };
 
@@ -28,6 +29,26 @@ export default function OwnerDevicesPage() {
   const [loading, setLoading] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
+  const [picked, setPicked] = useState<string[]>([]);
+
+  const isInStock = (d: DeviceRow) => d.status === 'ready' && !d.ownerUsername;
+
+  const setOnline = async (codes: string[], online: boolean) => {
+    if (!codes.length) return;
+    const res = await fetch('/api/owner/online-stock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codes, online }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      setMessage(data.error || 'Could not update online stock');
+      return;
+    }
+    setMessage(`${data.updated} card(s) ${online ? 'moved to online stock' : 'back to in-person stock'}`);
+    setPicked([]);
+    load();
+  };
 
   const load = async () => {
     const res = await fetch('/api/devices');
@@ -192,6 +213,22 @@ export default function OwnerDevicesPage() {
           ))}
         </div>
 
+        {picked.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2 rounded-2xl bg-zinc-900 p-3 text-sm">
+            <span className="font-semibold">{picked.length} selected</span>
+            <button onClick={() => setOnline(picked, true)} className="rounded-xl bg-sky-300 px-3 py-2 font-bold text-black">
+              Move to online stock
+            </button>
+            <button onClick={() => setOnline(picked, false)} className="rounded-xl bg-zinc-700 px-3 py-2 font-semibold">
+              Back to in-person
+            </button>
+            <button onClick={() => setPicked([])} className="ml-auto text-white/60 underline">Clear</button>
+          </div>
+        )}
+        <p className="mt-3 text-xs text-white/40">
+          Web orders only use cards in online stock. Everything else stays your in-person stock.
+        </p>
+
         <div className="mt-4 space-y-3">
           {visible.length === 0 && (
             <p className="text-sm text-white/40">No codes in this list yet.</p>
@@ -205,7 +242,28 @@ export default function OwnerDevicesPage() {
                     {d.productType} · {d.status === 'claimed' ? 'claimed' : 'ready'}
                     {d.ownerUsername ? ` · @${d.ownerUsername}` : ''}
                     {d.orderEmail ? ` · ${d.orderEmail}` : ''}
+                    {isInStock(d) && d.onlineStock ? ' · online stock' : ''}
                   </p>
+                  {isInStock(d) && (
+                    <div className="mt-2 flex items-center gap-3 text-xs">
+                      <label className="flex items-center gap-1 text-white/60">
+                        <input
+                          type="checkbox"
+                          checked={picked.includes(d.code)}
+                          onChange={(e) =>
+                            setPicked((p) => (e.target.checked ? [...p, d.code] : p.filter((c) => c !== d.code)))
+                          }
+                        />
+                        Select
+                      </label>
+                      <button
+                        onClick={() => setOnline([d.code], !d.onlineStock)}
+                        className={`rounded-full px-2 py-1 font-semibold ${d.onlineStock ? 'bg-sky-300/20 text-sky-200' : 'bg-zinc-800 text-white/60'}`}
+                      >
+                        {d.onlineStock ? 'Online stock ✓' : 'Make online stock'}
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold ${

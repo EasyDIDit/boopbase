@@ -35,6 +35,10 @@ const DeviceSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  /** Opt-in: only cards EASY moves into online stock can be auto-assigned to web orders. Default = in-person stock. */
+  onlineStock: { type: Boolean, default: false },
+  /** How it was sold. Existing records without a value read as in_person (not rewritten). */
+  saleChannel: { type: String, enum: ['in_person', 'online'], default: 'in_person' },
   soldAt: { type: Date, default: null },
   /** Per-card setup link. Token = HMAC(secret, orderId.code.salt); only the hash is stored. */
   claimTokenSalt: { type: String, default: '' },

@@ -56,11 +56,7 @@ export async function POST(request: NextRequest) {
     // Customer CDP row from registration — shop and promo share the same path
     await Customer.findOneAndUpdate(
       { email },
-      {
-        email,
-        username,
-        updatedAt: new Date(),
-      },
+      { $set: { email, username, updatedAt: new Date() }, $setOnInsert: { source: 'signup' } },
       { upsert: true, new: true, setDefaultsOnInsert: true }
     );
 
