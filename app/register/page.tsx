@@ -17,6 +17,10 @@ export default function Register() {
     typeof window !== 'undefined'
       ? new URLSearchParams(window.location.search).get('code') || ''
       : '';
+  const pendingClaim =
+    typeof window !== 'undefined'
+      ? new URLSearchParams(window.location.search).get('claim') || ''
+      : '';
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +43,20 @@ export default function Register() {
       const data = await res.json();
 
       if (res.ok) {
+        let problem: string | null = data.claimError || null;
+        if (pendingClaim) {
+          const c = await fetch('/api/claim-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token: pendingClaim }),
+          });
+          if (!c.ok) problem = (await c.json().catch(() => ({}))).error || 'Could not link your order';
+        }
+        if (problem) {
+          setError(`Your page was created, but: ${problem}`);
+          setTimeout(() => router.push('/dashboard'), 6000);
+          return;
+        }
         router.push('/dashboard');
       } else {
         setError(data.error || 'Something went wrong');
@@ -127,7 +145,7 @@ export default function Register() {
             />
           </label>
 
-          {error && <p className="text-center text-red-400">{error}</p>}
+          {error && <p role="alert" className="text-center text-red-400">{error}</p>}
 
           <button
             type="submit"
@@ -144,7 +162,7 @@ export default function Register() {
 
         <p className="mt-6 text-center text-sm text-white/50">
           Already have a page?{' '}
-          <a href={pendingCode ? `/login?code=${pendingCode}` : '/login'} className="font-semibold text-white underline">
+          <a href={pendingCode ? `/login?code=${pendingCode}` : pendingClaim ? `/login?claim=${pendingClaim}` : '/login'} className="font-semibold text-white underline">
             Sign in instead
           </a>
         </p>

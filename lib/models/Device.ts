@@ -30,6 +30,11 @@ const DeviceSchema = new mongoose.Schema({
     default: '',
     lowercase: true,
   },
+  /** Store order (Stripe session id) this device was sold under, when provisioned or assigned. */
+  orderId: {
+    type: String,
+    default: '',
+  },
   programmedUrl: {
     type: String,
     default: '',

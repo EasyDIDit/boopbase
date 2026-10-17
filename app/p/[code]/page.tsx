@@ -1,4 +1,7 @@
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
+import { SESSION_COOKIE, usernameFromSessionToken } from '@/lib/session';
+import { claimDevice } from '@/lib/claimDevice';
 import connectDB from '@/lib/mongodb';
 import Device from '@/lib/models/Device';
 import User from '@/lib/models/User';
@@ -52,10 +55,22 @@ export default async function TapPage({ params }: Props) {
     redirect(`/${owner.username}`);
   }
 
+  // Sold devices: the buyer who is already signed in (matching order email or redeemed setup link)
+  // gets it on tap, no form. Ready devices keep the existing create/sign-in screen.
+  const sessionUser = usernameFromSessionToken((await cookies()).get(SESSION_COOKIE)?.value);
+  if (device.status === 'sold' && sessionUser) {
+    const me = await User.findOne({ username: sessionUser });
+    if (me) {
+      const result = await claimDevice(cleanCode, { username: me.username, email: me.email });
+      if (result.status === 200) redirect(`/${me.username}`);
+    }
+  }
+
   return (
     <ClaimReadyScreen
       code={cleanCode}
       productType={device.productType || 'card'}
+      soldToEmail={device.status === 'sold' && !!device.orderEmail}
     />
   );
 }
