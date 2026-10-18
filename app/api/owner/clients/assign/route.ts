@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
     const customer = await Customer.findOneAndUpdate(
       { email },
       {
-        $set: { email, ...(profileUsername ? { username: profileUsername } : {}), updatedAt: new Date() },
+        $set: { email, ...(profileUsername ? { username: profileUsername } : {}), status: 'customer', updatedAt: new Date() },
         $setOnInsert: { source: 'in_person_sale' },
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }

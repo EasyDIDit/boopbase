@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       // Buyer shows up in the existing /owner/clients list right away (username fills in when they claim).
       await Customer.updateOne(
         { email: body.email },
-        { $setOnInsert: { email: body.email, source: 'online_order', createdAt: new Date() }, $set: { updatedAt: new Date() } },
+        { $setOnInsert: { email: body.email, source: 'online_order', createdAt: new Date() }, $set: { updatedAt: new Date(), status: 'customer' } },
         { upsert: true }
       );
       // Stock lines reserve from online stock of their color. Logo (custom) lines are printed fresh per order:

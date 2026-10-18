@@ -4,6 +4,7 @@ import Customer from '@/lib/models/Customer';
 import Device from '@/lib/models/Device';
 import { isOwner } from '@/lib/ownerAuth';
 import { getSessionUsername } from '@/lib/session';
+import { csvCell, customerStatus } from '@/lib/leads';
 
 export async function GET(request: NextRequest) {
   try {
@@ -31,6 +32,16 @@ export async function GET(request: NextRequest) {
       return {
         email: c.email,
         username: c.username || '',
+        name: c.name || '',
+        phone: c.phone || '',
+        interests: c.interests || [],
+        sources: c.sources || [],
+        source: c.source || '',
+        status: customerStatus(c, linked.length),
+        consentAt: c.consentAt || null,
+        textConsent: Boolean(c.textConsentAt),
+        marketingOptOut: Boolean(c.marketingOptOut),
+        createdAt: c.createdAt || null,
         devices: linked.map((d) => ({
           code: d.code,
           productType: d.productType,
@@ -41,7 +52,23 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    return NextResponse.json({ clients: rows });
+    if (request.nextUrl.searchParams.get('format') === 'csv') {
+      const head = ['name', 'email', 'phone', 'status', 'interests', 'sources', 'first_source', 'username', 'email_consent_at', 'text_consent', 'opted_out', 'created_at', 'cards'];
+      const lines = rows.map((r) =>
+        [r.name, r.email, r.phone, r.status, r.interests, r.sources, r.source, r.username, r.consentAt, r.textConsent ? 'yes' : 'no', r.marketingOptOut ? 'yes' : 'no', r.createdAt, r.devices.map((d) => d.code)]
+          .map(csvCell)
+          .join(',')
+      );
+      return new NextResponse([head.join(','), ...lines].join('\r\n'), {
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="boop-clients-${new Date().toISOString().slice(0, 10)}.csv"`,
+          'Cache-Control': 'no-store',
+        },
+      });
+    }
+
+    return NextResponse.json({ clients: rows }, { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     console.error('List clients error:', error);
     return NextResponse.json({ error: 'Failed to list clients' }, { status: 500 });
@@ -70,6 +97,7 @@ export async function POST(request: NextRequest) {
       {
         email,
         username: profileUsername,
+        status: 'customer',
         updatedAt: new Date(),
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }

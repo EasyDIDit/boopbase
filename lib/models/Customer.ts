@@ -24,6 +24,17 @@ const CustomerSchema = new mongoose.Schema({
     type: String,
     default: '',
   },
+  /** lead (sign-up form only) or customer (bought/claimed). Sign-ups never downgrade a customer. Empty on older rows. */
+  status: { type: String, enum: ['', 'lead', 'customer'], default: '' },
+  name: { type: String, default: '', maxlength: 80 },
+  phone: { type: String, default: '', maxlength: 30 },
+  interests: { type: [String], default: [] },
+  /** Which sign-up button: join-list, band-design. */
+  sources: { type: [String], default: [] },
+  consentAt: { type: Date },
+  consentText: { type: String, default: '' },
+  textConsentAt: { type: Date },
+  textConsentText: { type: String, default: '' },
   createdAt: {
     type: Date,
     default: Date.now,

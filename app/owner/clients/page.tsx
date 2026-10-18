@@ -14,8 +14,22 @@ type DeviceRow = {
 type ClientRow = {
   email: string;
   username: string;
+  name: string;
+  phone: string;
+  interests: string[];
+  sources: string[];
+  source: string;
+  status: 'lead' | 'customer';
+  consentAt: string | null;
+  textConsent: boolean;
+  marketingOptOut: boolean;
+  createdAt: string | null;
   devices: DeviceRow[];
 };
+
+const INTEREST_LABELS: Record<string, string> = { 'band-design': 'Band design', stickers: 'Stickers', 'team-cards': 'Cards for my team' };
+const SOURCE_LABELS: Record<string, string> = { 'join-list': 'Join the list', 'band-design': 'Help design the band' };
+type StatusFilter = 'all' | 'lead' | 'customer';
 
 export default function OwnerClientsPage() {
   const [clients, setClients] = useState<ClientRow[]>([]);
@@ -25,6 +39,10 @@ export default function OwnerClientsPage() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [signedOut, setSignedOut] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+  const [interest, setInterest] = useState('');
+  const shown = clients.filter((c) => (statusFilter === 'all' || c.status === statusFilter) && (!interest || c.interests.includes(interest)));
+  const counts = { all: clients.length, lead: clients.filter((c) => c.status === 'lead').length, customer: clients.filter((c) => c.status === 'customer').length };
 
   const load = async () => {
     const res = await fetch('/api/owner/clients');
@@ -109,7 +127,7 @@ export default function OwnerClientsPage() {
         <p className="text-xs tracking-[4px] text-white/40">MINT</p>
         <h1 className="mt-2 text-3xl font-bold">Clients</h1>
         <p className="mt-2 text-sm text-white/60">
-          Who claimed a Boop, and which codes are on their page.
+          Sign-ups, buyers, and who claimed a Boop. One list.
         </p>
         <p className="mt-4 text-sm">
           <Link href="/owner/devices" className="underline text-white/70">
@@ -165,26 +183,69 @@ export default function OwnerClientsPage() {
 
         {message && <p className="mt-4 text-yellow-300">{message}</p>}
 
-        <div className="mt-6 space-y-4">
-          {clients.length === 0 && (
-            <p className="text-sm text-white/40">No clients yet. They appear when someone claims a card.</p>
+        <div className="mt-8 flex flex-wrap items-center gap-2" role="group" aria-label="Filter clients">
+          {(['all', 'lead', 'customer'] as const).map((f) => (
+            <button
+              key={f}
+              type="button"
+              aria-pressed={statusFilter === f}
+              onClick={() => setStatusFilter(f)}
+              className={`min-h-11 rounded-full px-4 text-sm font-bold ${statusFilter === f ? 'bg-white text-black' : 'bg-zinc-800 text-white/70'}`}
+            >
+              {f === 'all' ? 'All' : f === 'lead' ? 'Leads' : 'Customers'} · {counts[f]}
+            </button>
+          ))}
+          <label className="sr-only" htmlFor="interest-filter">Interest</label>
+          <select
+            id="interest-filter"
+            value={interest}
+            onChange={(e) => setInterest(e.target.value)}
+            className="min-h-11 rounded-full bg-zinc-800 px-4 text-sm text-white"
+          >
+            <option value="">Any interest</option>
+            {Object.entries(INTEREST_LABELS).map(([k, v]) => (
+              <option key={k} value={k}>{v}</option>
+            ))}
+          </select>
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- file download from an API route, not a page */}
+          <a href="/api/owner/clients?format=csv" download className="ml-auto inline-flex min-h-11 items-center rounded-full bg-[#E72679] px-4 text-sm font-bold text-white">
+            Export CSV
+          </a>
+        </div>
+
+        <div className="mt-4 space-y-4">
+          {shown.length === 0 && (
+            <p className="text-sm text-white/40">{clients.length === 0 ? 'No clients yet. They appear when someone signs up, buys, or claims a card.' : 'Nobody matches this filter.'}</p>
           )}
-          {clients.map((c) => (
-            <div key={c.email} className="rounded-2xl bg-zinc-900 p-5">
-              <p className="font-medium">{c.email}</p>
-              <p className="mb-3 text-sm text-white/50">
-                {c.username ? (
-                  <a href={`/${c.username}`} className="underline">
-                    @{c.username}
-                  </a>
-                ) : (
-                  'no profile yet'
-                )}
-              </p>
+          {shown.map((c) => (
+            <div key={c.email} className="min-w-0 rounded-2xl bg-zinc-900 p-5">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div className="min-w-0">
+                  {c.name && <p className="text-lg font-bold">{c.name}</p>}
+                  <p className="break-all font-medium text-white/90">{c.email}</p>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide ${c.status === 'customer' ? 'bg-emerald-400/15 text-emerald-300' : 'bg-[#E72679]/20 text-pink-300'}`}>
+                  {c.status === 'customer' ? 'Customer' : 'Lead'}
+                </span>
+              </div>
+              <dl className="mt-3 grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+                <div className="flex gap-2"><dt className="text-white/40">Profile</dt><dd className="min-w-0 break-all">{c.username ? <a href={`/${c.username}`} className="underline">@{c.username}</a> : 'none yet'}</dd></div>
+                {c.phone && <div className="flex gap-2"><dt className="text-white/40">Phone</dt><dd>{c.phone}{c.textConsent ? ' · OK to text' : ' · no texts'}</dd></div>}
+                {c.sources.length > 0 && <div className="flex gap-2"><dt className="text-white/40">Signed up via</dt><dd>{c.sources.map((x) => SOURCE_LABELS[x] || x).join(', ')}</dd></div>}
+                {c.consentAt && <div className="flex gap-2"><dt className="text-white/40">Email OK</dt><dd>{new Date(c.consentAt).toLocaleDateString()}</dd></div>}
+                {c.marketingOptOut && <div className="flex gap-2"><dt className="text-white/40">Opted out</dt><dd>Do not contact</dd></div>}
+              </dl>
+              {c.interests.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {c.interests.map((i) => (
+                    <span key={i} className="rounded-full bg-zinc-800 px-3 py-1 text-xs">{INTEREST_LABELS[i] || i}</span>
+                  ))}
+                </div>
+              )}
               {c.devices.length === 0 ? (
-                <p className="text-sm text-white/40">No codes attached</p>
+                <p className="mt-3 text-sm text-white/40">No codes attached</p>
               ) : (
-                <div className="space-y-2">
+                <div className="mt-3 space-y-2">
                   {c.devices.map((d) => (
                     <div key={d.code} className="flex flex-wrap justify-between gap-2 text-sm">
                       <span className="font-mono text-lg">{d.code}</span>
