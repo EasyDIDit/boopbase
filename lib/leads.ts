@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 /**
- * Boop sign-up form (store /boop "Join the list" + "Help design the band") → BOOPbase /api/leads.
+ * Boop sign-up form (store /boop "Join the list" + "Help design the band") → BOOPbase /api/leads → Subscriber (mailing list).
  * Signed with its own secret (BOOPBASE_LEADS_SECRET), not the provision secret: a leaked leads secret can only add
  * list sign-ups, never reserve cards. Signature domain "lead." so a provision signature can never replay here.
  * Off unless BOOP_LEADS_ENABLED=true (production only), so previews never write to the shared database.
@@ -14,9 +14,6 @@ export const LEAD_INTERESTS = ['band-design', 'stickers', 'team-cards'] as const
 export const LEAD_SOURCES = ['join-list', 'band-design'] as const;
 export type LeadInterest = (typeof LEAD_INTERESTS)[number];
 export type LeadSource = (typeof LEAD_SOURCES)[number];
-
-/** Statuses that came from a real purchase/claim. A lead sign-up never overwrites these. */
-export const CUSTOMER_SOURCES = ['online_order', 'claim', 'in_person_sale', 'signup'];
 
 export function leadsEnabled(env: Record<string, string | undefined> = process.env): boolean {
   return env.BOOP_LEADS_ENABLED === 'true';
@@ -80,25 +77,20 @@ export function parseLeadBody(raw: unknown): LeadBody | null {
   };
 }
 
-/** Mongo update for a sign-up. Never touches status/username/source/marketingOptOut on existing rows. */
-export function leadUpdate(b: LeadBody, now = new Date()) {
-  const set: Record<string, unknown> = { name: b.name, consentAt: now, consentText: EMAIL_CONSENT_TEXT, updatedAt: now };
+/** Mongo update for a sign-up on the mailing list. Never touches isCustomer / customerSince. */
+export function subscriberUpdate(b: LeadBody, isCustomer: boolean, now = new Date()) {
+  const set: Record<string, unknown> = { name: b.name, consentAt: now, consentText: EMAIL_CONSENT_TEXT };
   if (b.phone) set.phone = b.phone;
   if (b.textConsent) {
     set.textConsentAt = now;
     set.textConsentText = TEXT_CONSENT_TEXT;
   }
+  if (isCustomer) set.isCustomer = true;
   return {
-    $setOnInsert: { email: b.email, source: 'lead_form', status: 'lead', createdAt: now },
+    $setOnInsert: { email: b.email },
     $set: set,
     $addToSet: { interests: { $each: b.interests }, sources: b.source },
   };
-}
-
-/** Derived for the owner list: anyone who bought, claimed, registered or has a card is a customer. */
-export function customerStatus(c: { status?: string; username?: string; source?: string }, deviceCount = 0): 'customer' | 'lead' {
-  if (c.status === 'customer' || c.username || deviceCount > 0 || CUSTOMER_SOURCES.includes(c.source || '')) return 'customer';
-  return 'lead';
 }
 
 export function throttleKeys(b: LeadBody, now = Date.now()): string[] {

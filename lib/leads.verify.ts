@@ -1,6 +1,6 @@
 // Run: npx tsx lib/leads.verify.ts
 import assert from 'node:assert/strict';
-import { csvCell, customerStatus, EMAIL_CONSENT_TEXT, leadUpdate, leadsEnabled, leadsSecret, parseLeadBody, signLead, throttleKeys, verifyLeadSignature } from './leads';
+import { csvCell, EMAIL_CONSENT_TEXT, subscriberUpdate, leadsEnabled, leadsSecret, parseLeadBody, signLead, throttleKeys, verifyLeadSignature } from './leads';
 import { signProvision } from './provision';
 
 const secret = 'l'.repeat(40);
@@ -29,13 +29,10 @@ for (const bad of [
 ]) assert.equal(parseLeadBody(bad), null, JSON.stringify(bad)?.slice(0, 60));
 assert.equal(parseLeadBody({ ...ok, name: 'Ada\u0000\u0007 Boop' })!.name, 'Ada Boop', 'control chars stripped');
 
-const u = leadUpdate(p);
-assert.equal(u.$setOnInsert.status, 'lead');
-assert.ok(!('status' in u.$set) && !('username' in u.$set) && !('source' in u.$set) && !('marketingOptOut' in u.$set), 'never downgrades / overwrites');
-assert.equal(customerStatus({ status: 'lead' }), 'lead');
-assert.equal(customerStatus({ status: 'lead', username: 'ada' }), 'customer');
-assert.equal(customerStatus({ source: 'online_order' }), 'customer');
-assert.equal(customerStatus({}, 1), 'customer');
+const u = subscriberUpdate(p, false);
+assert.ok(!('isCustomer' in u.$set) && !('customerSince' in u.$set), 'a sign-up never clears the customer flag');
+assert.equal(subscriberUpdate(p, true).$set.isCustomer, true, 'sign-up from a buyer flags customer');
+assert.equal(u.$set.consentText, EMAIL_CONSENT_TEXT);
 assert.equal(throttleKeys({ ...p, ipHash: 'a'.repeat(64) }).length, 2);
 assert.equal(csvCell('=HYPERLINK("x")'), `"'=HYPERLINK(""x"")"`, 'formula injection neutralised');
 assert.equal(csvCell(['a', 'b']), '"a; b"');

@@ -229,12 +229,20 @@ export default function OwnerDevicesPage() {
             <p className="text-xs tracking-[4px] text-white/40">MINT</p>
             <h1 className="mt-1 text-2xl font-bold sm:text-3xl">Boop codes</h1>
           </div>
+          <div className="flex shrink-0 flex-wrap justify-end gap-2">
           <Link
             href="/owner/clients"
             className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-zinc-800 px-3 text-sm font-semibold text-white/80"
           >
             Clients
           </Link>
+          <Link
+            href="/owner/mailing-list"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-zinc-800 px-3 text-sm font-semibold text-white/80"
+          >
+            Mailing list
+          </Link>
+          </div>
         </div>
         <p className="mt-2 text-sm text-white/60">Make a code, write only this URL on the chip, then pack it.</p>
         <div className="mt-4">

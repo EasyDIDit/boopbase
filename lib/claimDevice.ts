@@ -1,5 +1,6 @@
 import Device from '@/lib/models/Device';
 import Customer from '@/lib/models/Customer';
+import { markSubscriberCustomer } from '@/lib/subscribers';
 import { maySignedInUserClaim } from '@/lib/provision';
 
 export type ClaimResult = { status: number; body: Record<string, unknown> };
@@ -12,9 +13,10 @@ export async function upsertCustomer(email: string | undefined, username: string
   await Customer.findOneAndUpdate(
     { email: email.toLowerCase() },
     // Never touches marketingOptOut; source only set when the row is new.
-    { $set: { email: email.toLowerCase(), username, status: 'customer', updatedAt: new Date() }, $setOnInsert: { source: 'claim' } },
+    { $set: { email: email.toLowerCase(), username, updatedAt: new Date() }, $setOnInsert: { source: 'claim' } },
     { upsert: true, new: true, setDefaultsOnInsert: true }
   );
+  await markSubscriberCustomer(email, 'claim');
 }
 
 /** Pre-check without writing (used by /register before creating the account). */

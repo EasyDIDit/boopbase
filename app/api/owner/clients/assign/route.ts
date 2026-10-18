@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Customer from '@/lib/models/Customer';
+import { markSubscriberCustomer } from '@/lib/subscribers';
 import Device from '@/lib/models/Device';
 import BoopOrder from '@/lib/models/BoopOrder';
 import { isOwner } from '@/lib/ownerAuth';
@@ -88,11 +89,12 @@ export async function POST(request: NextRequest) {
     const customer = await Customer.findOneAndUpdate(
       { email },
       {
-        $set: { email, ...(profileUsername ? { username: profileUsername } : {}), status: 'customer', updatedAt: new Date() },
+        $set: { email, ...(profileUsername ? { username: profileUsername } : {}), updatedAt: new Date() },
         $setOnInsert: { source: 'in_person_sale' },
       },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
+    await markSubscriberCustomer(email, 'in_person');
 
     if (profileUsername && !customer.username) {
       customer.username = profileUsername;

@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import Customer from '@/lib/models/Customer';
+import Subscriber from '@/lib/models/Subscriber';
+import { emailIsCustomer } from '@/lib/subscribers';
 import LeadThrottle from '@/lib/models/LeadThrottle';
-import { LEAD_RATE_LIMIT, leadUpdate, leadsEnabled, leadsSecret, parseLeadBody, throttleKeys, verifyLeadSignature } from '@/lib/leads';
+import { LEAD_RATE_LIMIT, subscriberUpdate, leadsEnabled, leadsSecret, parseLeadBody, throttleKeys, verifyLeadSignature } from '@/lib/leads';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 /**
- * Store → BOOPbase: Boop sign-up form. HMAC-signed (BOOPBASE_LEADS_SECRET). Upserts Customer by email.
+ * Store → BOOPbase: Boop sign-up form. HMAC-signed (BOOPBASE_LEADS_SECRET). Upserts the mailing list (Subscriber) by email; flags isCustomer when the email bought or claimed.
  * Off (503) unless BOOP_LEADS_ENABLED=true and the secret is set. Rate limited per email and per hashed IP.
  */
 export async function POST(request: NextRequest) {
@@ -40,7 +41,8 @@ export async function POST(request: NextRequest) {
       ).lean<{ count: number }>();
       if ((row?.count ?? 0) > LEAD_RATE_LIMIT) return NextResponse.json({ error: 'too many sign-ups' }, { status: 429 });
     }
-    await Customer.updateOne({ email: body.email }, leadUpdate(body), { upsert: true });
+    const isCustomer = await emailIsCustomer(body.email);
+    await Subscriber.updateOne({ email: body.email }, subscriberUpdate(body, isCustomer), { upsert: true });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error('lead upsert failed', (err as Error).message);

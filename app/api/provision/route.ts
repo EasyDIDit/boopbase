@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import BoopOrder from '@/lib/models/BoopOrder';
 import Device from '@/lib/models/Device';
 import Customer from '@/lib/models/Customer';
+import { markSubscriberCustomer } from '@/lib/subscribers';
 import { parseProvisionBody, provisionSecret, verifyProvisionSignature } from '@/lib/provision';
 import { currentLink, publicBase, reserveFromStock, type CardLink } from '@/lib/cardLinks';
 
@@ -66,9 +67,10 @@ export async function POST(request: NextRequest) {
       // Buyer shows up in the existing /owner/clients list right away (username fills in when they claim).
       await Customer.updateOne(
         { email: body.email },
-        { $setOnInsert: { email: body.email, source: 'online_order', createdAt: new Date() }, $set: { updatedAt: new Date(), status: 'customer' } },
+        { $setOnInsert: { email: body.email, source: 'online_order', createdAt: new Date() }, $set: { updatedAt: new Date() } },
         { upsert: true }
       );
+      await markSubscriberCustomer(body.email, 'purchase', body.name);
       // Stock lines reserve from online stock of their color. Logo (custom) lines are printed fresh per order:
       // never auto-assigned, they go on EASY's to-make list on /owner/devices.
       const lines = body.lines.map((l) => ({ ...l, owed: l.quantity }));
