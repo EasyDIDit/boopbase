@@ -127,3 +127,52 @@ export async function eraseTag(opts: { timeoutMs?: number } = {}): Promise<{ ver
     ctl.abort();
   }
 }
+
+export type WriteLockResult = WriteResult & { locked: boolean; lockError: string | null };
+
+/**
+ * Write → read back → lock (EASY, Oct 17: auto permanent lock). Locks ONLY when the read-back shows exactly `url`
+ * as the single record. A lock failure never throws: the write still counts, and the caller offers "Lock" to retry.
+ */
+export async function writeVerifyAndLock(
+  url: string,
+  opts: { lock?: boolean; timeoutMs?: number } = {}
+): Promise<WriteLockResult> {
+  const r = await writeAndVerifyUrl(url, { timeoutMs: opts.timeoutMs });
+  if (!r.verified || opts.lock === false) return { ...r, locked: false, lockError: null };
+  try {
+    await lockTag(opts.timeoutMs);
+    return { ...r, locked: true, lockError: null };
+  } catch (err) {
+    return { ...r, locked: false, lockError: nfcErrorMessage(err) };
+  }
+}
+
+/**
+ * Lock an already-written card later: reads it first and locks ONLY if it holds exactly `url` (so the wrong card,
+ * or a blank one, is never locked).
+ */
+export async function verifyThenLock(url: string, timeoutMs = 20000): Promise<{ locked: boolean; readUrl: string | null; serial: string | null }> {
+  const C = ctor();
+  if (!C) throw Object.assign(new Error('Web NFC not supported'), { name: 'NotSupportedError' });
+  const reader = new C();
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), timeoutMs);
+  let ev: NdefReadingEvent;
+  try {
+    ev = await new Promise<NdefReadingEvent>((resolve, reject) => {
+      reader.addEventListener('reading', (e) => resolve(e as NdefReadingEvent), { once: true });
+      reader.addEventListener('readingerror', () => reject(Object.assign(new Error('read failed'), { name: 'NotReadableError' })), { once: true });
+      ctl.signal.addEventListener('abort', () => reject(Object.assign(new Error('read timeout'), { name: 'TimeoutError' })));
+      reader.scan({ signal: ctl.signal }).catch(reject);
+    });
+  } finally {
+    clearTimeout(timer);
+    ctl.abort();
+  }
+  const urls = ev.message.records.map(decodeUrl).filter((u): u is string => !!u);
+  const readUrl = urls[0] ?? null;
+  if (!(urls.length === 1 && readUrl === url && ev.message.records.length === 1)) return { locked: false, readUrl, serial: ev.serialNumber || null };
+  await lockTag(timeoutMs);
+  return { locked: true, readUrl, serial: ev.serialNumber || null };
+}

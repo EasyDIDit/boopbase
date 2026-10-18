@@ -61,6 +61,7 @@ const DeviceSchema = new mongoose.Schema({
   chipWrittenUrl: { type: String, default: '' },
   chipSerial: { type: String, default: '' },
   chipLocked: { type: Boolean, default: false },
+  chipLockedAt: { type: Date, default: null },
   programmedUrl: {
     type: String,
     default: '',

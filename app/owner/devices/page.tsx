@@ -273,9 +273,10 @@ export default function OwnerDevicesPage() {
                 key={lastCode}
                 code={lastCode}
                 url={lastUrl}
-                onWritten={() => {
+                onWritten={(_c, info) => {
                   load();
-                  if (batch) mint();
+                  // Batch: next code only after a fully locked card; a lock failure stops so EASY can tap Lock.
+                  if (batch && info.complete) mint();
                 }}
               />
             )}
@@ -419,18 +420,30 @@ export default function OwnerDevicesPage() {
               {d.chipWrittenAt && (
                 <p className="mt-2 text-xs text-sky-200/80">
                   Chip written {new Date(d.chipWrittenAt).toLocaleString()}
-                  {d.chipLocked ? ' · locked' : ''}
+                  {d.chipLocked ? ' · locked' : ' · not locked'}
                 </p>
               )}
               {d.programmedUrl && d.status === 'ready' && !d.ownerUsername && !d.chipLocked && (
                 writingCode === d.code ? (
-                  <NfcWritePanel code={d.code} url={d.programmedUrl} onWritten={() => load()} />
+                  <NfcWritePanel code={d.code} url={d.programmedUrl} alreadyWritten={!!d.chipWrittenAt} onWritten={() => load()} />
                 ) : (
                   <button
                     onClick={() => setWritingCode(d.code)}
                     className="mt-2 min-h-11 w-full rounded-xl border border-sky-300/40 text-sm font-semibold text-sky-200"
                   >
                     Write to card
+                  </button>
+                )
+              )}
+              {d.chipWrittenAt && !d.chipLocked && d.programmedUrl && !(d.status === 'ready' && !d.ownerUsername) && (
+                writingCode === d.code ? (
+                  <NfcWritePanel code={d.code} url={d.programmedUrl} lockOnly onWritten={() => load()} />
+                ) : (
+                  <button
+                    onClick={() => setWritingCode(d.code)}
+                    className="mt-2 min-h-11 w-full rounded-xl border border-amber-300/40 text-sm font-semibold text-amber-200"
+                  >
+                    Lock card
                   </button>
                 )
               )}

@@ -24,10 +24,19 @@ export async function POST(request: NextRequest) {
     const device = await Device.findOne({ code });
     if (!device) return NextResponse.json({ error: `${code} is not in the shop list` }, { status: 404 });
 
-    device.chipWrittenAt = new Date();
-    device.chipWrittenUrl = url;
+    // action 'locked': a card written earlier was locked later (read back + locked in the browser). Write info is kept.
+    if (body.action !== 'locked') {
+      device.chipWrittenAt = new Date();
+      device.chipWrittenUrl = url;
+    } else if (!device.chipWrittenAt) {
+      device.chipWrittenAt = new Date();
+      device.chipWrittenUrl = url;
+    }
     if (serial) device.chipSerial = serial;
-    if (body.locked === true) device.chipLocked = true;
+    if (body.locked === true && !device.chipLocked) {
+      device.chipLocked = true;
+      device.chipLockedAt = new Date();
+    }
     if (!device.programmedUrl) device.programmedUrl = expected;
     await device.save();
 
