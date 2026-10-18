@@ -84,13 +84,13 @@ export default function ShortfallNotice() {
           <p className="font-bold">Stock short: {owed} card(s) owed on {short.length} order(s)</p>
           <ul className="mt-2 space-y-1">
             {short.map((r) => (
-              <li key={r.orderId} className="font-mono text-xs">
+              <li key={r.orderId} className="break-all font-mono text-xs">
                 {new Date(r.createdAt).toLocaleDateString()} · {r.email} · owed {list(r.owedByColor) || r.shortfall} of {r.quantity}
                 {r.livemode ? '' : ' · TEST'}
               </li>
             ))}
           </ul>
-          <button onClick={fill} disabled={busy} className="mt-3 rounded-xl bg-amber-300 px-3 py-2 font-bold text-black disabled:opacity-60">
+          <button onClick={fill} disabled={busy} className="mt-3 min-h-11 w-full rounded-xl bg-amber-300 px-3 font-bold text-black disabled:opacity-60 sm:w-auto">
             {busy ? 'Assigning…' : 'Assign from online stock now'}
           </button>
         </div>
@@ -105,7 +105,7 @@ export default function ShortfallNotice() {
           <ul className="mt-3 space-y-3">
             {make.map((r) => (
               <li key={r.orderId} className="rounded-xl bg-black/20 p-3">
-                <p className="font-mono text-xs">
+                <p className="break-all font-mono text-xs">
                   {new Date(r.createdAt).toLocaleDateString()} · {r.email} · make {list(r.toMakeByColor) || r.toMake}
                   {r.livemode ? '' : ' · TEST'}
                 </p>
@@ -115,9 +115,9 @@ export default function ShortfallNotice() {
                     onChange={(e) => setCodes((c) => ({ ...c, [r.orderId]: e.target.value.toUpperCase() }))}
                     placeholder="Card code"
                     autoCapitalize="characters"
-                    className="min-w-0 flex-1 rounded-lg bg-zinc-800 px-3 py-2 font-mono"
+                    className="min-h-11 min-w-0 flex-1 rounded-lg bg-zinc-800 px-3 font-mono text-base"
                   />
-                  <button onClick={() => link(r.orderId)} disabled={busy} className="rounded-lg bg-fuchsia-300 px-3 py-2 font-bold text-black disabled:opacity-60">
+                  <button onClick={() => link(r.orderId)} disabled={busy} className="min-h-11 rounded-lg bg-fuchsia-300 px-4 font-bold text-black disabled:opacity-60">
                     Link
                   </button>
                 </div>
