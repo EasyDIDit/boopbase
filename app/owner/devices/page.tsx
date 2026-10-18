@@ -57,6 +57,24 @@ export default function OwnerDevicesPage() {
 
   const isInStock = (d: DeviceRow) => d.status === 'ready' && !d.ownerUsername;
 
+  const release = async (d: DeviceRow) => {
+    if (!d.ownerUsername) return;
+    const ok = window.confirm(
+      `Release card ${d.code} from @${d.ownerUsername}?\n\n` +
+        `Their account and profile are kept, but this card will no longer open it.\n` +
+        `The card keeps the same code and goes back to your in-person ready stock. Tapping it will start a fresh claim.`
+    );
+    if (!ok) return;
+    const res = await fetch('/api/owner/release', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: d.code, expectOwner: d.ownerUsername }),
+    });
+    const data = await res.json().catch(() => ({}));
+    setMessage(res.ok ? `${data.released} released from @${data.previousOwner}. It is ready stock again.` : data.error || 'Could not release');
+    if (res.ok) load();
+  };
+
   const setColorFor = async (codes: string[], c: string) => {
     if (!codes.length) return;
     const res = await fetch('/api/owner/device-color', {
@@ -381,6 +399,14 @@ export default function OwnerDevicesPage() {
                 >
                   {d.status === 'claimed' ? 'Claimed' : 'Ready'}
                 </span>
+                {d.ownerUsername && (
+                  <button
+                    onClick={() => release(d)}
+                    className="ml-2 rounded-full bg-red-400/15 px-3 py-1 text-xs font-semibold text-red-200"
+                  >
+                    Release card
+                  </button>
+                )}
               </div>
               {d.programmedUrl && (
                 <button

@@ -73,6 +73,26 @@ const DeviceSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  /** Owner actions on this card (e.g. 'released'), newest last. Audit only; never shown publicly. */
+  history: {
+    type: [
+      {
+        _id: false,
+        action: String,
+        by: String,
+        at: Date,
+        previousOwner: String,
+        previousOrderEmail: String,
+        previousOrderId: String,
+        previousSaleType: String,
+        previousSaleChannel: String,
+        previousNote: String,
+        previousClaimedAt: Date,
+        previousSoldAt: Date,
+      },
+    ],
+    default: [],
+  },
   createdAt: {
     type: Date,
     default: Date.now,
