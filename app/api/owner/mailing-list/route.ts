@@ -4,10 +4,12 @@ import Subscriber from '@/lib/models/Subscriber';
 import { isOwner } from '@/lib/ownerAuth';
 import { getSessionUsername } from '@/lib/session';
 import { csvCell } from '@/lib/leads';
+import { deleteSubscriber } from '@/lib/mailingListDelete';
 
 export const dynamic = 'force-dynamic';
 
 type Row = {
+  _id: unknown;
   email: string; name?: string; phone?: string; interests?: string[]; sources?: string[];
   consentAt?: Date | null; textConsentAt?: Date | null; isCustomer?: boolean; customerSince?: Date | null; createdAt?: Date;
 };
@@ -19,6 +21,7 @@ export async function GET(request: NextRequest) {
     await connectDB();
     const list = await Subscriber.find({}).sort({ createdAt: -1 }).limit(10_000).lean<Row[]>();
     const rows = list.map((s) => ({
+      id: String(s._id),
       email: s.email,
       name: s.name || '',
       phone: s.phone || '',
@@ -50,5 +53,28 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error('mailing list error', (err as Error).message);
     return NextResponse.json({ error: 'Failed to load mailing list' }, { status: 500 });
+  }
+}
+
+/** Owner only: remove ONE mailing-list entry by id (?id=<Subscriber _id>). Only the Subscriber collection is touched. */
+export async function DELETE(request: NextRequest) {
+  try {
+    const result = await deleteSubscriber(request.nextUrl.searchParams.get('id'), {
+      username: getSessionUsername(request),
+      isOwner,
+      origin: request.headers.get('origin'),
+      fetchSite: request.headers.get('sec-fetch-site'),
+      selfOrigin: request.nextUrl.origin,
+      remove: async (id) => {
+        await connectDB();
+        const doc = await Subscriber.findByIdAndDelete(id).select('email').lean<{ email: string } | null>();
+        return doc ? { email: doc.email } : null;
+      },
+    });
+    if (result.status === 200) console.info('mailing list: owner removed one subscriber');
+    return NextResponse.json(result.body, { status: result.status, headers: { 'Cache-Control': 'no-store' } });
+  } catch (err) {
+    console.error('mailing list delete error', (err as Error).message);
+    return NextResponse.json({ error: 'Could not remove' }, { status: 500 });
   }
 }
