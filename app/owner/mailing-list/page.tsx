@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 type Sub = {
+  id: string;
   email: string;
   name: string;
   phone: string;
@@ -32,6 +33,25 @@ export default function MailingListPage() {
   const [signedOut, setSignedOut] = useState(false);
   const [filter, setFilter] = useState<Filter>('all');
   const [interest, setInterest] = useState('');
+  const [removing, setRemoving] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
+
+  async function remove(s: Sub) {
+    if (!window.confirm(`Remove ${s.email} from the mailing list?`)) return;
+    setRemoving(s.id);
+    setNotice('');
+    try {
+      const res = await fetch(`/api/owner/mailing-list?id=${encodeURIComponent(s.id)}`, { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Could not remove');
+      setSubs((prev) => (prev ? prev.filter((x) => x.id !== s.id) : prev));
+      setNotice(`Removed ${s.email}.`);
+    } catch (e) {
+      setNotice(e instanceof Error ? e.message : 'Could not remove');
+    } finally {
+      setRemoving(null);
+    }
+  }
 
   useEffect(() => {
     let live = true;
@@ -110,11 +130,12 @@ export default function MailingListPage() {
           </p>
         )}
 
+        {notice && <p role="status" className="mt-4 text-sm text-white/70">{notice}</p>}
         <div className="mt-4 space-y-4">
           {subs === null && <p className="text-sm text-white/40">Loading…</p>}
           {subs !== null && shown.length === 0 && <p className="text-sm text-white/40">{all.length === 0 ? 'Nobody on the list yet.' : 'Nobody matches this filter.'}</p>}
           {shown.map((s) => (
-            <div key={s.email} className="min-w-0 rounded-2xl bg-zinc-900 p-5">
+            <div key={s.id} className="min-w-0 rounded-2xl bg-zinc-900 p-5">
               <div className="flex flex-wrap items-start justify-between gap-2">
                 <div className="min-w-0">
                   {s.name && <p className="text-lg font-bold">{s.name}</p>}
@@ -140,6 +161,16 @@ export default function MailingListPage() {
                   ))}
                 </div>
               )}
+              <div className="mt-4 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => remove(s)}
+                  disabled={removing === s.id}
+                  className="min-h-11 rounded-full border border-white/20 px-4 text-sm font-semibold text-white/70 hover:border-red-400 hover:text-red-300 disabled:opacity-50"
+                >
+                  {removing === s.id ? 'Removing…' : 'Remove from list'}
+                </button>
+              </div>
             </div>
           ))}
         </div>
