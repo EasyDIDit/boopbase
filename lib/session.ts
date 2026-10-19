@@ -57,7 +57,11 @@ export function clearSessionCookie(request: NextRequest, response: NextResponse)
 
 /** Verified username from the signed cookie, or null. */
 export function getSessionUsername(request: NextRequest): string | null {
-  const token = request.cookies.get(SESSION_COOKIE)?.value;
+  return usernameFromSessionToken(request.cookies.get(SESSION_COOKIE)?.value);
+}
+
+/** Same check for server components (pass cookies().get(SESSION_COOKIE)?.value). */
+export function usernameFromSessionToken(token: string | undefined): string | null {
   if (!token) return null;
   try {
     const payload = jwt.verify(token, getSecret(), { algorithms: ['HS256'] });

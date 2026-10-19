@@ -2,10 +2,13 @@
 
 import Link from 'next/link';
 import BoopLogo from '@/components/BoopLogo';
+import ResendLinkButton from '@/components/ResendLinkButton';
 
 type Props = {
   code: string;
   productType: string;
+  /** Sold to a buyer: only the checkout email (or setup link) can claim it. */
+  soldToEmail?: boolean;
 };
 
 const STEPS = [
@@ -26,7 +29,7 @@ const STEPS = [
   },
 ];
 
-export default function ClaimReadyScreen({ code, productType }: Props) {
+export default function ClaimReadyScreen({ code, productType, soldToEmail }: Props) {
   const thing = productType === 'band' ? 'band' : 'card';
   const registerHref = `/register?code=${encodeURIComponent(code)}`;
   const loginHref = `/login?code=${encodeURIComponent(code)}`;
@@ -55,6 +58,13 @@ export default function ClaimReadyScreen({ code, productType }: Props) {
           <p className="mt-1 font-mono text-3xl font-bold tracking-[0.18em]">{code}</p>
           <p className="mt-1 text-xs text-white/45">Write nothing. Just finish the form.</p>
         </div>
+
+        {soldToEmail && (
+          <p className="rounded-2xl border border-amber-300/40 bg-amber-300/10 px-4 py-3 text-center text-sm text-amber-100">
+            Use the same email you used at checkout so this {thing} links to you.
+          </p>
+        )}
+        {soldToEmail && <ResendLinkButton code={code} label="Email me a setup link instead" />}
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/40">

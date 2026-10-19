@@ -39,13 +39,27 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
-        const code = new URLSearchParams(window.location.search).get('code');
-        if (code) {
-          await fetch('/api/devices/claim', {
+        const search = new URLSearchParams(window.location.search);
+        const code = search.get('code');
+        const claim = search.get('claim');
+        const step = code
+          ? { url: '/api/devices/claim', body: { code } }
+          : claim
+            ? { url: '/api/claim-token', body: { token: claim } }
+            : null;
+        if (step) {
+          const c = await fetch(step.url, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ code }),
+            body: JSON.stringify(step.body),
           });
+          if (!c.ok) {
+            const d = await c.json().catch(() => ({}));
+            setError(`Signed in, but: ${d.error || 'could not claim'}. Opening your dashboard…`);
+            setLoading(false);
+            setTimeout(() => { window.location.href = '/dashboard'; }, 6000);
+            return;
+          }
         }
         const next = safeNext(new URLSearchParams(window.location.search).get('next'));
         window.location.href = next || '/dashboard';
@@ -106,7 +120,7 @@ export default function LoginPage() {
             className="w-full rounded-2xl border border-zinc-700 bg-zinc-900 px-6 py-4 focus:border-white focus:outline-none"
             required
           />
-          {error && <p className="text-center text-red-400">{error}</p>}
+          {error && <p role="alert" className="text-center text-red-400">{error}</p>}
           <button
             type="submit"
             disabled={loading}
@@ -120,7 +134,7 @@ export default function LoginPage() {
           <p className="mt-8 text-center text-sm text-white/50">
             No page yet?{' '}
             <Link
-              href={pendingCode ? `/register?code=${pendingCode}` : '/register'}
+              href={pendingCode ? `/register?code=${pendingCode}` : params.get('claim') ? `/register?claim=${encodeURIComponent(params.get('claim') || '')}` : '/register'}
               className="font-semibold text-white underline"
             >
               Create one and claim this card
