@@ -122,16 +122,30 @@ export default function Register() {
             <input
               type="text"
               value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase())}
-              placeholder="yourname"
+              onChange={(e) =>
+                setUsername(
+                  e.target.value
+                    .toLowerCase()
+                    .replace(/@/g, "")
+                    .replace(/[^a-z0-9._-]/g, "")
+                )
+              }
+              placeholder="yourname — no @"
               className="mt-1.5 min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 font-normal focus:border-white focus:outline-none"
               required
               autoCapitalize="none"
               autoCorrect="off"
+              spellCheck={false}
+              inputMode="text"
             />
             <span className="mt-1 block text-xs font-normal text-white/40">
-              This becomes www.boopbase.com/yourname
+              No @. This is your link. Example: boopbase.com/yourname
             </span>
+            {username ? (
+              <span className="mt-1 block text-xs font-medium text-emerald-300">
+                Your link: boopbase.com/{username}
+              </span>
+            ) : null}
           </label>
           <label className="block text-sm font-semibold">
             Password
