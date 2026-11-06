@@ -376,7 +376,7 @@ export default function Dashboard() {
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-xs text-zinc-500 tracking-widest uppercase">Boop studio</p>
-            <h1 className="text-xl md:text-2xl font-bold">@{user?.username || '…'}</h1>
+            <h1 className="text-xl md:text-2xl font-bold">{user?.username || '…'}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {saveMsg && (
