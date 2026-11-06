@@ -21,6 +21,10 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('profile');
   const [user, setUser] = useState<any>(null);
   const [name, setName] = useState('');
+  const [usernameDraft, setUsernameDraft] = useState('');
+  const [usernameMsg, setUsernameMsg] = useState<string | null>(null);
+  const [usernameOk, setUsernameOk] = useState(false);
+  const [changingUsername, setChangingUsername] = useState(false);
   const [bio, setBio] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [bgImage, setBgImage] = useState<string | null>(null);
@@ -67,6 +71,7 @@ export default function Dashboard() {
         if (data.error) return;
         setUser(data);
         setName(data.name || '');
+        setUsernameDraft(data.username || '');
         setBio(data.bio || '');
         setPhoto(data.profileImage || null);
         setBgImage(data.backgroundImage || null);
@@ -114,6 +119,35 @@ export default function Dashboard() {
       window.removeEventListener('resize', measure);
     };
   }, [name, bio, photo, bgImage, themeId, links, socials, outerBg, innerBg, useThemeBg, phone, email]);
+
+
+  const changeUsername = async () => {
+    if (!user?.username) return;
+    setChangingUsername(true);
+    setUsernameMsg(null);
+    try {
+      const res = await fetch('/api/change-username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: usernameDraft }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setUsernameOk(false);
+        setUsernameMsg(data.error || 'Could not change username');
+        return;
+      }
+      setUser((u: any) => (u ? { ...u, username: data.username } : u));
+      setUsernameDraft(data.username);
+      setUsernameOk(true);
+      setUsernameMsg('Updated. Your card still works.');
+    } catch {
+      setUsernameOk(false);
+      setUsernameMsg('Could not change username');
+    } finally {
+      setChangingUsername(false);
+    }
+  };
 
   const saveAllChanges = async () => {
     if (!user?.username) {
@@ -455,6 +489,49 @@ export default function Dashboard() {
                       </button>
                     )}
                   </div>
+                </Section>
+                <Section title="Username">
+                  <p className="text-sm text-zinc-400 mb-3">
+                    No @. This is your public link. Your card still opens this profile if you change it.
+                  </p>
+                  <input
+                    type="text"
+                    value={usernameDraft}
+                    onChange={(e) =>
+                      setUsernameDraft(
+                        e.target.value
+                          .toLowerCase()
+                          .replace(/@/g, "")
+                          .replace(/[^a-z0-9._-]/g, "")
+                      )
+                    }
+                    placeholder="yourname — no @"
+                    className="w-full bg-zinc-800 p-4 rounded-2xl"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                  />
+                  <p className="mt-2 text-xs text-white/40">
+                    Example: boopbase.com/yourname
+                  </p>
+                  {usernameDraft ? (
+                    <p className="mt-1 text-xs font-medium text-emerald-300">
+                      Your link: boopbase.com/{usernameDraft}
+                    </p>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={changeUsername}
+                    disabled={changingUsername || !usernameDraft || usernameDraft === user?.username}
+                    className="mt-3 rounded-xl bg-white px-4 py-2 text-sm font-bold text-black disabled:opacity-40"
+                  >
+                    {changingUsername ? "Updating…" : "Update username"}
+                  </button>
+                  {usernameMsg && (
+                    <p className={`mt-2 text-sm ${usernameOk ? "text-emerald-300" : "text-red-400"}`}>
+                      {usernameMsg}
+                    </p>
+                  )}
                 </Section>
                 <Section title="Name">
                   <input
