@@ -11,11 +11,22 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json().catch(() => ({}));
-    const username = String(body.username || '').toLowerCase().trim();
+    const username = String(body.username || '')
+      .toLowerCase()
+      .trim()
+      .replace(/@/g, '')
+      .replace(/[^a-z0-9._-]/g, '');
     const name = String(body.name || '').trim();
     const email = String(body.email || '').toLowerCase().trim();
     const password = String(body.password || '');
     const code = String(body.code || '').toUpperCase().trim();
+
+    if (String(body.username || '').includes('@')) {
+      return NextResponse.json(
+        { error: 'Username cannot include @. Use just yourname.' },
+        { status: 400 }
+      );
+    }
 
     if (!username || !name || !password) {
       return NextResponse.json(
