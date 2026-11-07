@@ -35,6 +35,7 @@ export default function Dashboard() {
   const [useThemeBg, setUseThemeBg] = useState(true);
   const [themeOverridesHero, setThemeOverridesHero] = useState(false);
   const [themeId, setThemeId] = useState('boop-classic');
+  const [fontId, setFontId] = useState('boop');
   const [links, setLinks] = useState<any[]>([]);
   const [socials, setSocials] = useState<SocialEntry[]>([]);
   const [newTitle, setNewTitle] = useState('');
@@ -82,6 +83,7 @@ export default function Dashboard() {
         setUseThemeBg(data.useThemeBackground !== false);
         setThemeOverridesHero(data.themeOverridesHero === true);
         setThemeId(data.themeId || 'boop-classic');
+        setFontId(data.fontId || 'boop');
         setLinks(data.links || []);
         setSocials(legacySocialsToEntries(data));
         setPhone(data.phone || '');
@@ -175,6 +177,7 @@ export default function Dashboard() {
           useThemeBackground: useThemeBg,
           themeOverridesHero,
           themeId,
+          fontId,
           links,
           socials,
           phone,
@@ -359,6 +362,7 @@ export default function Dashboard() {
       useThemeBackground: useThemeBg,
       themeOverridesHero,
       themeId,
+      fontId,
       links,
       socials,
       phone,
@@ -378,6 +382,7 @@ export default function Dashboard() {
       useThemeBg,
       themeOverridesHero,
       themeId,
+      fontId,
       links,
       socials,
       phone,
@@ -882,6 +887,22 @@ export default function Dashboard() {
                         {s.isDefault && (
                           <div className="text-[10px] text-[#E72679] mt-1 uppercase tracking-wide">Default</div>
                         )}
+                      </button>
+                    ))}
+                  </div>
+                </Section>
+
+                <Section title="Font">
+                  <p className="mb-4 text-sm text-zinc-400">Type on your card. Skin colors stay the same.</p>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {PROFILE_FONTS.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        onClick={() => setFontId(f.id)}
+                        className={`rounded-2xl border p-3 text-left ${fontId === f.id ? 'border-[#E72679] bg-zinc-800' : 'border-zinc-700 hover:border-zinc-500'}`}
+                      >
+                        <span className="block text-lg" style={{ fontFamily: f.family }}>{f.name}</span>
                       </button>
                     ))}
                   </div>
