@@ -16,6 +16,7 @@ import { SocialGlyph } from '@/components/icons/SocialGlyph';
 import { FieldTip } from '@/components/FieldTip';
 import InsightsPanel from '@/components/InsightsPanel';
 import { IMAGE_ACCEPT, prepareImage } from '@/lib/imageResize';
+import { PROFILE_FONTS } from '@/lib/fonts';
 
 type ImageStatus = { kind: 'idle' | 'busy' | 'ready' | 'error'; msg?: string };
 
