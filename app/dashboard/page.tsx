@@ -228,6 +228,31 @@ export default function Dashboard() {
     setSocials(socials.filter((s) => s.id !== id));
   };
 
+
+  const setLinkImg = async (id: string | number, file: File | null) => {
+    if (!file) {
+      setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, LNKimg: '' } : l)));
+      return;
+    }
+    const name = (file.name || '').toLowerCase();
+    const type = (file.type || '').toLowerCase();
+    const isSvg = type === 'image/svg+xml' || name.endsWith('.svg');
+    try {
+      if (isSvg) {
+        const text = await file.text();
+        if (/<script/i.test(text)) throw new Error('SVG cannot include script');
+        const LNKimg = `data:image/svg+xml;utf8,${encodeURIComponent(text)}`;
+        setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, LNKimg } : l)));
+        return;
+      }
+      const LNKimg = await prepareImage(file, 128, 128);
+      setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, LNKimg } : l)));
+    } catch (err) {
+      setSaveOk(false);
+      setSaveMsg(err instanceof Error ? err.message : 'LNKimg failed');
+    }
+  };
+
   const addLink = () => {
     if (!newTitle.trim() || !newUrl.trim()) return;
     let finalUrl = newUrl.trim();
@@ -236,7 +261,7 @@ export default function Dashboard() {
     }
     setLinks([
       ...links,
-      { id: String(Date.now()), title: newTitle.trim(), url: finalUrl, isActive: true, clicks: 0 },
+      { id: String(Date.now()), title: newTitle.trim(), url: finalUrl, isActive: true, clicks: 0, LNKimg: '' },
     ]);
     setNewTitle('');
     setNewUrl('');
@@ -641,7 +666,7 @@ export default function Dashboard() {
             {activeTab === 'links' && (
               <Section title="Links">
                 <p className="text-sm text-zinc-400 mb-4">
-                  Drag any row to reorder. Other links shift live so you can see the new position. Save when done.
+                  Drag any row to reorder. Tap LNKimg to add a PNG or SVG on the left of that button. Save when done.
                 </p>
                 <div className="flex flex-col gap-2 mb-5">
                   <input type="text" placeholder="https://your-site.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
@@ -686,10 +711,42 @@ export default function Dashboard() {
                             </svg>
                           </span>
 
+                          <label
+                            className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-zinc-900"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                          >
+                            {link.LNKimg ? (
+                              <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
+                            ) : (
+                              <span className="flex h-full w-full items-center justify-center text-[9px] text-zinc-500">LNKimg</span>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/png,image/svg+xml,.png,.svg"
+                              className="absolute inset-0 cursor-pointer opacity-0"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0] || null;
+                                void setLinkImg(link.id, file);
+                                e.target.value = '';
+                              }}
+                            />
+                          </label>
                           <div className="min-w-0 flex-1 pointer-events-none">
                             <div className="font-medium truncate">{link.title}</div>
                             <div className="text-xs text-zinc-500 truncate">{link.url}</div>
                           </div>
+                          {link.LNKimg ? (
+                            <button
+                              type="button"
+                              onClick={() => setLinkImg(link.id, null)}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onPointerDown={(e) => e.stopPropagation()}
+                              className="text-xs text-zinc-400 shrink-0"
+                            >
+                              Clear
+                            </button>
+                          ) : null}
 
                           <button
                             type="button"
