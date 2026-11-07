@@ -259,4 +259,12 @@ export const FRAME_PRESETS = {
       radius: 12,
     } as LinkFrameParams,
   },
+  easy: {
+    ring: { outerStroke: '#0E0C1A', midStroke: '#FED097', accentStroke: '#E72679', accentArcStroke: '#3EBEEF' } as RingParams,
+    link: { fill: '#FFFFFF', outerStroke: '#0E0C1A', insetStroke: '#FED097' } as LinkFrameParams,
+  },
+  atown: {
+    ring: { outerStroke: '#000000', midStroke: '#FED097', accentStroke: '#C8102E', accentArcStroke: '#FED097' } as RingParams,
+    link: { fill: '#111111', outerStroke: '#FED097', insetStroke: '#C8102E' } as LinkFrameParams,
+  },
 } as const;

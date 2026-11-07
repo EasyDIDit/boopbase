@@ -119,6 +119,26 @@ export const themes: Theme[] = [
     '--primary': '#8D6E63', '--accent': '#E72679', '--text': '#3E2723', '--card-bg': '#F5E6D3', '--button-border': '#3E2723', '--shadow': '3px 3px 0 0 #3E2723',
     contentAreaClass: '',
   },
+  {
+    id: 'easy-did-it',
+    name: 'Easy Did It',
+    description: 'Partner skin',
+    buttonClass: 'bg-white text-[#18152E] border-[4px] border-[#0E0C1A] shadow-[3px_3px_0_0_#E72679] font-bold rounded-2xl',
+    addToContactsClass: 'bg-[#E72679] text-white border-[3px] border-[#0E0C1A] shadow-[2px_2px_0_0_#0E0C1A] font-bold rounded-xl text-sm py-2.5 px-6 flex items-center gap-2',
+    socialIconClass: 'w-11 h-11 rounded-full border-[3px] border-[#0E0C1A] bg-white flex items-center justify-center text-xl shadow-[2px_2px_0_0_#E72679] hover:scale-110 transition-all',
+    '--primary': '#E72679', '--accent': '#FED097', '--text': '#18152E', '--card-bg': '#FED097', '--button-border': '#0E0C1A', '--shadow': '3px 3px 0 0 #E72679',
+    contentAreaClass: '',
+  },
+  {
+    id: 'a-town',
+    name: 'A-Town',
+    description: 'A-Town Collection',
+    buttonClass: 'bg-[#111111] text-white border-[4px] border-[#FED097] shadow-[3px_3px_0_0_#C8102E] font-bold rounded-2xl',
+    addToContactsClass: 'bg-[#FED097] text-black border-[3px] border-black shadow-[2px_2px_0_0_#C8102E] font-bold rounded-xl text-sm py-2.5 px-6 flex items-center gap-2',
+    socialIconClass: 'w-11 h-11 rounded-full border-[3px] border-[#FED097] bg-[#111111] flex items-center justify-center text-xl shadow-[2px_2px_0_0_#C8102E] hover:scale-110 transition-all',
+    '--primary': '#FED097', '--accent': '#C8102E', '--text': '#ffffff', '--card-bg': '#111111', '--button-border': '#FED097', '--shadow': '3px 3px 0 0 #C8102E',
+    contentAreaClass: '',
+  },
 ];
 
 export const getThemeById = (id: string) => themes.find((t) => t.id === id) || themes[0];

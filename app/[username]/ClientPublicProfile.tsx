@@ -143,6 +143,9 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
         className="max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border border-black/15 relative"
         style={{ backgroundColor: cardColor, fontFamily: font.family }}
       >
+        {skin.assets.mascot && skin.assets.mascot.position !== 'profile' && (
+          <SkinMascotLayer mascot={skin.assets.mascot} />
+        )}
         {isOwner && (
           <Link
             href="/dashboard"
@@ -186,6 +189,9 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                   <div className="w-full h-full bg-[#f4d9b0] rounded-full border-[5px] border-white shadow-xl flex items-center justify-center text-5xl">
                     🐱
                   </div>
+                )}
+                {skin.assets.mascot?.position === 'profile' && (
+                  <SkinMascotLayer mascot={skin.assets.mascot} />
                 )}
                 {skin.assets.profileFrame && (
                   <img
@@ -362,5 +368,26 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
         </div>
       </div>
     </div>
+  );
+}
+
+
+function SkinMascotLayer({ mascot }: { mascot: NonNullable<ReturnType<typeof getSkinById>['assets']['mascot']> }) {
+  const size = mascot.size ?? 72;
+  const pos: Record<string, string> = {
+    'top-left': 'top-3 left-3',
+    'top-right': 'top-3 right-3',
+    'bottom-left': 'bottom-3 left-3',
+    'bottom-right': 'bottom-3 right-3',
+    profile: '-bottom-1 -right-3',
+  };
+  return (
+    <span
+      aria-hidden
+      className={`pointer-events-none select-none absolute z-20 flex items-center justify-center ${pos[mascot.position] || pos['top-right']}`}
+      style={{ width: size, height: size, fontSize: size * 0.7, lineHeight: 1 }}
+    >
+      {mascot.src ? <img src={mascot.src} alt="" className="h-full w-full object-contain" /> : mascot.emoji}
+    </span>
   );
 }

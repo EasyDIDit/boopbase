@@ -16,6 +16,18 @@ export interface SkinAssets {
   linkFrame: string | null;
   cover: string | null;
   hero: string | null;
+  /** Optional decorative mascot layer (v2). Image (transparent PNG/SVG) or emoji. */
+  mascot?: SkinMascot | null;
+}
+
+export type MascotPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'profile';
+
+export interface SkinMascot {
+  src?: string;
+  emoji?: string;
+  position: MascotPosition;
+  /** Size in px (default 72). */
+  size?: number;
 }
 
 export interface SkinFlags {
@@ -53,7 +65,7 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
     description: 'Bold 1930s BOOP baseline — pink & grey',
     isDefault: true,
     tokens: { text: '#000000', accent: '#E72679', pageBg: '#C4CFDA', cardBg: '#ffffff', linkText: '#000000' },
-    assets: { preview: null, ...frames('classic'), cover: null, hero: null },
+    assets: { preview: null, ...frames('classic'), cover: null, hero: null, mascot: { emoji: '🐱', position: 'profile', size: 56 } },
     flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: true },
   },
   'jazz-night': {
@@ -181,6 +193,24 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
       hero: '/skins/paper-kraft/hero.svg',
     },
     flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: true },
+  },
+  'easy-did-it': {
+    id: 'easy-did-it',
+    name: 'Easy Did It',
+    description: 'Partner skin — navy, cream & magenta',
+    isDefault: false,
+    tokens: { text: '#18152E', accent: '#E72679', pageBg: '#0E0C1A', cardBg: '#FED097', linkText: '#18152E' },
+    assets: { preview: null, ...frames('easy'), cover: null, hero: null, mascot: null },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: false },
+  },
+  'a-town': {
+    id: 'a-town',
+    name: 'A-Town',
+    description: 'A-Town Collection — North, South, East & West',
+    isDefault: false,
+    tokens: { text: '#FFFFFF', accent: '#FED097', pageBg: '#000000', cardBg: '#111111', linkText: '#FFFFFF' },
+    assets: { preview: null, ...frames('atown'), cover: '/skins/a-town/hero.webp', hero: '/skins/a-town/hero.webp', mascot: null },
+    flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: false },
   },
 };
 
