@@ -19,7 +19,9 @@ const UserSchema = new mongoose.Schema({
     title: { type: String },
     url: { type: String },
     isActive: { type: Boolean, default: true },
-    clicks: { type: Number, default: 0 }
+    clicks: { type: Number, default: 0 },
+    /** Small PNG or SVG shown on the left of this link. Never the profile or hero. */
+    LNKimg: { type: String, default: '' },
   }],
   /** Flexible social buttons — only entries here appear on the public card */
   socials: [{
