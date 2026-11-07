@@ -52,7 +52,17 @@ export async function POST(request: NextRequest) {
       updateData.links = (updateData.links as Array<Record<string, unknown>>).map((l) => {
         const url = normalizeLinkUrl(l?.url);
         if (!url) bad.push(String(l?.title ?? l?.url ?? ''));
-        return { ...l, url };
+        const rawImg = String(l?.LNKimg || '');
+        const LNKimg =
+          rawImg.startsWith('data:image/png') ||
+          rawImg.startsWith('data:image/jpeg') ||
+          rawImg.startsWith('data:image/webp') ||
+          rawImg.startsWith('data:image/svg+xml') ||
+          rawImg.startsWith('/uploads/') ||
+          rawImg.startsWith('/skins/')
+            ? rawImg
+            : '';
+        return { ...l, url, LNKimg };
       });
       if (bad.length) {
         return NextResponse.json(
