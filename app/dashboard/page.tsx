@@ -229,6 +229,11 @@ export default function Dashboard() {
   };
 
 
+
+  const setLinkKind = (id: string | number, kind: 'link' | 'video') => {
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, kind } : l)));
+  };
+
   const setLinkImg = async (id: string | number, file: File | null) => {
     if (!file) {
       setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, LNKimg: '' } : l)));
@@ -261,7 +266,7 @@ export default function Dashboard() {
     }
     setLinks([
       ...links,
-      { id: String(Date.now()), title: newTitle.trim(), url: finalUrl, isActive: true, clicks: 0, LNKimg: '' },
+      { id: String(Date.now()), title: newTitle.trim(), url: finalUrl, isActive: true, clicks: 0, LNKimg: '', kind: 'link' },
     ]);
     setNewTitle('');
     setNewUrl('');
@@ -666,7 +671,7 @@ export default function Dashboard() {
             {activeTab === 'links' && (
               <Section title="Links">
                 <p className="text-sm text-zinc-400 mb-4">
-                  Drag any row to reorder. Tap LNKimg to add a PNG or SVG on the left of that button. Save when done.
+                  Drag to reorder. Tap LNKimg for a PNG or SVG. Toggle Video to play their hosted link on the profile. Save when done.
                 </p>
                 <div className="flex flex-col gap-2 mb-5">
                   <input type="text" placeholder="https://your-site.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
@@ -736,6 +741,15 @@ export default function Dashboard() {
                             <div className="font-medium truncate">{link.title}</div>
                             <div className="text-xs text-zinc-500 truncate">{link.url}</div>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => setLinkKind(link.id, link.kind === 'video' ? 'link' : 'video')}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onPointerDown={(e) => e.stopPropagation()}
+                            className={`shrink-0 rounded-lg px-2 py-1 text-xs font-semibold ${link.kind === 'video' ? 'bg-white text-black' : 'bg-zinc-700 text-white'}`}
+                          >
+                            {link.kind === 'video' ? 'Video' : 'Link'}
+                          </button>
                           {link.LNKimg ? (
                             <button
                               type="button"
