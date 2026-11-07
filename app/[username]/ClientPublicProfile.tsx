@@ -243,10 +243,10 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             </div>
           )}
 
-          <div className="space-y-3.5">
+          <div className="flex flex-col gap-3.5">
             {activeLinks.map((link: any) => (
+              <div key={link.id} className="w-full">
               <button
-                key={link.id}
                 type="button"
                 onClick={() => {
                   if (link.kind === 'video') {
@@ -287,7 +287,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                 )}
               </button>
               {link.kind === 'video' && openVideo === link.id ? (
-                <div className="mt-2 overflow-hidden rounded-2xl bg-black">
+                <div className="mt-2 w-full overflow-hidden rounded-2xl bg-black">
                   {(() => {
                     const embed = videoEmbed(link.url);
                     if (!embed) return <p className="p-4 text-sm text-white">This video link cannot play here.</p>;
@@ -306,6 +306,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                   })()}
                 </div>
               ) : null}
+              </div>
             ))}
           </div>
         </div>
