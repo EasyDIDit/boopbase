@@ -22,6 +22,8 @@ const UserSchema = new mongoose.Schema({
     clicks: { type: Number, default: 0 },
     /** Small PNG or SVG shown on the left of this link. Never the profile or hero. */
     LNKimg: { type: String, default: '' },
+    /** link = open URL. video = play their hosted video (YouTube, Vimeo, or direct file). We do not host it. */
+    kind: { type: String, enum: ['link', 'video'], default: 'link' },
   }],
   /** Flexible social buttons — only entries here appear on the public card */
   socials: [{
