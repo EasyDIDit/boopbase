@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
           rawImg.startsWith('/skins/')
             ? rawImg
             : '';
-        return { ...l, url, LNKimg };
+        const kind = String(l?.kind || 'link') === 'video' ? 'video' : 'link';
+        return { ...l, url, LNKimg, kind };
       });
       if (bad.length) {
         return NextResponse.json(
