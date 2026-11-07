@@ -222,6 +222,14 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                   rel="noopener noreferrer"
                   className={skin.socialIconClass}
                   title={s.platform}
+                  onClick={() => {
+                    try {
+                      const body = JSON.stringify({ username: user?.username });
+                      if (navigator.sendBeacon) navigator.sendBeacon('/api/track-social', new Blob([body], { type: 'application/json' }));
+                    } catch {
+                      // never block the tap
+                    }
+                  }}
                 >
                   <SocialGlyph platform={s.platform} className="w-6 h-6" />
                 </a>

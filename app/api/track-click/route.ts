@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { dayKey } from '@/lib/daily';
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +19,7 @@ export async function POST(request: NextRequest) {
         "links.id": linkId 
       },
       { 
-        $inc: { "links.$.clicks": 1 } 
+        $inc: { "links.$.clicks": 1, [`daily.${dayKey()}.t`]: 1 } 
       },
       { new: true }
     );

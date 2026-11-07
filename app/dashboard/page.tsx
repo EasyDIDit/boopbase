@@ -14,6 +14,7 @@ import {
 } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
 import { FieldTip } from '@/components/FieldTip';
+import InsightsPanel from '@/components/InsightsPanel';
 import { IMAGE_ACCEPT, prepareImage } from '@/lib/imageResize';
 
 type ImageStatus = { kind: 'idle' | 'busy' | 'ready' | 'error'; msg?: string };
@@ -386,7 +387,6 @@ export default function Dashboard() {
   const backgroundImages = bgImage ? [bgImage] : [];
   const skins = getAllSkins();
   const activeSkin = getSkinById(themeId);
-  const totalClicks = links.reduce((sum, l) => sum + (l.clicks || 0), 0);
   const selectedPlatform = getPlatform(pickPlatform);
   const availablePlatforms = SOCIAL_PLATFORMS;
   const isDragging = draggingId !== null;
@@ -903,34 +903,16 @@ export default function Dashboard() {
 
             {activeTab === 'insights' && (
               <Section title="Insights">
-                <p className="text-sm text-zinc-400 mb-6">
-                  Honest counts from your live page. Link taps update when visitors open links.
-                </p>
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
-                    <div className="text-4xl font-bold text-emerald-400">{totalViews}</div>
-                    <div className="text-zinc-400 text-sm mt-1">Card views</div>
-                  </div>
-                  <div className="bg-zinc-800 rounded-2xl p-6 text-center">
-                    <div className="text-4xl font-bold text-emerald-400">{totalClicks}</div>
-                    <div className="text-zinc-400 text-sm mt-1">Link taps</div>
-                  </div>
-                </div>
-                {links.length > 0 ? (
-                  <div className="space-y-2">
-                    <h4 className="text-sm text-zinc-400 mb-2">By link</h4>
-                    {[...links]
-                      .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
-                      .map((link: any) => (
-                        <div key={link.id} className="flex justify-between bg-zinc-800 p-3 rounded-xl text-sm">
-                          <span className="truncate pr-3">{link.title}</span>
-                          <span className="text-emerald-400 font-mono shrink-0">{link.clicks || 0}</span>
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <p className="text-zinc-500 text-sm">Add links to see tap counts.</p>
-                )}
+                <FieldTip kind="tip" className="mb-5">
+                  Honest counts from your live page. Daily history, social taps and contact saves count from the day this update went live.
+                </FieldTip>
+                <InsightsPanel
+                  views={totalViews}
+                  links={links}
+                  daily={user?.daily || {}}
+                  contactSaves={user?.contactSaves || 0}
+                  socialTaps={user?.socialTaps || 0}
+                />
               </Section>
             )}
           </div>
