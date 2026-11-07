@@ -234,21 +234,21 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                       className="w-full h-14 object-fill pointer-events-none absolute inset-0"
                     />
                     <span
-                      className="relative z-10 flex items-center justify-center gap-2 h-14 font-bold text-lg px-4"
+                      className="relative z-10 flex items-center justify-center h-14 font-bold text-lg px-4"
                       style={{ color: skin.tokens.linkText }}
                     >
                       {link.LNKimg ? (
-                        <img src={link.LNKimg} alt="" className="h-7 w-7 shrink-0 object-contain" />
+                        <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
                       ) : null}
-                      {link.title}
+                      <span className="truncate px-10">{link.title}</span>
                     </span>
                   </>
                 ) : (
-                  <span className={`flex items-center justify-center gap-2 py-4 px-8 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
+                  <span className={`relative flex items-center justify-center py-4 px-8 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
                     {link.LNKimg ? (
-                      <img src={link.LNKimg} alt="" className="h-7 w-7 shrink-0 object-contain" />
+                      <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
                     ) : null}
-                    {link.title}
+                    <span className="truncate px-10">{link.title}</span>
                   </span>
                 )}
               </button>
