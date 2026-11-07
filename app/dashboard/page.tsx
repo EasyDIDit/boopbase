@@ -406,7 +406,7 @@ export default function Dashboard() {
       <div className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/95 backdrop-blur">
         <div className="max-w-6xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-xs text-zinc-500 tracking-widest uppercase">Boop studio</p>
+            <p className="text-xs font-bold text-[#ff7ab6] tracking-widest uppercase">Boop studio</p>
             <h1 className="text-xl md:text-2xl font-bold">{user?.username || '…'}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -454,16 +454,63 @@ export default function Dashboard() {
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 ${
+              aria-current={activeTab === tab.id ? 'page' : undefined}
+              className={`px-4 py-3 text-sm font-semibold whitespace-nowrap border-b-[3px] transition-colors ${
                 activeTab === tab.id
                   ? 'border-[#E72679] text-white'
-                  : 'border-transparent text-zinc-400 hover:text-white'
+                  : 'border-transparent text-zinc-400 hover:text-white hover:border-zinc-600'
               }`}
             >
               {tab.label}
             </button>
           ))}
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 pt-6">
+        {(() => {
+          const steps = [
+            { id: 'profile', label: 'Add a photo', done: !!photo },
+            { id: 'profile', label: 'Add your name', done: !!name.trim() },
+            { id: 'profile', label: 'Write a short bio', done: !!bio.trim() },
+            { id: 'social', label: 'Add a social', done: socials.length > 0 },
+            { id: 'links', label: 'Add a link', done: links.length > 0 },
+          ];
+          const doneCount = steps.filter((x) => x.done).length;
+          const pct = Math.round((doneCount / steps.length) * 100);
+          return (
+            <div className="rounded-3xl border border-white/5 bg-gradient-to-br from-[#E72679]/20 via-zinc-900 to-zinc-900 p-5 sm:p-6">
+              <div className="flex flex-wrap items-end justify-between gap-2">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest text-[#ff7ab6]">Start here</p>
+                  <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
+                    {pct === 100 ? 'Your Boop page is ready. Hit Save.' : 'Build your Boop page in 5 quick steps'}
+                  </h2>
+                </div>
+                <span className="text-sm font-semibold text-zinc-300">{doneCount} of {steps.length} done</span>
+              </div>
+              <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Profile complete">
+                <div className="h-full rounded-full bg-[#E72679] transition-all duration-500" style={{ width: `${pct}%` }} />
+              </div>
+              <div className="mt-4 flex flex-wrap gap-2">
+                {steps.map((x) => (
+                  <button
+                    key={x.label}
+                    type="button"
+                    onClick={() => setActiveTab(x.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-semibold transition ${
+                      x.done ? 'bg-emerald-400/15 text-emerald-300' : 'bg-zinc-800 text-white hover:bg-zinc-700'
+                    }`}
+                  >
+                    <span aria-hidden>{x.done ? '✓' : '○'}</span>
+                    {x.label}
+                    <span className="sr-only">{x.done ? '(done)' : '(to do)'}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </div>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
