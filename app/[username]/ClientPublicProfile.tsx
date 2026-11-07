@@ -268,21 +268,21 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                       className="w-full h-14 object-fill pointer-events-none absolute inset-0"
                     />
                     <span
-                      className="relative z-10 flex items-center justify-center h-14 font-bold text-lg px-4"
+                      className="relative z-10 grid h-14 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 px-[clamp(1.1rem,7%,1.9rem)] font-bold text-lg"
                       style={{ color: skin.tokens.linkText }}
                     >
-                      {link.LNKimg ? (
-                        <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
-                      ) : null}
-                      <span className="truncate px-10 text-center">{link.title}</span>
+                      {link.LNKimg ? (<span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                        <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
+                      </span>) : <span aria-hidden />}
+                      <span className="truncate text-center">{link.title}</span><span aria-hidden />
                     </span>
                   </>
                 ) : (
-                  <span className={`relative flex items-center justify-center py-4 px-8 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
-                    {link.LNKimg ? (
-                      <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
-                    ) : null}
-                    <span className="truncate px-10 text-center">{link.title}</span>
+                  <span className={`relative grid grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 py-4 px-4 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
+                    {link.LNKimg ? (<span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                        <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
+                      </span>) : <span aria-hidden />}
+                    <span className="truncate text-center">{link.title}</span><span aria-hidden />
                   </span>
                 )}
               </button>
@@ -304,11 +304,11 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                       />
                     );
                   })()}
-                  <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-center bg-black/50 py-2 text-center font-bold text-white">
-                    {link.LNKimg ? (
-                      <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
-                    ) : null}
-                    <span className="truncate px-12 text-center">{link.title}</span>
+                  <div className="pointer-events-none absolute inset-x-0 top-0 grid grid-cols-[2rem_minmax(0,1fr)_2rem] items-center gap-2 bg-black/50 px-3 py-2 text-center font-bold text-white">
+                    {link.LNKimg ? (<span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                        <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
+                      </span>) : <span aria-hidden />}
+                    <span className="truncate text-center">{link.title}</span><span aria-hidden />
                   </div>
                 </div>
               ) : null}

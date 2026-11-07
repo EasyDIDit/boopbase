@@ -13,6 +13,7 @@ import {
   type SocialPlatformId,
 } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
+import { FieldTip } from '@/components/FieldTip';
 import { IMAGE_ACCEPT, prepareImage } from '@/lib/imageResize';
 
 type ImageStatus = { kind: 'idle' | 'busy' | 'ready' | 'error'; msg?: string };
@@ -571,6 +572,7 @@ export default function Dashboard() {
                     className="w-full bg-zinc-800 p-4 rounded-2xl"
                     placeholder="What people see, e.g. Jordan Lee"
                   />
+                  <FieldTip kind="public">Shows big at the top of your page.</FieldTip>
                 </Section>
                 <Section title="Headline / bio" right={`${bio.length}/200`}>
                   <textarea
@@ -580,11 +582,12 @@ export default function Dashboard() {
                     className="w-full bg-zinc-800 p-4 rounded-2xl h-28 resize-y"
                     placeholder="One line about you, e.g. Maker in the ATL"
                   />
+                  <FieldTip kind="public">Shows under your name. Keep it short and sweet.</FieldTip>
                 </Section>
                 <Section title="Contact card (vCard)">
-                  <p className="text-sm text-zinc-400 mb-3">
-                    Add to Contacts only shows on your public page if you fill phone or email.
-                  </p>
+                  <FieldTip kind="tip" className="mb-3">
+                    Add to Contacts only shows on your public page if you fill phone or email. These details go into the contact file people save.
+                  </FieldTip>
                   <div className="space-y-3">
                     <input type="text" placeholder="Phone for contacts, e.g. 404-555-0100" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
                     <input type="email" placeholder="Email for contacts, e.g. you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
@@ -670,9 +673,10 @@ export default function Dashboard() {
 
             {activeTab === 'links' && (
               <Section title="Links">
-                <p className="text-sm text-zinc-400 mb-4">
-                  Drag to reorder. Tap LNKimg for a PNG or SVG. Toggle Video to play their hosted link on the profile. Save when done.
-                </p>
+                <div className="mb-4 flex flex-col gap-2">
+                  <FieldTip kind="link">Paste the full web address, then give the button a short label.</FieldTip>
+                  <FieldTip kind="tip">Drag to reorder. Tap the image square to add a PNG or SVG. Switch Link to Video to play it right on your page. Save when done.</FieldTip>
+                </div>
                 <div className="flex flex-col gap-2 mb-5">
                   <input type="text" placeholder="https://your-site.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
                   <input type="text" placeholder="Button label, e.g. My site" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />

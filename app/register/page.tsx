@@ -1,4 +1,5 @@
 'use client';
+import { FieldTip } from "@/components/FieldTip";
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -104,9 +105,9 @@ export default function Register() {
               className="mt-1.5 min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 font-normal focus:border-white focus:outline-none"
               required
             />
-            <span className="mt-1 block text-xs font-normal text-white/40">
+            <FieldTip kind="public">
               The name people see on your profile.
-            </span>
+            </FieldTip>
           </label>
           <label className="block text-sm font-semibold">
             Email
@@ -119,9 +120,9 @@ export default function Register() {
               required
               autoCapitalize="none"
             />
-            <span className="mt-1 block text-xs font-normal text-white/40">
+            <FieldTip kind="private">
               Used to sign in. We never show this on your public profile.
-            </span>
+            </FieldTip>
           </label>
           <label className="block text-sm font-semibold">
             Username
@@ -144,9 +145,9 @@ export default function Register() {
               spellCheck={false}
               inputMode="text"
             />
-            <span className="mt-1 block text-xs font-normal text-white/40">
+            <FieldTip kind="link">
               No @. This is your link. Example: boopbase.com/yourname
-            </span>
+            </FieldTip>
             {username ? (
               <span className="mt-1 block text-xs font-medium text-emerald-300">
                 Your link: boopbase.com/{username}
@@ -163,9 +164,9 @@ export default function Register() {
               className="mt-1.5 min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 font-normal focus:border-white focus:outline-none"
               required
             />
-            <span className="mt-1 block text-xs font-normal text-white/40">
+            <FieldTip kind="private">
               At least 6 characters. You will use this to edit later.
-            </span>
+            </FieldTip>
           </label>
 
           {error && <p role="alert" className="text-center text-red-400">{error}</p>}
