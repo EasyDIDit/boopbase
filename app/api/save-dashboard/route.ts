@@ -14,6 +14,7 @@ const ALLOWED_FIELDS = [
   'useThemeBackground',
   'themeOverridesHero',
   'themeId',
+  'fontId',
   'links',
   'socials',
   'instagram',
@@ -40,8 +41,13 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     const updateData: Record<string, unknown> = {};
+    const allowedFonts = new Set(['boop', 'clean', 'classic', 'marker', 'condensed']);
     for (const key of ALLOWED_FIELDS) {
       if (Object.prototype.hasOwnProperty.call(body, key) && body[key] !== undefined) {
+        if (key === 'fontId') {
+          updateData[key] = allowedFonts.has(String(body[key])) ? body[key] : 'boop';
+          continue;
+        }
         updateData[key] = body[key];
       }
     }
