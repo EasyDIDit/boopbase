@@ -537,7 +537,7 @@ export default function Dashboard() {
                       )
                     }
                     placeholder="yourname — no @"
-                    className="w-full bg-zinc-800 p-4 rounded-2xl"
+                    className="w-full bg-zinc-800 p-4 rounded-2xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30"
                     autoCapitalize="none"
                     autoCorrect="off"
                     spellCheck={false}
@@ -569,7 +569,7 @@ export default function Dashboard() {
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-zinc-800 p-4 rounded-2xl"
+                    className="w-full bg-zinc-800 p-4 rounded-2xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30"
                     placeholder="What people see, e.g. Jordan Lee"
                   />
                   <FieldTip kind="public">Shows big at the top of your page.</FieldTip>
@@ -579,7 +579,7 @@ export default function Dashboard() {
                     value={bio}
                     onChange={(e) => setBio(e.target.value.slice(0, 200))}
                     maxLength={200}
-                    className="w-full bg-zinc-800 p-4 rounded-2xl h-28 resize-y"
+                    className="w-full bg-zinc-800 p-4 rounded-2xl h-28 resize-y border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30"
                     placeholder="One line about you, e.g. Maker in the ATL"
                   />
                   <FieldTip kind="public">Shows under your name. Keep it short and sweet.</FieldTip>
@@ -589,11 +589,11 @@ export default function Dashboard() {
                     Add to Contacts only shows on your public page if you fill phone or email. These details go into the contact file people save.
                   </FieldTip>
                   <div className="space-y-3">
-                    <input type="text" placeholder="Phone for contacts, e.g. 404-555-0100" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
-                    <input type="email" placeholder="Email for contacts, e.g. you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
-                    <input type="text" placeholder="Company, e.g. Easy Did It" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
-                    <input type="text" placeholder="Job title, e.g. Maker" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
-                    <input type="text" placeholder="City or address (optional)" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Phone</span><input type="text" placeholder="Phone for contacts, e.g. 404-555-0100" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Email</span><input type="email" placeholder="Email for contacts, e.g. you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Company</span><input type="text" placeholder="Company, e.g. Easy Did It" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Job title</span><input type="text" placeholder="Job title, e.g. Maker" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">City or address</span><input type="text" placeholder="City or address (optional)" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                   </div>
                 </Section>
               </div>
@@ -625,7 +625,7 @@ export default function Dashboard() {
                       if (e.key === 'Enter') addSocial();
                     }}
                     placeholder={selectedPlatform?.placeholder || '@username'}
-                    className="flex-1 bg-zinc-800 p-3 rounded-xl"
+                    className="flex-1 bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30"
                   />
                   <button
                     type="button"
@@ -678,9 +678,9 @@ export default function Dashboard() {
                   <FieldTip kind="tip">Drag to reorder. Tap the image square to add a PNG or SVG. Switch Link to Video to play it right on your page. Save when done.</FieldTip>
                 </div>
                 <div className="flex flex-col gap-2 mb-5">
-                  <input type="text" placeholder="https://your-site.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
-                  <input type="text" placeholder="Button label, e.g. My site" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
-                  <button type="button" onClick={addLink} className="bg-white text-black py-3 rounded-xl font-medium">
+                  <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Web address</span><input type="text" placeholder="https://your-site.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                  <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Button label</span><input type="text" placeholder="Button label, e.g. My site" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                  <button type="button" onClick={addLink} className="rounded-xl bg-[#E72679] py-3 font-bold text-white transition hover:brightness-110 active:scale-[0.99]">
                     Add link
                   </button>
                 </div>
@@ -697,7 +697,7 @@ export default function Dashboard() {
                           onDragStart={(e) => onLinkDragStart(index, String(link.id), e)}
                           onDragOver={(e) => onLinkDragOver(index, e)}
                           onDrop={(e) => e.preventDefault()}
-                          className={`p-3 rounded-xl flex items-center gap-3 select-none transition-all duration-150 ${
+                          className={`p-3 rounded-2xl flex flex-wrap sm:flex-nowrap items-center gap-3 select-none transition-all duration-150 ${
                             isActive
                               ? 'opacity-50 border-2 border-solid border-[#E72679] bg-zinc-800 shadow-lg shadow-pink-500/10 scale-[1.01]'
                               : isDragging
@@ -721,14 +721,15 @@ export default function Dashboard() {
                           </span>
 
                           <label
-                            className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-zinc-900"
+                            className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-zinc-900 ${link.LNKimg ? "border border-zinc-700" : "border-2 border-dashed border-zinc-600 hover:border-[#E72679]"}`}
+                            title="Add an image to this link"
                             onMouseDown={(e) => e.stopPropagation()}
                             onPointerDown={(e) => e.stopPropagation()}
                           >
                             {link.LNKimg ? (
-                              <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
+                              <img src={link.LNKimg} alt="" className="h-full w-full object-contain p-1.5" />
                             ) : (
-                              <span className="flex h-full w-full items-center justify-center text-[9px] text-zinc-500">LNKimg</span>
+                              <span className="flex h-full w-full flex-col items-center justify-center text-zinc-400"><span className="text-lg leading-none">+</span><span className="text-[0.6rem] font-semibold">Image</span></span>
                             )}
                             <input
                               type="file"
@@ -945,10 +946,13 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-zinc-900 rounded-3xl p-6 md:p-8">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">{title}</h3>
-        {right ? <span className="text-sm text-zinc-500">{right}</span> : null}
+    <div className="rounded-3xl border border-white/5 bg-zinc-900 p-5 shadow-lg shadow-black/20 sm:p-6 md:p-8">
+      <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/5 pb-3">
+        <h3 className="flex items-center gap-2 text-lg font-bold tracking-tight">
+          <span className="h-5 w-1.5 rounded-full bg-[#E72679]" aria-hidden />
+          {title}
+        </h3>
+        {right ? <span className="rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-semibold text-zinc-400">{right}</span> : null}
       </div>
       {children}
     </div>
