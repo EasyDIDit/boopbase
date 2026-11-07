@@ -768,7 +768,8 @@ export default function Dashboard() {
                           </span>
 
                           <label
-                            className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-zinc-900 ${link.LNKimg ? "border border-zinc-700" : "border-2 border-dashed border-zinc-600 hover:border-[#E72679]"}`}
+                            style={link.LNKimg ? { backgroundColor: "#ffffff", backgroundImage: "linear-gradient(45deg,#e4e4e7 25%,transparent 25%,transparent 75%,#e4e4e7 75%),linear-gradient(45deg,#e4e4e7 25%,transparent 25%,transparent 75%,#e4e4e7 75%)", backgroundSize: "10px 10px", backgroundPosition: "0 0,5px 5px" } : undefined}
+                            className={`relative h-12 w-12 shrink-0 overflow-hidden rounded-xl ${link.LNKimg ? "" : "bg-zinc-900"} ${link.LNKimg ? "border border-zinc-700" : "border-2 border-dashed border-zinc-600 hover:border-[#E72679]"}`}
                             title="Add an image to this link"
                             onMouseDown={(e) => e.stopPropagation()}
                             onPointerDown={(e) => e.stopPropagation()}
