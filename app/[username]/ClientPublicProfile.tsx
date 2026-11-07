@@ -85,23 +85,21 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     Boolean(user?.email?.trim()) ||
     Boolean(user?.company?.trim());
 
-  const [openVideo, setOpenVideo] = useState<string | null>(null);
-
   const videoEmbed = (raw: string): { kind: 'iframe' | 'file'; src: string } | null => {
     try {
       const u = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
       const host = u.hostname.replace(/^www\./, '');
       if (host === 'youtu.be') {
         const id = u.pathname.split('/').filter(Boolean)[0];
-        return id ? { kind: 'iframe', src: `https://www.youtube.com/embed/${id}` } : null;
+        return id ? { kind: 'iframe', src: `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&playsinline=1&modestbranding=1` } : null;
       }
       if (host.endsWith('youtube.com')) {
         const id = u.searchParams.get('v') || u.pathname.split('/').filter(Boolean).pop();
-        return id ? { kind: 'iframe', src: `https://www.youtube.com/embed/${id}` } : null;
+        return id ? { kind: 'iframe', src: `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&playsinline=1&modestbranding=1` } : null;
       }
       if (host.endsWith('vimeo.com')) {
         const id = u.pathname.split('/').filter(Boolean).pop();
-        return id ? { kind: 'iframe', src: `https://player.vimeo.com/video/${id}` } : null;
+        return id ? { kind: 'iframe', src: `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1` } : null;
       }
       if (/\.(mp4|webm|mov)(\?|$)/i.test(u.pathname)) return { kind: 'file', src: u.toString() };
       return null;
@@ -254,16 +252,10 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
           <div className="flex flex-col gap-3.5">
             {activeLinks.map((link: any) => (
               <div key={link.id} className="w-full">
+              {!(link.kind === 'video' && videoEmbed(link.url)) && (
               <button
                 type="button"
                 onClick={() => {
-                  if (link.kind === 'video') {
-                    const embed = videoEmbed(link.url);
-                    if (embed) {
-                      setOpenVideo(openVideo === link.id ? null : link.id);
-                      return;
-                    }
-                  }
                   trackAndOpen(link);
                 }}
                 className="block relative w-full text-center cursor-pointer"
@@ -294,21 +286,22 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                   </span>
                 )}
               </button>
-              {link.kind === 'video' && openVideo === link.id ? (
-                <div className="relative mt-2 w-full overflow-hidden rounded-2xl bg-black">
+              )}
+              {link.kind === 'video' && videoEmbed(link.url) ? (
+                <button type="button" onClick={() => trackAndOpen(link)} aria-label={`Open ${link.title}`} className="relative block w-full cursor-pointer overflow-hidden rounded-2xl bg-black text-left active:scale-[0.985] transition-all">
                   {(() => {
                     const embed = videoEmbed(link.url);
                     if (!embed) return <p className="p-4 text-center text-sm text-white">This video link cannot play here.</p>;
                     if (embed.kind === 'file') {
-                      return <video src={embed.src} controls playsInline className="aspect-video w-full" />;
+                      return <video src={embed.src} autoPlay muted loop playsInline className="pointer-events-none aspect-video w-full object-cover" />;
                     }
                     return (
                       <iframe
                         src={embed.src}
                         title={link.title}
-                        className="aspect-video w-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
+                        className="pointer-events-none aspect-video w-full"
+                        tabIndex={-1}
+                        allow="autoplay; encrypted-media; picture-in-picture"
                       />
                     );
                   })()}
@@ -318,7 +311,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                       </span>) : <span aria-hidden />}
                     <span className="truncate text-center">{link.title}</span><span aria-hidden />
                   </div>
-                </div>
+                </button>
               ) : null}
               </div>
             ))}
