@@ -39,7 +39,7 @@ export function fitWithin(width: number, height: number, maxWidth: number, maxHe
   return { width: Math.max(1, Math.round(width * scale)), height: Math.max(1, Math.round(height * scale)) };
 }
 
-function decodeToDataUrl(blob: Blob, maxWidth: number, maxHeight: number): Promise<string> {
+function decodeToDataUrl(blob: Blob, maxWidth: number, maxHeight: number, png = false): Promise<string> {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(blob);
     const img = new Image();
@@ -63,9 +63,10 @@ function decodeToDataUrl(blob: Blob, maxWidth: number, maxHeight: number): Promi
         const ctx = canvas.getContext('2d');
         if (!ctx) throw new Error('no canvas');
         ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+        const type = png ? 'image/png' : 'image/jpeg';
+        const dataUrl = png ? canvas.toDataURL(type) : canvas.toDataURL(type, 0.8);
         cleanup();
-        if (!dataUrl.startsWith('data:image/jpeg')) throw new Error('encode failed');
+        if (!dataUrl.startsWith(`data:${type}`)) throw new Error('encode failed');
         resolve(dataUrl);
       } catch {
         cleanup();
@@ -80,11 +81,12 @@ function decodeToDataUrl(blob: Blob, maxWidth: number, maxHeight: number): Promi
   });
 }
 
-export async function prepareImage(file: File, maxWidth = 1200, maxHeight = 1200): Promise<string> {
+/** keepTransparency: encode as PNG so transparent backgrounds survive (used for link images). */
+export async function prepareImage(file: File, maxWidth = 1200, maxHeight = 1200, keepTransparency = false): Promise<string> {
   if (!file) throw new ImagePrepError('No photo selected.');
   const source = isHeic(file) ? await heicToJpeg(file) : file;
   try {
-    return await decodeToDataUrl(source, maxWidth, maxHeight);
+    return await decodeToDataUrl(source, maxWidth, maxHeight, keepTransparency && source === file);
   } catch (err) {
     // Some browsers report HEIC with an empty/odd type; try converting once before giving up.
     if (source === file && !isHeic(file)) {

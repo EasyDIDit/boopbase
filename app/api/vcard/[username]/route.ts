@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { dayKey } from '@/lib/daily';
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +11,11 @@ export async function GET(
     await connectDB();
 
     const { username } = await params;
-    const user = await User.findOne({ username: username.toLowerCase() });
+    const user = await User.findOneAndUpdate(
+      { username: username.toLowerCase() },
+      { $inc: { contactSaves: 1, [`daily.${dayKey()}.c`]: 1 } },
+      { new: true }
+    );
 
     if (!user) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

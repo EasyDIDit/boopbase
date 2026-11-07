@@ -85,23 +85,21 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     Boolean(user?.email?.trim()) ||
     Boolean(user?.company?.trim());
 
-  const [openVideo, setOpenVideo] = useState<string | null>(null);
-
   const videoEmbed = (raw: string): { kind: 'iframe' | 'file'; src: string } | null => {
     try {
       const u = new URL(raw.startsWith('http') ? raw : `https://${raw}`);
       const host = u.hostname.replace(/^www\./, '');
       if (host === 'youtu.be') {
         const id = u.pathname.split('/').filter(Boolean)[0];
-        return id ? { kind: 'iframe', src: `https://www.youtube.com/embed/${id}` } : null;
+        return id ? { kind: 'iframe', src: `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&playsinline=1&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0` } : null;
       }
       if (host.endsWith('youtube.com')) {
         const id = u.searchParams.get('v') || u.pathname.split('/').filter(Boolean).pop();
-        return id ? { kind: 'iframe', src: `https://www.youtube.com/embed/${id}` } : null;
+        return id ? { kind: 'iframe', src: `https://www.youtube.com/embed/${id}?autoplay=1&mute=1&loop=1&playlist=${id}&controls=0&playsinline=1&modestbranding=1&rel=0&iv_load_policy=3&disablekb=1&fs=0` } : null;
       }
       if (host.endsWith('vimeo.com')) {
         const id = u.pathname.split('/').filter(Boolean).pop();
-        return id ? { kind: 'iframe', src: `https://player.vimeo.com/video/${id}` } : null;
+        return id ? { kind: 'iframe', src: `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=1&background=1` } : null;
       }
       if (/\.(mp4|webm|mov)(\?|$)/i.test(u.pathname)) return { kind: 'file', src: u.toString() };
       return null;
@@ -222,6 +220,14 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                   rel="noopener noreferrer"
                   className={skin.socialIconClass}
                   title={s.platform}
+                  onClick={() => {
+                    try {
+                      const body = JSON.stringify({ username: user?.username });
+                      if (navigator.sendBeacon) navigator.sendBeacon('/api/track-social', new Blob([body], { type: 'application/json' }));
+                    } catch {
+                      // never block the tap
+                    }
+                  }}
                 >
                   <SocialGlyph platform={s.platform} className="w-6 h-6" />
                 </a>
@@ -246,16 +252,10 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
           <div className="flex flex-col gap-3.5">
             {activeLinks.map((link: any) => (
               <div key={link.id} className="w-full">
+              {!(link.kind === 'video' && videoEmbed(link.url)) && (
               <button
                 type="button"
                 onClick={() => {
-                  if (link.kind === 'video') {
-                    const embed = videoEmbed(link.url);
-                    if (embed) {
-                      setOpenVideo(openVideo === link.id ? null : link.id);
-                      return;
-                    }
-                  }
                   trackAndOpen(link);
                 }}
                 className="block relative w-full text-center cursor-pointer"
@@ -268,49 +268,44 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                       className="w-full h-14 object-fill pointer-events-none absolute inset-0"
                     />
                     <span
-                      className="relative z-10 flex items-center justify-center h-14 font-bold text-lg px-4"
+                      className="relative z-10 grid h-14 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 px-[clamp(1.9rem,12%,3.25rem)] font-bold text-lg"
                       style={{ color: skin.tokens.linkText }}
                     >
-                      {link.LNKimg ? (
-                        <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
-                      ) : null}
-                      <span className="truncate px-10 text-center">{link.title}</span>
+                      {link.LNKimg ? (<span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                        <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
+                      </span>) : <span aria-hidden />}
+                      <span className="truncate text-center">{link.title}</span><span aria-hidden />
                     </span>
                   </>
                 ) : (
-                  <span className={`relative flex items-center justify-center py-4 px-8 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
-                    {link.LNKimg ? (
-                      <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
-                    ) : null}
-                    <span className="truncate px-10 text-center">{link.title}</span>
+                  <span className={`relative grid grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-3 py-4 pl-5 pr-5 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
+                    {link.LNKimg ? (<span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                        <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
+                      </span>) : <span aria-hidden />}
+                    <span className="truncate text-center">{link.title}</span><span aria-hidden />
                   </span>
                 )}
               </button>
-              {link.kind === 'video' && openVideo === link.id ? (
-                <div className="relative mt-2 w-full overflow-hidden rounded-2xl bg-black">
+              )}
+              {link.kind === 'video' && videoEmbed(link.url) ? (
+                <button type="button" onClick={() => trackAndOpen({ ...link, url: link.tapUrl || link.url })} aria-label={`Open ${link.title}`} className="relative block aspect-video w-full cursor-pointer overflow-hidden rounded-2xl bg-black text-left active:scale-[0.985] transition-all">
                   {(() => {
                     const embed = videoEmbed(link.url);
                     if (!embed) return <p className="p-4 text-center text-sm text-white">This video link cannot play here.</p>;
                     if (embed.kind === 'file') {
-                      return <video src={embed.src} controls playsInline className="aspect-video w-full" />;
+                      return <video src={embed.src} autoPlay muted loop playsInline className="pointer-events-none absolute inset-0 h-full w-full object-cover" />;
                     }
                     return (
                       <iframe
                         src={embed.src}
                         title={link.title}
-                        className="aspect-video w-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
+                        className="pointer-events-none absolute left-1/2 top-1/2 h-[160%] w-[160%] -translate-x-1/2 -translate-y-1/2 border-0"
+                        tabIndex={-1}
+                        allow="autoplay; encrypted-media; picture-in-picture"
                       />
                     );
                   })()}
-                  <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-center bg-black/50 py-2 text-center font-bold text-white">
-                    {link.LNKimg ? (
-                      <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
-                    ) : null}
-                    <span className="truncate px-12 text-center">{link.title}</span>
-                  </div>
-                </div>
+                </button>
               ) : null}
               </div>
             ))}

@@ -24,3 +24,8 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Big screens and TVs: scale every rem-based size up so pages don't look tiny. */
+@media (min-width: 1800px) { html { font-size: 18px; } }
+@media (min-width: 2400px) { html { font-size: 22px; } }
+@media (min-width: 3200px) { html { font-size: 28px; } }

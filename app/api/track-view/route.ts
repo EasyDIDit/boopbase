@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
+import { dayKey } from '@/lib/daily';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Increment views by 1
     const updatedUser = await User.findOneAndUpdate(
       { username: username.toLowerCase() },
-      { $inc: { views: 1 } },
+      { $inc: { views: 1, [`daily.${dayKey()}.v`]: 1 } },
       { new: true }
     );
 
