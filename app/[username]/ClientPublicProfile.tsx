@@ -276,18 +276,18 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                       className="w-full h-14 object-fill pointer-events-none absolute inset-0"
                     />
                     <span
-                      className="relative z-10 grid h-14 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 px-[clamp(1.1rem,7%,1.9rem)] font-bold text-lg"
+                      className="relative z-10 grid h-14 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 px-[clamp(1.9rem,12%,3.25rem)] font-bold text-lg"
                       style={{ color: skin.tokens.linkText }}
                     >
-                      {link.LNKimg ? (<span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                      {link.LNKimg ? (<span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
                         <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
                       </span>) : <span aria-hidden />}
                       <span className="truncate text-center">{link.title}</span><span aria-hidden />
                     </span>
                   </>
                 ) : (
-                  <span className={`relative grid grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 py-4 px-4 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
-                    {link.LNKimg ? (<span className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
+                  <span className={`relative grid grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-3 py-4 pl-5 pr-5 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
+                    {link.LNKimg ? (<span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
                         <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
                       </span>) : <span aria-hidden />}
                     <span className="truncate text-center">{link.title}</span><span aria-hidden />
