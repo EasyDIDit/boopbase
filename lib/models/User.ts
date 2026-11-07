@@ -13,6 +13,8 @@ const UserSchema = new mongoose.Schema({
   /** When true, the selected skin hero wins over an uploaded hero. */
   themeOverridesHero: { type: Boolean, default: false },
   themeId: { type: String, default: 'boop-classic' },
+  /** Profile typeface. Independent of skin. */
+  fontId: { type: String, default: 'boop' },
   buttonStyle: { type: String, default: 'solid' },
   links: [{
     id: { type: String },
