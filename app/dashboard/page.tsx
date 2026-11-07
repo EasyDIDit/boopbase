@@ -232,6 +232,10 @@ export default function Dashboard() {
 
 
 
+  const setLinkTap = (id: string | number, tapUrl: string) => {
+    setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, tapUrl } : l)));
+  };
+
   const setLinkKind = (id: string | number, kind: 'link' | 'video') => {
     setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, kind } : l)));
   };
@@ -792,7 +796,25 @@ export default function Dashboard() {
                           </label>
                           <div className="min-w-0 flex-1 pointer-events-none">
                             <div className="font-medium truncate">{link.title}</div>
-                            <div className="text-xs text-zinc-500 truncate">{link.url}</div>
+                            <div className="text-xs text-zinc-500 truncate">{link.kind === 'video' ? `Plays: ${link.url}` : link.url}</div>
+                            {link.kind === 'video' && (
+                              <div className="pointer-events-auto mt-2 space-y-1">
+                                <label className="block text-xs font-semibold text-zinc-300" htmlFor={`tap-${link.id}`}>Tap goes to</label>
+                                <input
+                                  id={`tap-${link.id}`}
+                                  type="url"
+                                  inputMode="url"
+                                  value={link.tapUrl || ''}
+                                  placeholder="Leave blank to open the full video"
+                                  onChange={(e) => setLinkTap(link.id, e.target.value)}
+                                  onMouseDown={(e) => e.stopPropagation()}
+                                  onPointerDown={(e) => e.stopPropagation()}
+                                  onKeyDown={(e) => e.stopPropagation()}
+                                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-[#E72679] focus:ring-2 focus:ring-[#E72679]/40"
+                                />
+                                <FieldTip kind="link">Your video plays silently in the button. Tapping it opens this link.</FieldTip>
+                              </div>
+                            )}
                           </div>
                           <button
                             type="button"

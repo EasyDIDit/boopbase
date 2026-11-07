@@ -24,6 +24,7 @@ const UserSchema = new mongoose.Schema({
     LNKimg: { type: String, default: '' },
     /** link = open URL. video = play their hosted video (YouTube, Vimeo, or direct file). We do not host it. */
     kind: { type: String, enum: ['link', 'video'], default: 'link' },
+    tapUrl: { type: String, default: '' },
   }],
   /** Flexible social buttons — only entries here appear on the public card */
   socials: [{

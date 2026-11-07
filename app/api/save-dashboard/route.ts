@@ -63,7 +63,10 @@ export async function POST(request: NextRequest) {
             ? rawImg
             : '';
         const kind = String(l?.kind || 'link') === 'video' ? 'video' : 'link';
-        return { ...l, url, LNKimg, kind };
+        const rawTap = String(l?.tapUrl || '').trim();
+        const tapUrl = kind === 'video' && rawTap ? normalizeLinkUrl(rawTap) : '';
+        if (kind === 'video' && rawTap && !tapUrl) bad.push(String(l?.title ?? rawTap));
+        return { ...l, url, LNKimg, kind, tapUrl: tapUrl || '' };
       });
       if (bad.length) {
         return NextResponse.json(

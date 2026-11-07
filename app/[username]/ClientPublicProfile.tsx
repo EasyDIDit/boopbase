@@ -288,7 +288,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
               </button>
               )}
               {link.kind === 'video' && videoEmbed(link.url) ? (
-                <button type="button" onClick={() => trackAndOpen(link)} aria-label={`Open ${link.title}`} className="relative block aspect-video w-full cursor-pointer overflow-hidden rounded-2xl bg-black text-left active:scale-[0.985] transition-all">
+                <button type="button" onClick={() => trackAndOpen({ ...link, url: link.tapUrl || link.url })} aria-label={`Open ${link.title}`} className="relative block aspect-video w-full cursor-pointer overflow-hidden rounded-2xl bg-black text-left active:scale-[0.985] transition-all">
                   {(() => {
                     const embed = videoEmbed(link.url);
                     if (!embed) return <p className="p-4 text-center text-sm text-white">This video link cannot play here.</p>;
