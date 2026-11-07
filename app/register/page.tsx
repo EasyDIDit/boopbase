@@ -100,10 +100,13 @@ export default function Register() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="What people should call you"
+              placeholder="What people call you, e.g. Jordan Lee"
               className="mt-1.5 min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 font-normal focus:border-white focus:outline-none"
               required
             />
+            <span className="mt-1 block text-xs font-normal text-white/40">
+              The name people see on your profile.
+            </span>
           </label>
           <label className="block text-sm font-semibold">
             Email
@@ -111,11 +114,14 @@ export default function Register() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@email.com"
+              placeholder="Login email, e.g. you@email.com"
               className="mt-1.5 min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 font-normal focus:border-white focus:outline-none"
               required
               autoCapitalize="none"
             />
+            <span className="mt-1 block text-xs font-normal text-white/40">
+              Used to sign in. We never show this on your public profile.
+            </span>
           </label>
           <label className="block text-sm font-semibold">
             Username
@@ -153,10 +159,13 @@ export default function Register() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Something you will remember"
+              placeholder="Something you will remember (6+ characters)"
               className="mt-1.5 min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 font-normal focus:border-white focus:outline-none"
               required
             />
+            <span className="mt-1 block text-xs font-normal text-white/40">
+              At least 6 characters. You will use this to edit later.
+            </span>
           </label>
 
           {error && <p role="alert" className="text-center text-red-400">{error}</p>}
