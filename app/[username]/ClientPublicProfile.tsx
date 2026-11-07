@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { normalizeLinkUrl } from '@/lib/safeUrl';
 import Link from 'next/link';
 import { getSkinById } from '@/lib/skins';
+import { getProfileFont } from '@/lib/fonts';
 import { legacySocialsToEntries } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
 import { BOOP_LOGO_BLACK, BOOP_LOGO_WHITE } from '@/lib/brandLogos';
@@ -37,6 +38,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
   const skin = getSkinById(user?.themeId || 'boop-classic');
+  const font = getProfileFont(user?.fontId);
 
   useEffect(() => {
     if (backgroundImages.length <= 1) return;
@@ -139,7 +141,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
     >
       <div
         className="max-w-md w-full rounded-3xl overflow-hidden shadow-2xl border border-black/15 relative"
-        style={{ backgroundColor: cardColor }}
+        style={{ backgroundColor: cardColor, fontFamily: font.family }}
       >
         {isOwner && (
           <Link
