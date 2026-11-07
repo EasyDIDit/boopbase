@@ -252,7 +252,7 @@ export default function Dashboard() {
         setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, LNKimg } : l)));
         return;
       }
-      const LNKimg = await prepareImage(file, 128, 128);
+      const LNKimg = await prepareImage(file, 128, 128, true);
       setLinks((prev) => prev.map((l) => (l.id === id ? { ...l, LNKimg } : l)));
     } catch (err) {
       setSaveOk(false);
