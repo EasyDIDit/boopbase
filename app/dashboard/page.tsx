@@ -539,7 +539,7 @@ export default function Dashboard() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full bg-zinc-800 p-4 rounded-2xl"
-                    placeholder="Display name"
+                    placeholder="What people see, e.g. Jordan Lee"
                   />
                 </Section>
                 <Section title="Headline / bio" right={`${bio.length}/200`}>
@@ -548,7 +548,7 @@ export default function Dashboard() {
                     onChange={(e) => setBio(e.target.value.slice(0, 200))}
                     maxLength={200}
                     className="w-full bg-zinc-800 p-4 rounded-2xl h-28 resize-y"
-                    placeholder="What should people know in one line?"
+                    placeholder="One line about you, e.g. Maker in the ATL"
                   />
                 </Section>
                 <Section title="Contact card (vCard)">
@@ -556,11 +556,11 @@ export default function Dashboard() {
                     Add to Contacts only shows on your public page if you fill phone or email.
                   </p>
                   <div className="space-y-3">
-                    <input type="text" placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
-                    <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
-                    <input type="text" placeholder="Company" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
-                    <input type="text" placeholder="Job title" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
-                    <input type="text" placeholder="Address" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="text" placeholder="Phone for contacts, e.g. 404-555-0100" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="email" placeholder="Email for contacts, e.g. you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="text" placeholder="Company, e.g. Easy Did It" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="text" placeholder="Job title, e.g. Maker" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
+                    <input type="text" placeholder="City or address (optional)" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl" />
                   </div>
                 </Section>
               </div>
@@ -644,8 +644,8 @@ export default function Dashboard() {
                   Drag any row to reorder. Other links shift live so you can see the new position. Save when done.
                 </p>
                 <div className="flex flex-col gap-2 mb-5">
-                  <input type="text" placeholder="https://…" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
-                  <input type="text" placeholder="Title on button" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
+                  <input type="text" placeholder="https://your-site.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
+                  <input type="text" placeholder="Button label, e.g. My site" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="bg-zinc-800 p-3 rounded-xl" />
                   <button type="button" onClick={addLink} className="bg-white text-black py-3 rounded-xl font-medium">
                     Add link
                   </button>
