@@ -268,29 +268,29 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                       className="w-full h-14 object-fill pointer-events-none absolute inset-0"
                     />
                     <span
-                      className={`relative z-10 flex items-center h-14 font-bold text-lg px-4 ${link.LNKimg ? "justify-start gap-3" : "justify-center"}`}
+                      className="relative z-10 flex items-center justify-center h-14 font-bold text-lg px-4"
                       style={{ color: skin.tokens.linkText }}
                     >
                       {link.LNKimg ? (
-                        <img src={link.LNKimg} alt="" className="h-7 w-7 shrink-0 object-contain" />
+                        <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
                       ) : null}
-                      <span className="truncate">{link.title}</span>
+                      <span className="truncate px-10 text-center">{link.title}</span>
                     </span>
                   </>
                 ) : (
-                  <span className={`flex items-center py-4 px-8 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all ${link.LNKimg ? "justify-start gap-3" : "justify-center"}`}>
+                  <span className={`relative flex items-center justify-center py-4 px-8 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
                     {link.LNKimg ? (
-                      <img src={link.LNKimg} alt="" className="h-7 w-7 shrink-0 object-contain" />
+                      <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
                     ) : null}
-                    <span className="truncate">{link.title}</span>
+                    <span className="truncate px-10 text-center">{link.title}</span>
                   </span>
                 )}
               </button>
               {link.kind === 'video' && openVideo === link.id ? (
-                <div className="mt-2 w-full overflow-hidden rounded-2xl bg-black">
+                <div className="relative mt-2 w-full overflow-hidden rounded-2xl bg-black">
                   {(() => {
                     const embed = videoEmbed(link.url);
-                    if (!embed) return <p className="p-4 text-sm text-white">This video link cannot play here.</p>;
+                    if (!embed) return <p className="p-4 text-center text-sm text-white">This video link cannot play here.</p>;
                     if (embed.kind === 'file') {
                       return <video src={embed.src} controls playsInline className="aspect-video w-full" />;
                     }
@@ -304,6 +304,12 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                       />
                     );
                   })()}
+                  <div className="pointer-events-none absolute inset-x-0 top-0 flex items-center justify-center bg-black/50 py-2 text-center font-bold text-white">
+                    {link.LNKimg ? (
+                      <img src={link.LNKimg} alt="" className="absolute left-4 h-7 w-7 object-contain" />
+                    ) : null}
+                    <span className="truncate px-12 text-center">{link.title}</span>
+                  </div>
                 </div>
               ) : null}
               </div>
