@@ -534,7 +534,7 @@ export default function Dashboard() {
                       {photo ? (
                         <img src={photo} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-3xl">🐱</div>
+                        <img src="/mascots/baby-panther.webp" alt="" className="w-full h-full object-cover" />
                       )}
                     </div>
                     <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl font-medium text-sm">
