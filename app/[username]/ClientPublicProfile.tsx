@@ -186,12 +186,9 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                     className="w-full h-full object-cover rounded-full border-[5px] border-white shadow-xl"
                   />
                 ) : (
-                  // Default placeholder (EASY, Nov 7 2026): baby panther. The old 🐱 placeholder stays in the repo, unused, for later.
-                  <img
-                    src="/mascots/baby-panther.webp"
-                    alt=""
-                    className="w-full h-full object-cover bg-[#f4d9b0] rounded-full border-[5px] border-white shadow-xl"
-                  />
+                  <div className="w-full h-full bg-[#f4d9b0] rounded-full border-[5px] border-white shadow-xl flex items-center justify-center text-5xl">
+                    🐱
+                  </div>
                 )}
                 {skin.assets.mascot?.position === 'profile' && (
                   <SkinMascotLayer mascot={skin.assets.mascot} />
