@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import { dayKey } from '@/lib/daily';
-import { Mascot } from '@/components/Mascot';
 
 type Day = { v?: number; t?: number; s?: number; c?: number };
 type LinkLike = { id: string | number; title?: string; clicks?: number; isActive?: boolean };
@@ -110,7 +109,7 @@ export default function InsightsPanel({
             <polyline points={line('t')} fill="none" stroke={PINK} strokeWidth="3" vectorEffect="non-scaling-stroke" />
           </svg>
         ) : (
-          <div className="flex items-center gap-3 rounded-xl bg-zinc-900 p-6"><Mascot pose="3-waving" className="h-16 w-16" /><p className="text-sm text-zinc-400">Daily history starts today. Check back after people visit your page.</p></div>
+          <p className="rounded-xl bg-zinc-900 p-6 text-center text-sm text-zinc-400">Daily history starts today. Check back after people visit your page.</p>
         )}
         <div className="mt-2 flex flex-wrap gap-4 text-xs text-zinc-300">
           <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full" style={{ background: GREEN }} />Views</span>
@@ -132,7 +131,7 @@ export default function InsightsPanel({
         <div className="rounded-2xl bg-zinc-800 p-4">
           <h4 className="mb-3 font-bold">Taps per link</h4>
           {sorted.length === 0 ? (
-            <div className="flex items-center gap-3"><Mascot pose="3-waving" /><p className="text-sm text-zinc-400">Add links to see tap counts.</p></div>
+            <p className="text-sm text-zinc-400">Add links to see tap counts.</p>
           ) : (
             <ul className="space-y-2.5">
               {sorted.map((l) => (
@@ -153,7 +152,7 @@ export default function InsightsPanel({
         <div className="rounded-2xl bg-zinc-800 p-4">
           <h4 className="mb-3 font-bold">Where the action is</h4>
           {partTotal === 0 ? (
-            <div className="flex items-center gap-3"><Mascot pose="3-waving" /><p className="text-sm text-zinc-400">No taps or saves yet.</p></div>
+            <p className="text-sm text-zinc-400">No taps or saves yet.</p>
           ) : (
             <div className="flex flex-wrap items-center gap-5">
               <svg viewBox="0 0 140 140" className="h-36 w-36 -rotate-90" role="img" aria-label="Share of link taps, social taps and contact saves">
@@ -179,7 +178,7 @@ export default function InsightsPanel({
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-2xl border-l-4 border-[#E72679] bg-zinc-800 p-4">
           <div className="text-xs font-bold uppercase tracking-wide text-[#ff7ab6]">Top link</div>
-          <div className="mt-1 font-bold">{top ? `${top.title}: ${top.clicks} taps` : <span className="flex items-center gap-2"><Mascot pose="3-waving" className="h-10 w-10" />No taps yet</span>}</div>
+          <div className="mt-1 font-bold">{top ? `${top.title}: ${top.clicks} taps` : 'No taps yet'}</div>
         </div>
         <div className="rounded-2xl border-l-4 border-amber-300 bg-zinc-800 p-4">
           <div className="text-xs font-bold uppercase tracking-wide text-amber-300">Not tapped yet</div>

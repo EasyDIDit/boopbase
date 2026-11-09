@@ -1,8 +1,6 @@
 'use client';
 
 import type { CSSProperties, ReactNode } from 'react';
-import { Mascot } from '@/components/Mascot';
-import type { MascotPose } from '@/lib/mascot';
 
 /**
  * Color-coded helper tip under a form field.
@@ -48,7 +46,7 @@ const KINDS: Record<TipKind, { label: string; box: string; badge: string; bubble
   },
 };
 
-export function FieldTip({ kind = 'tip', children, className = '', pose }: { kind?: TipKind; children: ReactNode; className?: string; pose?: MascotPose }) {
+export function FieldTip({ kind = 'tip', children, className = '', speech = false }: { kind?: TipKind; children: ReactNode; className?: string; speech?: boolean }) {
   const k = KINDS[kind];
   const badge = (
     <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[0.68rem] font-bold uppercase tracking-wide ${k.badge}`}>
@@ -57,22 +55,17 @@ export function FieldTip({ kind = 'tip', children, className = '', pose }: { kin
     </span>
   );
   // Registration tips without a mascot keep their existing layout.
-  if (!pose) return (
+  if (!speech) return (
     <span className={`mt-2 flex items-start gap-2 rounded-xl border-l-4 px-3 py-2 text-[0.8rem] font-normal leading-snug text-white/85 ${k.box} ${className}`}>
       {badge}<span className="min-w-0 pt-px">{children}</span>
     </span>
   );
   const colors = { '--tip-bg': k.bubble, '--tip-edge': k.edge } as CSSProperties;
   return (
-    <span data-mascot-tip className={`relative mt-5 flex min-w-0 flex-col items-start gap-2 text-[0.8rem] font-normal leading-snug text-white/85 sm:flex-row sm:gap-3 ${className}`} style={colors}>
-      <span data-mascot-speaker className={`relative ml-1 block w-16 shrink-0 sm:ml-0 ${pose === '5-peeking' ? 'h-14 border-b border-white/25' : 'h-20'}`}>
-        <Mascot pose={pose} className={pose === '5-peeking' ? 'absolute -top-2 left-0 h-16 w-16 object-bottom' : 'h-20 w-16'} />
-      </span>
-      <span data-mascot-bubble className="relative flex w-full min-w-0 flex-1 flex-wrap items-start gap-2 rounded-2xl border border-[var(--tip-edge)] bg-[var(--tip-bg)] px-3 py-3 sm:mt-3">
-        <span aria-hidden className="absolute -top-1.5 left-7 h-3 w-3 rotate-45 border-l border-t border-[var(--tip-edge)] bg-[var(--tip-bg)] sm:-left-1.5 sm:top-4 sm:border-b sm:border-t-0" />
-        {badge}
-        <span className="min-w-0 flex-1 basis-36 break-words pt-px">{children}</span>
-      </span>
+    <span data-mascot-bubble className={`relative mt-4 flex min-w-0 flex-wrap items-start gap-2 rounded-2xl border border-[var(--tip-edge)] bg-[var(--tip-bg)] px-3 py-3 text-[0.8rem] font-normal leading-snug text-white/85 ${className}`} style={colors}>
+      <span aria-hidden className="absolute -top-1.5 left-7 h-3 w-3 rotate-45 border-l border-t border-[var(--tip-edge)] bg-[var(--tip-bg)]" />
+      {badge}
+      <span className="min-w-0 flex-1 basis-36 break-words pt-px">{children}</span>
     </span>
   );
 }

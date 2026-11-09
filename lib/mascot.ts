@@ -1,14 +1,12 @@
-export type MascotStyle = '3d' | 'drawn';
 export type MascotPose = '1-pointing' | '2-phone-card' | '3-waving' | '4-thumbs-up' | '5-peeking';
 
-export function mascotStyle(search: string, previewAllowed: boolean): MascotStyle {
-  return previewAllowed && new URLSearchParams(search).get('mascot') === 'drawn' ? 'drawn' : '3d';
+/** The approved drawn style is fixed; URL parameters cannot change it. */
+export function mascotSrc(pose: MascotPose): string {
+  return `/mascots/poses/clean/panther-drawn-${pose}.webp`;
 }
 
-export function mascotSrc(style: MascotStyle, pose: MascotPose): string {
-  return `/mascots/poses/panther-${style}-${pose}${pose === '5-peeking' ? '-edge' : ''}.webp`;
-}
-
-export function allowMascotPreview(vercelEnv: string | undefined, nodeEnv: string | undefined): boolean {
-  return vercelEnv !== 'production' && (vercelEnv === 'preview' || nodeEnv === 'development');
+export function profileSetupComplete({ photo, name, bio, socials, links }: {
+  photo: string | null; name: string; bio: string; socials: readonly unknown[]; links: readonly unknown[];
+}): boolean {
+  return !!photo && !!name.trim() && !!bio.trim() && socials.length > 0 && links.length > 0;
 }

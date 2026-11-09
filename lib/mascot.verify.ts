@@ -2,30 +2,30 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { allowMascotPreview, mascotSrc, mascotStyle, type MascotPose } from './mascot';
+import { mascotSrc, profileSetupComplete, type MascotPose } from './mascot';
 
-assert.equal(mascotStyle('', true), '3d');
-assert.equal(mascotStyle('?mascot=3d', true), '3d');
-assert.equal(mascotStyle('?mascot=drawn', true), 'drawn');
-assert.equal(mascotStyle('?other=value&mascot=drawn', true), 'drawn');
-assert.equal(mascotStyle('?mascot=unknown', true), '3d');
-assert.equal(mascotStyle('?mascot=drawn', false), '3d');
-assert.equal(allowMascotPreview('production', 'production'), false);
-assert.equal(allowMascotPreview('production', 'development'), false);
-assert.equal(allowMascotPreview(undefined, 'production'), false);
-assert.equal(allowMascotPreview('preview', 'production'), true);
-assert.equal(allowMascotPreview(undefined, 'development'), true);
+let checks = 0;
+const ok = (condition: unknown, message: string) => { assert.ok(condition, message); checks++; };
 const poses: MascotPose[] = ['1-pointing', '2-phone-card', '3-waving', '4-thumbs-up', '5-peeking'];
-for (const style of ['3d', 'drawn'] as const) {
-  for (const pose of poses) {
-    assert.ok(existsSync(resolve('public', '.' + mascotSrc(style, pose))), `${style} ${pose} asset exists`);
-  }
+for (const pose of poses) {
+  ok(mascotSrc(pose).includes('/clean/panther-drawn-'), 'fixed drawn style');
+  ok(existsSync(resolve('public', '.' + mascotSrc(pose))), 'rendered asset exists');
 }
 for (const style of ['3d', 'drawn']) {
-  assert.ok(existsSync(resolve('public/mascots/poses', `panther-${style}-head.webp`)), `${style} head exists`);
+  for (const pose of [...poses, 'head']) {
+    ok(existsSync(resolve(`public/mascots/poses/clean/panther-${style}-${pose}.webp`)), 'both cleaned locked sets exist');
+    ok(existsSync(resolve(`public/mascots/poses/panther-${style}-${pose}.webp`)), 'legacy asset path preserved');
+  }
 }
-const skins = readFileSync(resolve('lib/skins.ts'), 'utf8');
-assert.ok(!/[\u{1f431}\u{1f63a}-\u{1f640}\u{1f408}]/u.test(skins), 'no yellow-cat emoji in skin configuration');
+const complete = { photo: '/example.webp', name: 'Example', bio: 'Example bio', socials: [{}], links: [{}] };
+ok(profileSetupComplete(complete), 'all five steps complete');
+for (const missing of [{ photo: null }, { name: ' ' }, { bio: ' ' }, { socials: [] }, { links: [] }]) {
+  ok(!profileSetupComplete({ ...complete, ...missing }), 'every setup step is required');
+}
 const editor = readFileSync(resolve('app/dashboard/page.tsx'), 'utf8');
-assert.equal((editor.match(/<FieldTip[^>]*pose=/g) || []).length, 7, 'all seven editor tips retain a speaker pose');
-console.log('mascot.verify: all 25 checks passed');
+const mascot = readFileSync(resolve('components/Mascot.tsx'), 'utf8');
+ok(!editor.includes('MascotStyleSwitch') && !mascot.includes('URLSearchParams'), 'no style switch or query override');
+ok((editor.match(/pose="4-thumbs-up"/g) || []).length === 1, 'thumbs-up only in save toast');
+ok(!readFileSync(resolve('components/InsightsPanel.tsx'), 'utf8').includes('Mascot'), 'no insight empty-state mascots');
+ok(!/[\u{1f431}\u{1f63a}-\u{1f640}\u{1f408}]/u.test(readFileSync(resolve('lib/skins.ts'), 'utf8')), 'no yellow-cat badge');
+console.log(`mascot.verify: all ${checks} checks passed`);
