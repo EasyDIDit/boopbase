@@ -16,7 +16,6 @@ export const PEEK_EXPRESSIONS = {
   shock: { width: 360, height: 358, grip: 0.154 },
   grin: { width: 360, height: 338, grip: 0.112 },
   wink: { width: 360, height: 324, grip: 0.108 },
-  tongue: { width: 360, height: 325, grip: 0.138 },
   gasp: { width: 360, height: 352, grip: 0.06 },
   think: { width: 300, height: 360, grip: 0.078 },
 } as const;

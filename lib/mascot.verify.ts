@@ -34,6 +34,7 @@ for (const [name, v] of Object.entries(PEEK_EXPRESSIONS)) {
 }
 ok(startHereExpression(0) === 'shock' && startHereExpression(2) === 'grin' && startHereExpression(4) === 'gasp', 'start-here reacts to progress');
 const spots = [...editor.matchAll(/peek="(\w+)"/g)].map((m) => m[1]);
-ok(spots.length === 3 && new Set(spots).size === 3 && !spots.some((s) => ['shock', 'grin', 'gasp'].includes(s)), 'each card has its own expression');
+ok(spots.length === 3 && new Set(spots).size === 3 && !spots.includes('tongue'), 'each card has its own expression');
+ok(!('tongue' in PEEK_EXPRESSIONS) && !existsSync(resolve('public/mascots/peek/panther-drawn-peek-tongue.webp')), 'tongue-out omitted');
 ok(readFileSync(resolve('app/globals.css'), 'utf8').includes('prefers-reduced-motion: reduce'), 'reduced motion respected');
 console.log(`mascot.verify: all ${checks} checks passed`);

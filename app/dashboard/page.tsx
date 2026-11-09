@@ -668,7 +668,7 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'social' && (
-              <Section title="Social buttons" peek="tongue" quip="Show off your socials!">
+              <Section title="Social buttons" peek="grin" quip="Show off your socials!">
                 <p className="text-sm text-zinc-400 mb-4">
                   Pick a platform, add your @ or URL, then Add. Only platforms you add show on your card.
                 </p>
@@ -1007,7 +1007,7 @@ export default function Dashboard() {
 
       {saveMsg && saveOk && (
         <div data-save-toast role="status" aria-live="polite" className="fixed bottom-4 left-1/2 z-[60] flex max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-3 rounded-2xl border border-emerald-400/40 bg-zinc-900 px-5 py-3 text-emerald-300 shadow-xl">
-          <Mascot pose="4-thumbs-up" className="h-16 w-12" />
+          <Mascot pose="4-thumbs-up" className="h-24 w-16" />
           <span className="font-semibold">{saveMsg}</span>
         </div>
       )}

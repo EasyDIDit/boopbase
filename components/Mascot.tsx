@@ -7,6 +7,6 @@ export function Mascot({ pose, className = 'h-12 w-12' }: { pose: MascotPose; cl
 }
 
 export function MascotHead({ className = 'h-full w-full' }: { className?: string }) {
-  return <Image unoptimized src="/mascots/poses/clean/panther-drawn-head.webp" alt="" aria-hidden width={214} height={214}
+  return <Image unoptimized src="/mascots/poses/clean/panther-drawn-head.webp" alt="" aria-hidden width={320} height={320}
     className={`select-none object-contain ${className}`} data-mascot-head data-mascot-style="drawn" />;
 }
