@@ -14,11 +14,12 @@ import {
 } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
 import { FieldTip } from '@/components/FieldTip';
-import { Mascot, MascotHead, PeekHead } from '@/components/Mascot';
+import { Mascot, MascotHead } from '@/components/Mascot';
+import { PeekPanther, peekSpace } from '@/components/PeekPanther';
 import InsightsPanel from '@/components/InsightsPanel';
 import { IMAGE_ACCEPT, prepareImage } from '@/lib/imageResize';
 import { PROFILE_FONTS } from '@/lib/fonts';
-import { profileSetupComplete } from '@/lib/mascot';
+import { profileSetupComplete, startHereExpression, type PeekExpression } from '@/lib/mascot';
 
 type ImageStatus = { kind: 'idle' | 'busy' | 'ready' | 'error'; msg?: string };
 
@@ -492,9 +493,9 @@ export default function Dashboard() {
           const doneCount = steps.filter((x) => x.done).length;
           const pct = Math.round((doneCount / steps.length) * 100);
           return (
-            <div data-mascot-welcome className="relative pt-16">
-              <PeekHead />
+            <div data-mascot-welcome className="relative" style={{ paddingTop: peekSpace(startHereExpression(doneCount)) }}>
               <div className="relative z-10 rounded-3xl border border-white/5 bg-gradient-to-br from-[#47202f] via-zinc-900 to-zinc-900 p-5 sm:p-6">
+              <PeekPanther key={startHereExpression(doneCount)} expression={startHereExpression(doneCount)} side="left" quip={doneCount === 0 ? 'Whoa, it\'s empty in here!' : doneCount >= 4 ? 'So close! One more!' : 'Let\'s build it!'} />
               <div className="flex items-center gap-3 sm:gap-4">
                 <div className="flex min-w-0 flex-1 flex-wrap items-end justify-between gap-2">
                 <div>
@@ -630,7 +631,7 @@ export default function Dashboard() {
                     </p>
                   )}
                 </Section>
-                <Section title="Profile details" tipHead>
+                <Section title="Profile details" peek="think" quip="Hmm… who are you?">
                   <label className="mb-2 block text-sm font-bold" htmlFor="profile-name">Name</label>
                   <input
                     type="text"
@@ -667,7 +668,7 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'social' && (
-              <Section title="Social buttons">
+              <Section title="Social buttons" peek="tongue" quip="Show off your socials!">
                 <p className="text-sm text-zinc-400 mb-4">
                   Pick a platform, add your @ or URL, then Add. Only platforms you add show on your card.
                 </p>
@@ -739,7 +740,7 @@ export default function Dashboard() {
             )}
 
             {activeTab === 'links' && (
-              <Section title="Links" tipHead>
+              <Section title="Links" peek="wink" quip="Drop your best links">
                 <div className="mb-4 flex flex-col gap-2">
                   <FieldTip kind="link" speech>Paste the full web address, then give the button a short label.</FieldTip>
                   <FieldTip kind="tip" speech>Drag to reorder. Tap the image square to add a PNG or SVG. Switch Link to Video to play it right on your page. Save when done.</FieldTip>
@@ -810,7 +811,7 @@ export default function Dashboard() {
                               }}
                             />
                           </label>
-                          <div className="min-w-0 flex-1 pointer-events-none">
+                          <div className={`min-w-0 flex-1 pointer-events-none ${link.kind === 'video' ? 'max-sm:order-last max-sm:basis-full' : ''}`}>
                             <div className="font-medium truncate">{link.title}</div>
                             <div className="text-xs text-zinc-500 truncate">{link.kind === 'video' ? `Plays: ${link.url}` : link.url}</div>
                             {link.kind === 'video' && (
@@ -1037,17 +1038,20 @@ function Section({
   title,
   right,
   children,
-  tipHead = false,
+  peek,
+  quip,
 }: {
   title: string;
   right?: string;
-  tipHead?: boolean;
+  /** One peeking panther per card; its speech bubbles inside point up at him. */
+  peek?: PeekExpression;
+  quip?: string;
   children: React.ReactNode;
 }) {
   return (
-    <div data-tip-group={tipHead || undefined} className={tipHead ? "relative pt-16" : "relative"}>
-      {tipHead && <PeekHead tip />}
+    <div data-tip-group={peek || undefined} className="relative" style={peek ? { paddingTop: peekSpace(peek) } : undefined}>
       <div className="relative z-10 rounded-3xl border border-white/5 bg-zinc-900 p-5 shadow-lg shadow-black/20 sm:p-6 md:p-8">
+      {peek && <PeekPanther expression={peek} quip={quip} />}
       <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/5 pb-3">
         <h3 className="flex items-center gap-2 text-lg font-bold tracking-tight">
           <span className="h-5 w-1.5 rounded-full bg-[#E72679]" aria-hidden />

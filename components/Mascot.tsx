@@ -10,11 +10,3 @@ export function MascotHead({ className = 'h-full w-full' }: { className?: string
   return <Image unoptimized src="/mascots/poses/clean/panther-drawn-head.webp" alt="" aria-hidden width={214} height={214}
     className={`select-none object-contain ${className}`} data-mascot-head data-mascot-style="drawn" />;
 }
-
-/** Place before the foreground card, whose opaque wall hides the lower chin. */
-export function PeekHead({ tip = false }: { tip?: boolean }) {
-  return <span data-peek-head data-tip-head={tip || undefined} aria-hidden
-    className="pointer-events-none absolute left-6 top-0 h-20 w-20 overflow-hidden">
-    <MascotHead />
-  </span>;
-}

@@ -62,8 +62,8 @@ export function FieldTip({ kind = 'tip', children, className = '', speech = fals
   );
   const colors = { '--tip-bg': k.bubble, '--tip-edge': k.edge } as CSSProperties;
   return (
-    <span data-mascot-bubble className={`relative mt-4 flex min-w-0 flex-wrap items-start gap-2 rounded-2xl border border-[var(--tip-edge)] bg-[var(--tip-bg)] px-3 py-3 text-[0.8rem] font-normal leading-snug text-white/85 ${className}`} style={colors}>
-      <span aria-hidden className="absolute -top-1.5 left-7 h-3 w-3 rotate-45 border-l border-t border-[var(--tip-edge)] bg-[var(--tip-bg)]" />
+    <span data-mascot-bubble className={`relative mt-3 flex min-w-0 flex-wrap items-start gap-2 rounded-2xl border border-[var(--tip-edge)] bg-[var(--tip-bg)] px-3 py-3 text-[0.8rem] font-normal leading-snug text-white/85 ${className}`} style={colors}>
+      <span aria-hidden data-tail-toward="speaker" className="absolute -top-1.5 right-10 h-3 w-3 rotate-45 border-l border-t border-[var(--tip-edge)] bg-[var(--tip-bg)]" />
       {badge}
       <span className="min-w-0 flex-1 basis-36 break-words pt-px">{children}</span>
     </span>
