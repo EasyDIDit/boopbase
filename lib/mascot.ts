@@ -6,7 +6,7 @@ export function mascotStyle(search: string, previewAllowed: boolean): MascotStyl
 }
 
 export function mascotSrc(style: MascotStyle, pose: MascotPose): string {
-  return `/mascots/poses/panther-${style}-${pose}.webp`;
+  return `/mascots/poses/panther-${style}-${pose}${pose === '5-peeking' ? '-edge' : ''}.webp`;
 }
 
 export function allowMascotPreview(vercelEnv: string | undefined, nodeEnv: string | undefined): boolean {

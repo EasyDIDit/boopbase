@@ -31,6 +31,12 @@ export function Mascot({ pose, className = 'h-12 w-12' }: { pose: MascotPose; cl
     className={`shrink-0 select-none object-contain ${className}`} data-mascot-pose={pose} data-mascot-style={style} />;
 }
 
+export function MascotHead({ className = 'h-full w-full' }: { className?: string }) {
+  const style = useContext(Style);
+  return <Image src={`/mascots/poses/panther-${style}-head.webp`} alt="" aria-hidden width={214} height={214}
+    className={`select-none object-contain ${className}`} data-mascot-head data-mascot-style={style} />;
+}
+
 export function MascotStyleSwitch() {
   const allowed = useContext(PreviewAllowed);
   const search = useContext(Search);

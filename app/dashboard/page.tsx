@@ -14,7 +14,7 @@ import {
 } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
 import { FieldTip } from '@/components/FieldTip';
-import { Mascot, MascotStyleSwitch } from '@/components/Mascot';
+import { Mascot, MascotHead, MascotStyleSwitch } from '@/components/Mascot';
 import InsightsPanel from '@/components/InsightsPanel';
 import { IMAGE_ACCEPT, prepareImage } from '@/lib/imageResize';
 import { PROFILE_FONTS } from '@/lib/fonts';
@@ -492,9 +492,11 @@ export default function Dashboard() {
           const doneCount = steps.filter((x) => x.done).length;
           const pct = Math.round((doneCount / steps.length) * 100);
           return (
-            <div className="rounded-3xl border border-white/5 bg-gradient-to-br from-[#E72679]/20 via-zinc-900 to-zinc-900 p-5 sm:p-6">
+            <div data-mascot-welcome className="relative mt-20 rounded-3xl border border-white/5 bg-gradient-to-br from-[#E72679]/20 via-zinc-900 to-zinc-900 p-5 sm:p-6">
+              <span className="pointer-events-none absolute -top-[4.5rem] left-5 z-10" aria-hidden>
+                <Mascot pose="5-peeking" className="h-20 w-24 object-bottom" />
+              </span>
               <div className="flex items-center gap-3 sm:gap-4">
-                <Mascot pose={pct === 100 ? '4-thumbs-up' : '3-waving'} className="h-20 w-20 sm:h-24 sm:w-24" />
                 <div className="flex min-w-0 flex-1 flex-wrap items-end justify-between gap-2">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-[#ff7ab6]">Start here</p>
@@ -540,7 +542,7 @@ export default function Dashboard() {
                       {photo ? (
                         <img src={photo} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <img src="/mascots/poses/panther-3d-3-waving.webp" alt="" className="w-full h-full object-contain p-1" />
+                        <MascotHead />
                       )}
                     </div>
                     <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl font-medium text-sm">

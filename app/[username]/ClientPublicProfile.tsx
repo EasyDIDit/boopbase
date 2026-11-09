@@ -7,6 +7,7 @@ import { getSkinById } from '@/lib/skins';
 import { getProfileFont } from '@/lib/fonts';
 import { legacySocialsToEntries } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
+import { MascotHead } from '@/components/Mascot';
 import { BOOP_LOGO_BLACK, BOOP_LOGO_WHITE } from '@/lib/brandLogos';
 
 interface ClientPublicProfileProps {
@@ -186,12 +187,8 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                     className="w-full h-full object-cover rounded-full border-[5px] border-white shadow-xl"
                   />
                 ) : (
-                  // Default placeholder (EASY, Nov 7 2026): baby panther. The old 🐱 placeholder stays in the repo, unused, for later.
-                  <img
-                    src="/mascots/poses/panther-3d-3-waving.webp"
-                    alt=""
-                    className="w-full h-full object-contain p-2 bg-[#f4d9b0] rounded-full border-[5px] border-white shadow-xl"
-                  />
+                  // Approved head-only panther. Legacy image assets stay in the repository.
+                  <MascotHead className="w-full h-full bg-[#f4d9b0] rounded-full border-[5px] border-white shadow-xl" />
                 )}
                 {skin.assets.mascot?.position === 'profile' && (
                   <SkinMascotLayer mascot={skin.assets.mascot} />

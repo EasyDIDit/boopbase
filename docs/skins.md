@@ -15,5 +15,5 @@ The editor picker lists every `SKIN_REGISTRY` entry automatically.
 - New optional mascot layer: `assets.mascot = { src?, emoji?, position, size? }`.
   `position` is `top-left`, `top-right`, `bottom-left`, `bottom-right`, or `profile` (beside the profile photo).
   It is decorative only (no taps, hidden from screen readers). Use a transparent PNG or SVG for `src`.
-- Boop Classic carries the Boop cat as its mascot.
+- Boop Classic uses the panther head as its default profile placeholder, without an emoji badge.
 - New skins: Easy Did It (partner skin) and A-Town (A-Town Collection art).
