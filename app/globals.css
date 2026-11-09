@@ -29,3 +29,21 @@ body {
 @media (min-width: 1800px) { html { font-size: 18px; } }
 @media (min-width: 2400px) { html { font-size: 22px; } }
 @media (min-width: 3200px) { html { font-size: 28px; } }
+
+/* Peeking panther: pops up from behind the card edge on first view, then a small tilt. */
+.peek-pop { transform: translateY(105%); transform-origin: 50% 100%; }
+.peek-pop.is-shown { animation: peek-pop 900ms cubic-bezier(.2,.9,.3,1.25) both; }
+.peek-quip { opacity: 0; transform: scale(.85); transform-origin: 100% 100%; }
+.peek-quip.is-shown { animation: peek-quip 300ms ease-out 650ms both; }
+@keyframes peek-pop {
+  0% { transform: translateY(105%) rotate(0); }
+  55% { transform: translateY(-4%) rotate(0); }
+  72% { transform: translateY(0) rotate(-6deg); }
+  88% { transform: translateY(0) rotate(3deg); }
+  100% { transform: translateY(0) rotate(0); }
+}
+@keyframes peek-quip { from { opacity: 0; transform: scale(.85); } to { opacity: 1; transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) {
+  .peek-pop, .peek-pop.is-shown { animation: none; transform: none; }
+  .peek-quip, .peek-quip.is-shown { animation: none; opacity: 1; transform: none; }
+}

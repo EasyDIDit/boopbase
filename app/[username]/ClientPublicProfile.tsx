@@ -7,6 +7,7 @@ import { getSkinById } from '@/lib/skins';
 import { getProfileFont } from '@/lib/fonts';
 import { legacySocialsToEntries } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
+import { MascotHead } from '@/components/Mascot';
 import { BOOP_LOGO_BLACK, BOOP_LOGO_WHITE } from '@/lib/brandLogos';
 
 interface ClientPublicProfileProps {
@@ -186,9 +187,8 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                     className="w-full h-full object-cover rounded-full border-[5px] border-white shadow-xl"
                   />
                 ) : (
-                  <div className="w-full h-full bg-[#f4d9b0] rounded-full border-[5px] border-white shadow-xl flex items-center justify-center text-5xl">
-                    🐱
-                  </div>
+                  // Approved head-only panther. Legacy image assets stay in the repository.
+                  <MascotHead className="w-full h-full bg-[#f4d9b0] rounded-full border-[5px] border-white shadow-xl" />
                 )}
                 {skin.assets.mascot?.position === 'profile' && (
                   <SkinMascotLayer mascot={skin.assets.mascot} />

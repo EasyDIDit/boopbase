@@ -65,7 +65,7 @@ const SKIN_REGISTRY: Record<string, Partial<Skin>> = {
     description: 'Bold 1930s BOOP baseline — pink & grey',
     isDefault: true,
     tokens: { text: '#000000', accent: '#E72679', pageBg: '#C4CFDA', cardBg: '#ffffff', linkText: '#000000' },
-    assets: { preview: null, ...frames('classic'), cover: null, hero: null, mascot: { emoji: '🐱', position: 'profile', size: 56 } },
+    assets: { preview: null, ...frames('classic'), cover: null, hero: null, mascot: null },
     flags: { allowsCustomHeroImage: true, allowsCustomPageColor: true, allowsCustomCardColor: true },
   },
   'jazz-night': {
