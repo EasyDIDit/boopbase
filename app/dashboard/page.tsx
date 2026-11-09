@@ -14,6 +14,7 @@ import {
 } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
 import { FieldTip } from '@/components/FieldTip';
+import { Mascot, MascotStyleSwitch } from '@/components/Mascot';
 import InsightsPanel from '@/components/InsightsPanel';
 import { IMAGE_ACCEPT, prepareImage } from '@/lib/imageResize';
 import { PROFILE_FONTS } from '@/lib/fonts';
@@ -422,6 +423,7 @@ export default function Dashboard() {
           <div className="flex flex-wrap items-center gap-2">
             {saveMsg && (
               <span className={`text-sm font-medium px-2 ${saveOk ? 'text-emerald-400' : 'text-red-400'}`}>
+                {saveOk && <Mascot pose="4-thumbs-up" className="inline-block h-8 w-8 align-middle mr-1" />}
                 {saveMsg}
                 {needsLogin && (
                   <>
@@ -478,6 +480,7 @@ export default function Dashboard() {
       </div>
 
       <div className="max-w-6xl mx-auto px-4 pt-6">
+        <div className="mb-3 flex justify-end"><MascotStyleSwitch /></div>
         {(() => {
           const steps = [
             { id: 'profile', label: 'Add a photo', done: !!photo },
@@ -490,7 +493,9 @@ export default function Dashboard() {
           const pct = Math.round((doneCount / steps.length) * 100);
           return (
             <div className="rounded-3xl border border-white/5 bg-gradient-to-br from-[#E72679]/20 via-zinc-900 to-zinc-900 p-5 sm:p-6">
-              <div className="flex flex-wrap items-end justify-between gap-2">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <Mascot pose={pct === 100 ? '4-thumbs-up' : '3-waving'} className="h-20 w-20 sm:h-24 sm:w-24" />
+                <div className="flex min-w-0 flex-1 flex-wrap items-end justify-between gap-2">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest text-[#ff7ab6]">Start here</p>
                   <h2 className="text-xl font-extrabold tracking-tight sm:text-2xl">
@@ -498,6 +503,7 @@ export default function Dashboard() {
                   </h2>
                 </div>
                 <span className="text-sm font-semibold text-zinc-300">{doneCount} of {steps.length} done</span>
+                </div>
               </div>
               <div className="mt-3 h-2 overflow-hidden rounded-full bg-zinc-800" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100} aria-label="Profile complete">
                 <div className="h-full rounded-full bg-[#E72679] transition-all duration-500" style={{ width: `${pct}%` }} />
@@ -534,7 +540,7 @@ export default function Dashboard() {
                       {photo ? (
                         <img src={photo} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <img src="/mascots/baby-panther.webp" alt="" className="w-full h-full object-cover" />
+                        <img src="/mascots/poses/panther-3d-3-waving.webp" alt="" className="w-full h-full object-contain p-1" />
                       )}
                     </div>
                     <label className="cursor-pointer bg-white text-black px-5 py-2.5 rounded-xl font-medium text-sm">
@@ -629,7 +635,7 @@ export default function Dashboard() {
                     className="w-full bg-zinc-800 p-4 rounded-2xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30"
                     placeholder="What people see, e.g. Jordan Lee"
                   />
-                  <FieldTip kind="public">Shows big at the top of your page.</FieldTip>
+                  <FieldTip kind="public" pose="1-pointing">Shows big at the top of your page.</FieldTip>
                 </Section>
                 <Section title="Headline / bio" right={`${bio.length}/200`}>
                   <textarea
@@ -639,10 +645,10 @@ export default function Dashboard() {
                     className="w-full bg-zinc-800 p-4 rounded-2xl h-28 resize-y border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30"
                     placeholder="One line about you, e.g. Maker in the ATL"
                   />
-                  <FieldTip kind="public">Shows under your name. Keep it short and sweet.</FieldTip>
+                  <FieldTip kind="public" pose="5-peeking">Shows under your name. Keep it short and sweet.</FieldTip>
                 </Section>
                 <Section title="Contact card (vCard)">
-                  <FieldTip kind="tip" className="mb-3">
+                  <FieldTip kind="tip" pose="2-phone-card" className="mb-3">
                     Add to Contacts only shows on your public page if you fill phone or email. These details go into the contact file people save.
                   </FieldTip>
                   <div className="space-y-3">
@@ -695,7 +701,7 @@ export default function Dashboard() {
 
                 <div className="space-y-2 mt-6">
                   {socials.length === 0 ? (
-                    <p className="text-zinc-500 text-sm">No social buttons yet — add your first above.</p>
+                    <div className="flex items-center gap-3"><Mascot pose="3-waving" className="h-16 w-16" /><p className="text-zinc-500 text-sm">No social buttons yet — add your first above.</p></div>
                   ) : (
                     socials.map((s) => {
                       const meta = getPlatform(s.platform);
@@ -731,8 +737,8 @@ export default function Dashboard() {
             {activeTab === 'links' && (
               <Section title="Links">
                 <div className="mb-4 flex flex-col gap-2">
-                  <FieldTip kind="link">Paste the full web address, then give the button a short label.</FieldTip>
-                  <FieldTip kind="tip">Drag to reorder. Tap the image square to add a PNG or SVG. Switch Link to Video to play it right on your page. Save when done.</FieldTip>
+                  <FieldTip kind="link" pose="1-pointing">Paste the full web address, then give the button a short label.</FieldTip>
+                  <FieldTip kind="tip" pose="5-peeking">Drag to reorder. Tap the image square to add a PNG or SVG. Switch Link to Video to play it right on your page. Save when done.</FieldTip>
                 </div>
                 <div className="flex flex-col gap-2 mb-5">
                   <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Web address</span><input type="text" placeholder="https://your-site.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
@@ -742,7 +748,7 @@ export default function Dashboard() {
                   </button>
                 </div>
                 {links.length === 0 ? (
-                  <p className="text-zinc-500 text-sm">No links yet.</p>
+                  <div className="flex items-center gap-3"><Mascot pose="3-waving" className="h-16 w-16" /><p className="text-zinc-500 text-sm">No links yet.</p></div>
                 ) : (
                   <div className="flex flex-col gap-2" onDragEnd={onLinkDragEnd}>
                     {links.map((link: any, index: number) => {
@@ -818,7 +824,7 @@ export default function Dashboard() {
                                   onKeyDown={(e) => e.stopPropagation()}
                                   className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-[#E72679] focus:ring-2 focus:ring-[#E72679]/40"
                                 />
-                                <FieldTip kind="link">Your video plays silently in the button. Tapping it opens this link.</FieldTip>
+                                <FieldTip kind="link" pose="1-pointing">Your video plays silently in the button. Tapping it opens this link.</FieldTip>
                               </div>
                             )}
                           </div>
@@ -948,7 +954,7 @@ export default function Dashboard() {
 
             {activeTab === 'insights' && (
               <Section title="Insights">
-                <FieldTip kind="tip" className="mb-5">
+                <FieldTip kind="tip" pose="2-phone-card" className="mb-5">
                   Honest counts from your live page. Daily history, social taps and contact saves count from the day this update went live.
                 </FieldTip>
                 <InsightsPanel
@@ -1038,7 +1044,8 @@ function ImageStatusNote({ status }: { status: ImageStatus }) {
   const color =
     status.kind === 'error' ? 'text-red-400' : status.kind === 'ready' ? 'text-emerald-400' : 'text-zinc-400';
   return (
-    <p role="status" aria-live="polite" className={`text-sm text-center max-w-xs ${color}`}>
+    <p role="status" aria-live="polite" className={`flex items-center justify-center gap-2 text-sm text-center max-w-xs ${color}`}>
+      {status.kind !== 'error' && <Mascot pose={status.kind === 'busy' ? '5-peeking' : '4-thumbs-up'} className="h-8 w-8" />}
       {status.msg}
     </p>
   );

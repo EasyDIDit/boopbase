@@ -1,4 +1,8 @@
+'use client';
+
 import type { ReactNode } from 'react';
+import { Mascot } from '@/components/Mascot';
+import type { MascotPose } from '@/lib/mascot';
 
 /**
  * Color-coded helper tip under a form field.
@@ -40,19 +44,22 @@ const KINDS: Record<TipKind, { label: string; box: string; badge: string; icon: 
   },
 };
 
-export function FieldTip({ kind = 'tip', children, className = '' }: { kind?: TipKind; children: ReactNode; className?: string }) {
+export function FieldTip({ kind = 'tip', children, className = '', pose }: { kind?: TipKind; children: ReactNode; className?: string; pose?: MascotPose }) {
   const k = KINDS[kind];
   return (
     <span
       className={`mt-2 flex items-start gap-2 rounded-xl border-l-4 px-3 py-2 text-[0.8rem] font-normal leading-snug text-white/85 ${k.box} ${className}`}
     >
+      {pose && <Mascot pose={pose} className="h-10 w-10 sm:h-12 sm:w-12" />}
+      <span className={pose ? "flex min-w-0 flex-1 flex-wrap items-start gap-2" : "contents"}>
       <span className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[0.68rem] font-bold uppercase tracking-wide ${k.badge}`}>
         <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor" aria-hidden>
           {k.icon}
         </svg>
         {k.label}
       </span>
-      <span className="min-w-0 pt-px">{children}</span>
+      <span className={pose ? "min-w-0 flex-1 basis-36 break-words pt-px" : "min-w-0 pt-px"}>{children}</span>
+      </span>
     </span>
   );
 }
