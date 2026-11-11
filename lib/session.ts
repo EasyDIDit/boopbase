@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import jwt from 'jsonwebtoken';
-import { isOwner } from '@/lib/ownerAuth';
+import { isOwner, isAdminUsername } from '@/lib/ownerAuth';
 
 /** Signed session cookie (HS256 JWT). Replaces the old forgeable `user` cookie. */
 export const SESSION_COOKIE = 'boop_session';
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
-const ADMIN_USERNAMES = ['pez', 'easydidit'];
 
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
@@ -80,7 +79,7 @@ export function isSessionOwner(request: NextRequest) {
 
 export function isSessionAdmin(request: NextRequest) {
   const u = getSessionUsername(request);
-  return !!u && ADMIN_USERNAMES.includes(u);
+  return isAdminUsername(u);
 }
 
 export const unauthorized = () => NextResponse.json({ error: 'Not logged in' }, { status: 401 });

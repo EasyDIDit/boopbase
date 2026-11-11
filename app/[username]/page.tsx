@@ -2,6 +2,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import ClientPublicProfile from './ClientPublicProfile';
 import ViewTracker from './ViewTracker';
+import { toPublicProfile } from '@/lib/publicProfile';
 
 interface Props {
   params: Promise<{ username: string }>;
@@ -12,11 +13,11 @@ export default async function PublicProfile({ params }: Props) {
 
   await connectDB();
 
-  const user = await User.findOne({ username: username.toLowerCase() })
+  const doc = await User.findOne({ username: username.toLowerCase() })
     .select('-password')
     .lean();
 
-  if (!user) {
+  if (!doc) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white">
         Profile not found
@@ -24,7 +25,9 @@ export default async function PublicProfile({ params }: Props) {
     );
   }
 
-  const backgroundImages = user.backgroundImage ? [user.backgroundImage as string] : [];
+  // Only the display allowlist reaches the client component (RSC payload).
+  const user = toPublicProfile(doc as Record<string, unknown>);
+  const backgroundImages = user.backgroundImage ? [user.backgroundImage] : [];
 
   return (
     <>

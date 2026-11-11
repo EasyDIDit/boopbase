@@ -12,3 +12,11 @@ export function isOwner(username: string | undefined | null): boolean {
   if (!username) return false;
   return OWNER_USERNAMES.includes(username.toLowerCase());
 }
+
+/** Legacy Boop admin accounts (see /admin). */
+export const ADMIN_USERNAMES = ['pez', 'easydidit'];
+
+export function isAdminUsername(username: string | undefined | null): boolean {
+  if (!username) return false;
+  return ADMIN_USERNAMES.includes(username.toLowerCase());
+}

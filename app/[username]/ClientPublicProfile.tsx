@@ -9,9 +9,10 @@ import { legacySocialsToEntries } from '@/lib/socialPlatforms';
 import { SocialGlyph } from '@/components/icons/SocialGlyph';
 import { MascotHead } from '@/components/Mascot';
 import { BOOP_LOGO_BLACK, BOOP_LOGO_WHITE } from '@/lib/brandLogos';
+import type { PublicProfile } from '@/lib/publicProfile';
 
 interface ClientPublicProfileProps {
-  user: any;
+  user: PublicProfile;
   backgroundImages: string[];
 }
 
@@ -83,10 +84,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
   const cardColor = useThemeBG ? skin.tokens.cardBg : user?.innerBackgroundColor || '#ffffff';
   const pageColor = user?.outerBackgroundColor || '#C4CFDA';
 
-  const hasContact =
-    Boolean(user?.phone?.trim()) ||
-    Boolean(user?.email?.trim()) ||
-    Boolean(user?.company?.trim());
+  const hasContact = user?.hasContactCard === true;
 
   const videoEmbed = (raw: string): { kind: 'iframe' | 'file'; src: string } | null => {
     try {

@@ -20,6 +20,7 @@ import InsightsPanel from '@/components/InsightsPanel';
 import { IMAGE_ACCEPT, prepareImage } from '@/lib/imageResize';
 import { PROFILE_FONTS } from '@/lib/fonts';
 import { profileSetupComplete, startHereExpression, type PeekExpression } from '@/lib/mascot';
+import { toPublicProfile } from '@/lib/publicProfile';
 
 type ImageStatus = { kind: 'idle' | 'busy' | 'ready' | 'error'; msg?: string };
 
@@ -354,8 +355,9 @@ export default function Dashboard() {
     }
   };
 
+  // Preview goes through the same public allowlist strangers get.
   const liveUser = useMemo(
-    () => ({
+    () => toPublicProfile({
       username: user?.username || 'preview',
       name,
       bio,
@@ -374,7 +376,7 @@ export default function Dashboard() {
       company,
       title,
       address,
-    }),
+    } as Record<string, unknown>),
     [
       user?.username,
       name,
@@ -654,11 +656,11 @@ export default function Dashboard() {
                   <FieldTip kind="public" speech>Shows under your name. Keep it short and sweet.</FieldTip>
                   <h4 className="mb-2 mt-6 text-sm font-bold">Contact card (vCard)</h4>
                   <FieldTip kind="tip" speech className="mb-3">
-                    Add to Contacts only shows on your public page if you fill phone or email. These details go into the contact file people save.
+                    Add to Contacts shows on your public page when you fill in phone, company, job title, or city. Those go into the contact file people save. Your email is your login and stays private.
                   </FieldTip>
                   <div className="space-y-3">
                     <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Phone</span><input type="text" placeholder="Phone for contacts, e.g. 404-555-0100" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
-                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Email</span><input type="email" placeholder="Email for contacts, e.g. you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Login email (private)</span><input type="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                     <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Company</span><input type="text" placeholder="Company, e.g. Easy Did It" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                     <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Job title</span><input type="text" placeholder="Job title, e.g. Maker" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                     <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">City or address</span><input type="text" placeholder="City or address (optional)" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
