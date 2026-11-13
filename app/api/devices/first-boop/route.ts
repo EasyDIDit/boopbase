@@ -1,4 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { isSessionOwner } from '@/lib/session';
+
+/** Owner-only seed. Anyone else gets 403 and nothing is read or written. */
+const forbidden = () => NextResponse.json({ error: 'Not allowed' }, { status: 403 });
 import connectDB from '@/lib/mongodb';
 import Device from '@/lib/models/Device';
 
@@ -35,7 +39,8 @@ async function seedFirstBoop() {
   };
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!isSessionOwner(request)) return forbidden();
   try {
     const data = await seedFirstBoop();
     return NextResponse.json(data);
@@ -45,7 +50,8 @@ export async function GET() {
   }
 }
 
-export async function POST() {
+export async function POST(request: NextRequest) {
+  if (!isSessionOwner(request)) return forbidden();
   try {
     const data = await seedFirstBoop();
     return NextResponse.json(data);

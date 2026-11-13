@@ -35,6 +35,9 @@ const PUBLIC_STRING_FIELDS = [
   'facebook',
 ] as const;
 
+/** Private fields stripped even from the owner/admin view (token hashes are never sent to a browser). */
+const SECRET_FIELDS = ['password', 'resetTokenHash', 'resetTokenExpires', 'emailVerifyTokenHash', 'emailVerifyExpires'] as const;
+
 /**
  * Fields that must never appear in a public payload. `phone`, `address`,
  * `company` and `title` are owner-entered vCard fields: they are served only
@@ -48,6 +51,12 @@ export const PRIVATE_PROFILE_FIELDS = [
   'id',
   'email',
   'password',
+  'resetTokenHash',
+  'resetTokenExpires',
+  'emailVerifyTokenHash',
+  'emailVerifyExpires',
+  'emailVerified',
+  'passwordChangedAt',
   'phone',
   'address',
   'company',
@@ -96,14 +105,24 @@ export interface PublicProfile {
   facebook: string;
   links: PublicLink[];
   socials: PublicSocial[];
+  /** Owner-set public contact email ('' when not set or not opted in). Never the login email. */
+  contactEmail: string;
+  /** When true and contactEmail is set, the public page shows an email icon. */
+  showContactEmail: boolean;
   /** True when the vCard has something worth saving (shows Add to Contacts). */
   hasContactCard: boolean;
 }
 
-/** vCard has content beyond the name. Email is excluded (login email). */
+/** Public contact email if the owner set a valid one, else ''. */
+export function publicContactEmail(user: AnyRecord | null | undefined): string {
+  const v = str(user?.contactEmail).trim().toLowerCase();
+  return v.length <= 254 && /^[^\s@<>"(),;:]+@[^\s@<>"(),;:]+\.[a-z]{2,24}$/i.test(v) ? v : '';
+}
+
+/** vCard has content beyond the name. The login email is excluded; the public contact email counts. */
 export function hasContactCard(user: AnyRecord | null | undefined): boolean {
   if (!user) return false;
-  return ['phone', 'company', 'title', 'address'].some((k) => str(user[k]).trim() !== '');
+  return ['phone', 'company', 'title', 'address'].some((k) => str(user[k]).trim() !== '') || publicContactEmail(user) !== '';
 }
 
 /** Explicit allowlist serializer for anything a stranger can see. */
@@ -131,6 +150,9 @@ export function toPublicProfile(user: AnyRecord): PublicProfile {
     url: str(s.url),
   }));
 
+  out.showContactEmail = bool(user.showContactEmail, false);
+  // Page/API JSON only includes the address when the owner opts in. The vCard still uses it whenever it is set.
+  out.contactEmail = out.showContactEmail ? publicContactEmail(user) : '';
   out.hasContactCard = hasContactCard(user);
   return out as unknown as PublicProfile;
 }
@@ -138,7 +160,7 @@ export function toPublicProfile(user: AnyRecord): PublicProfile {
 /** Full record for the owner/admin, minus the password hash. */
 export function toPrivateProfile(user: AnyRecord): AnyRecord {
   const rest = { ...user };
-  delete rest.password;
+  for (const k of SECRET_FIELDS) delete rest[k];
   return rest;
 }
 
@@ -156,19 +178,21 @@ export function profileForViewer(user: AnyRecord, viewer: string | null | undefi
 const vcardEscape = (v: string) =>
   v.replace(/\\/g, '\\\\').replace(/\r?\n/g, '\\n').replace(/,/g, '\\,').replace(/;/g, '\\;');
 
-/** Public Add to Contacts file: only owner-entered contact fields, never the login email. */
+/** Public Add to Contacts file: only owner-entered contact fields (incl. public contact email), never the login email. */
 export function buildPublicVCard(user: AnyRecord): string {
   const name = vcardEscape(str(user.name));
   const phone = str(user.phone).trim();
   const company = str(user.company).trim();
   const title = str(user.title).trim();
   const address = str(user.address).trim();
+  const contactEmail = publicContactEmail(user);
   return [
     'BEGIN:VCARD',
     'VERSION:3.0',
     `FN:${name}`,
     `N:${name};;;;`,
     phone ? `TEL;TYPE=CELL:${vcardEscape(phone)}` : '',
+    contactEmail ? `EMAIL;TYPE=INTERNET:${vcardEscape(contactEmail)}` : '',
     company ? `ORG:${vcardEscape(company)}` : '',
     title ? `TITLE:${vcardEscape(title)}` : '',
     address ? `ADR;TYPE=HOME:;;${vcardEscape(address)};;;;` : '',

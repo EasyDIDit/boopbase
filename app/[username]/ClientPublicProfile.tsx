@@ -36,6 +36,16 @@ function isLightColor(color: string | undefined): boolean {
   return false;
 }
 
+
+function linkTitleClass(title: string | undefined): string {
+  const len = String(title || '').length;
+  const size =
+    len <= 22 ? 'text-lg leading-snug' :
+    len <= 42 ? 'text-[15px] leading-tight' :
+    'text-sm leading-tight';
+  return `${size} break-words text-center`;
+}
+
 export default function ClientPublicProfile({ user, backgroundImages }: ClientPublicProfileProps) {
   const [currentBgIndex, setCurrentBgIndex] = useState(0);
   const [isOwner, setIsOwner] = useState(false);
@@ -216,7 +226,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             </p>
           </div>
 
-          {socials.length > 0 && (
+          {(socials.length > 0 || (user?.showContactEmail && user?.contactEmail)) && (
             <div className="flex justify-center flex-wrap gap-3 mb-6">
               {socials.map((s) => (
                 <a
@@ -238,6 +248,18 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                   <SocialGlyph platform={s.platform} className="w-6 h-6" />
                 </a>
               ))}
+              {user?.showContactEmail && user?.contactEmail ? (
+                <a
+                  href={`mailto:${user.contactEmail}`}
+                  className={skin.socialIconClass}
+                  aria-label="Email"
+                  title={user.contactEmail}
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6" aria-hidden>
+                    <path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z" />
+                  </svg>
+                </a>
+              ) : null}
             </div>
           )}
 
@@ -255,6 +277,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             </div>
           )}
 
+
           <div className="flex flex-col gap-3.5">
             {activeLinks.map((link: any) => (
               <div key={link.id} className="w-full">
@@ -271,24 +294,24 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                     <img
                       src={skin.assets.linkFrame}
                       alt=""
-                      className="w-full h-14 object-fill pointer-events-none absolute inset-0"
+                      className="pointer-events-none absolute inset-0 h-full w-full object-fill"
                     />
                     <span
-                      className="relative z-10 grid h-14 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 px-[clamp(1.9rem,12%,3.25rem)] font-bold text-lg"
+                      className="relative z-10 grid min-h-14 grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-2 px-[clamp(1.9rem,12%,3.25rem)] py-4 font-bold"
                       style={{ color: skin.tokens.linkText }}
                     >
                       {link.LNKimg ? (<span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
                         <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
                       </span>) : <span aria-hidden />}
-                      <span className="truncate text-center">{link.title}</span><span aria-hidden />
+                      <span className={linkTitleClass(link.title)}>{link.title}</span><span aria-hidden />
                     </span>
                   </>
                 ) : (
-                  <span className={`relative grid grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-3 py-4 pl-5 pr-5 text-lg ${skin.buttonClass} active:scale-[0.985] transition-all`}>
+                  <span className={`relative grid grid-cols-[2.25rem_minmax(0,1fr)_2.25rem] items-center gap-3 py-4 pl-5 pr-5 ${skin.buttonClass} active:scale-[0.985] transition-all`}>
                     {link.LNKimg ? (<span className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-lg" aria-hidden>
                         <img src={link.LNKimg} alt="" className="h-full w-full object-contain" />
                       </span>) : <span aria-hidden />}
-                    <span className="truncate text-center">{link.title}</span><span aria-hidden />
+                    <span className={linkTitleClass(link.title)}>{link.title}</span><span aria-hidden />
                   </span>
                 )}
               </button>
@@ -346,7 +369,7 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
             style={{ color: footerTextColor }}
           >
             <p className="text-center text-[10px] tracking-[0.18em] opacity-45 m-0">
-              Building Opportunities One Profile at a time
+              Building Opportunities One Profile at a Time
             </p>
             <a
               href="https://www.boopbase.com/login"
@@ -359,8 +382,17 @@ export default function ClientPublicProfile({ user, backgroundImages }: ClientPu
                 className="h-8 w-auto max-w-[10rem] object-contain"
               />
             </a>
-            <p className="text-center text-[11px] tracking-[0.12em] opacity-55 m-0">
-              by EasyDidIt
+            <p className="mt-2 text-center text-[10px] opacity-45 m-0">
+              <a
+                href={`mailto:heyeasy@easydidit.com?subject=${encodeURIComponent(`Report BOOP profile: ${user?.username || ''}`)}`}
+                className="hover:opacity-100 underline"
+              >
+                Report
+              </a>
+              {' · '}
+              <Link href="/terms" className="hover:opacity-100 underline">Terms</Link>
+              {' · '}
+              <Link href="/privacy" className="hover:opacity-100 underline">Privacy</Link>
             </p>
           </footer>
         </div>

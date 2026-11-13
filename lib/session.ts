@@ -6,14 +6,29 @@ import { isOwner, isAdminUsername } from '@/lib/ownerAuth';
 export const SESSION_COOKIE = 'boop_session';
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
+/** Values that must never be accepted as a signing secret (old dev default, placeholders). */
+const KNOWN_WEAK = new Set(['dev-only-insecure-session-secret', 'changeme', 'secret', 'session_secret', 'your-secret-here']);
+export const SESSION_SECRET_MIN = 16;
+
+/** Null when the secret is usable; otherwise why not. Never returns or logs the value. */
+export function sessionSecretProblem(secret: string | undefined): string | null {
+  const s = (secret || '').trim();
+  if (!s) return 'SESSION_SECRET is not set';
+  if (s.length < SESSION_SECRET_MIN) return 'SESSION_SECRET is too short';
+  if (KNOWN_WEAK.has(s.toLowerCase()) || /^(.)\1+$/.test(s)) return 'SESSION_SECRET is a known/weak value';
+  return null;
+}
+
+/**
+ * Fail closed in every environment: no built-in fallback secret, so a missing or weak
+ * SESSION_SECRET means nobody can sign in (and no forged cookie can verify) until it is fixed.
+ * Local dev: put a random SESSION_SECRET in .env.local (never committed).
+ */
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
-  if (secret && secret.length >= 16) return secret;
-  if (process.env.NODE_ENV === 'production') {
-    // Fail closed: never sign/verify with a guessable secret in production.
-    throw new Error('SESSION_SECRET is missing or too short');
-  }
-  return 'dev-only-insecure-session-secret';
+  const problem = sessionSecretProblem(secret);
+  if (problem) throw new Error(problem);
+  return secret as string; // used exactly as stored, so existing sessions stay valid
 }
 
 function cookieDomain(request: NextRequest) {

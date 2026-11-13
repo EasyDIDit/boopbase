@@ -47,6 +47,9 @@ export default function Dashboard() {
   const [newUrl, setNewUrl] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [showContactEmail, setShowContactEmail] = useState(false);
+  const [verifyMsg, setVerifyMsg] = useState<string | null>(null);
   const [company, setCompany] = useState('');
   const [title, setTitle] = useState('');
   const [address, setAddress] = useState('');
@@ -93,6 +96,8 @@ export default function Dashboard() {
         setSocials(legacySocialsToEntries(data));
         setPhone(data.phone || '');
         setEmail(data.email || '');
+        setContactEmail(data.contactEmail || '');
+        setShowContactEmail(data.showContactEmail === true);
         setCompany(data.company || '');
         setTitle(data.title || '');
         setAddress(data.address || '');
@@ -127,7 +132,7 @@ export default function Dashboard() {
       ro.disconnect();
       window.removeEventListener('resize', measure);
     };
-  }, [name, bio, photo, bgImage, themeId, links, socials, outerBg, innerBg, useThemeBg, phone, email]);
+  }, [name, bio, photo, bgImage, themeId, links, socials, outerBg, innerBg, useThemeBg, phone, email, contactEmail, showContactEmail]);
 
 
   const changeUsername = async () => {
@@ -187,6 +192,8 @@ export default function Dashboard() {
           socials,
           phone,
           email,
+          contactEmail,
+          showContactEmail,
           company,
           title,
           address,
@@ -203,6 +210,7 @@ export default function Dashboard() {
       if (res.ok && (data?.success === true || data?.success === undefined)) {
         setSaveOk(true);
         setSaveMsg('Saved');
+        if (typeof data?.emailVerified === 'boolean') setUser((u: typeof user) => (u ? { ...u, emailVerified: data.emailVerified } : u));
         setPhotoStatus((s) => (s.kind === 'ready' ? { kind: 'idle' } : s));
         setBgStatus((s) => (s.kind === 'ready' ? { kind: 'idle' } : s));
         setTimeout(() => setSaveMsg(null), 2500);
@@ -280,7 +288,7 @@ export default function Dashboard() {
     }
     setLinks([
       ...links,
-      { id: String(Date.now()), title: newTitle.trim(), url: finalUrl, isActive: true, clicks: 0, LNKimg: '', kind: 'link' },
+      { id: String(Date.now()), title: newTitle.trim().slice(0, 75), url: finalUrl, isActive: true, clicks: 0, LNKimg: '', kind: 'link' },
     ]);
     setNewTitle('');
     setNewUrl('');
@@ -373,6 +381,8 @@ export default function Dashboard() {
       socials,
       phone,
       email,
+      contactEmail,
+      showContactEmail,
       company,
       title,
       address,
@@ -393,6 +403,8 @@ export default function Dashboard() {
       socials,
       phone,
       email,
+      contactEmail,
+      showContactEmail,
       company,
       title,
       address,
@@ -656,12 +668,31 @@ export default function Dashboard() {
                   <FieldTip kind="public" speech>Shows under your name. Keep it short and sweet.</FieldTip>
                   <h4 className="mb-2 mt-6 text-sm font-bold">Contact card (vCard)</h4>
                   <FieldTip kind="tip" speech className="mb-3">
-                    Add to Contacts shows on your public page when you fill in phone, company, job title, or city. Those go into the contact file people save. Your email is your login and stays private.
+                    Add to Contacts shows on your public page when you fill in phone, public email, company, job title, or city. Those go into the contact file people save. Your login email stays private.
                   </FieldTip>
                   <div className="space-y-3">
                     <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Phone</span><input type="text" placeholder="Phone for contacts, e.g. 404-555-0100" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                     <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Login email (private)</span><input type="email" placeholder="you@email.com" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
-                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Company</span><input type="text" placeholder="Company, e.g. Easy Did It" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Public email (optional)</span><input type="email" inputMode="email" autoCapitalize="none" placeholder="Email people can reach you at" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                    <label className="flex items-start gap-3 cursor-pointer text-sm">
+                      <input type="checkbox" checked={showContactEmail} onChange={(e) => setShowContactEmail(e.target.checked)} className="mt-0.5 w-4 h-4 shrink-0" />
+                      <span>
+                        <span className="block">Show email icon on my public profile</span>
+                        <span className="block text-xs text-zinc-500">Your contact card still includes this email even when this is unchecked.</span>
+                      </span>
+                    </label>
+                    {user?.emailVerified === false && (
+                      <div role="status" className="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-sm text-amber-200">
+                        Confirm your login email: check your inbox for our link.{' '}
+                        <button type="button" className="font-semibold underline" onClick={async () => {
+                          const res = await fetch('/api/verify-email/resend', { method: 'POST' });
+                          const d = await res.json().catch(() => ({}));
+                          setVerifyMsg(d.message || d.error || (res.ok ? 'Sent.' : 'Could not send.'));
+                        }}>Send a new link</button>
+                        {verifyMsg && <span className="mt-1 block text-xs">{verifyMsg}</span>}
+                      </div>
+                    )}
+                    <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Company</span><input type="text" placeholder="e.g. Your Company" value={company} onChange={(e) => setCompany(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                     <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Job title</span><input type="text" placeholder="Job title, e.g. Maker" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                     <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">City or address</span><input type="text" placeholder="City or address (optional)" value={address} onChange={(e) => setAddress(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                   </div>
@@ -749,7 +780,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex flex-col gap-2 mb-5">
                   <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Web address</span><input type="text" placeholder="https://your-site.com" value={newUrl} onChange={(e) => setNewUrl(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
-                  <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Button label</span><input type="text" placeholder="Button label, e.g. My site" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
+                  <label className="block"><span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-zinc-400">Button label</span><input type="text" placeholder="Button label, e.g. My site" value={newTitle} maxLength={75} onChange={(e) => setNewTitle(e.target.value)} className="w-full bg-zinc-800 p-3 rounded-xl border border-zinc-700 focus:border-[#E72679] focus:outline-none focus:ring-2 focus:ring-[#E72679]/30" /></label>
                   <button type="button" onClick={addLink} className="rounded-xl bg-[#E72679] py-3 font-bold text-white transition hover:brightness-110 active:scale-[0.99]">
                     Add link
                   </button>

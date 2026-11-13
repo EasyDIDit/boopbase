@@ -33,7 +33,7 @@ const oswald = Oswald({
 });
 
 export const metadata: Metadata = {
-  title: "BOOP by easydidit",
+  title: "BOOP — Building Opportunities One Profile at a Time",
   description: "Tap-to-share digital business card. No monthly fee.",
 };
 

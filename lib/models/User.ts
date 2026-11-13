@@ -45,6 +45,22 @@ const UserSchema = new mongoose.Schema({
   title: { type: String, default: '' },
   address: { type: String, default: '' },
   password: { type: String, required: true },
+  /**
+   * Optional public contact email (owner-set). Goes into Add to Contacts when set.
+   * Shown as an email icon on the public page only when showContactEmail is also true.
+   * Separate from `email`, which is the private login email.
+   */
+  contactEmail: { type: String, default: '' },
+  /** When true, the public page shows an email icon for contactEmail. Default off. vCard is unchanged. */
+  showContactEmail: { type: Boolean, default: false },
+  /** Login email confirmed by link. Undefined on accounts made before verification existed (treated as not asked). */
+  emailVerified: { type: Boolean },
+  /** One-time token hashes (never the raw token). select:false keeps them out of every normal read. */
+  emailVerifyTokenHash: { type: String, select: false },
+  emailVerifyExpires: { type: Date, select: false },
+  resetTokenHash: { type: String, select: false },
+  resetTokenExpires: { type: Date, select: false },
+  passwordChangedAt: { type: Date },
   views: { type: Number, default: 0 },
   /** Insights: Add to Contacts downloads and social icon taps (counted from launch of this feature). */
   contactSaves: { type: Number, default: 0 },

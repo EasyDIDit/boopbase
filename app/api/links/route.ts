@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { getSessionUsername, unauthorized } from '@/lib/session';
+import { normalizeLinkUrl } from '@/lib/safeUrl';
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,11 +10,14 @@ export async function POST(request: NextRequest) {
     if (!username) return unauthorized();
     await connectDB();
 
-    const { title, url } = await request.json();
+    const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+    const title = typeof body.title === 'string' ? body.title.trim().slice(0, 75) : '';
+    // Only http(s) links (no javascript:/data:).
+    const url = normalizeLinkUrl(body.url);
 
     if (!title || !url) {
       return NextResponse.json(
-        { error: 'Title and url are required' },
+        { error: 'Title and an http(s) link are required' },
         { status: 400 }
       );
     }
@@ -25,7 +29,7 @@ export async function POST(request: NextRequest) {
     }
 
     const newLink = {
-      id: Date.now(),
+      id: String(Date.now()),
       title,
       url,
       isActive: true,

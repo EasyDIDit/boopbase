@@ -161,6 +161,8 @@ export default function Register() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Something you will remember (6+ characters)"
+              minLength={6}
+              autoComplete="new-password"
               className="mt-1.5 min-h-12 w-full rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-3 font-normal focus:border-white focus:outline-none"
               required
             />
@@ -170,6 +172,12 @@ export default function Register() {
           </label>
 
           {error && <p role="alert" className="text-center text-red-400">{error}</p>}
+
+          <p className="text-center text-xs text-white/50">
+            By creating a page you agree to the{' '}
+            <a href="/terms" target="_blank" rel="noopener" className="underline">Terms</a> and{' '}
+            <a href="/privacy" target="_blank" rel="noopener" className="underline">Privacy</a> notes.
+          </p>
 
           <button
             type="submit"

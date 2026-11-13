@@ -1,3 +1,4 @@
+import { normalizeLinkUrl } from './safeUrl';
 /**
  * Curated social platform catalog for Boop.
  * Customers pick a platform + handle/URL; only configured ones show on the card.
@@ -93,7 +94,10 @@ export function legacySocialsToEntries(user: {
   socials?: SocialEntry[];
 }): SocialEntry[] {
   if (Array.isArray(user.socials) && user.socials.length > 0) {
-    return user.socials.filter((s) => s && s.platform && s.url);
+    // Only http(s) links ever render (no javascript:/data: links on a public page).
+    return user.socials
+      .filter((s) => s && s.platform && s.url && normalizeLinkUrl(s.url))
+      .map((s) => ({ ...s, url: normalizeLinkUrl(s.url) as string }));
   }
   const out: SocialEntry[] = [];
   const pairs: [SocialPlatformId, string | undefined][] = [
@@ -103,8 +107,9 @@ export function legacySocialsToEntries(user: {
     ['facebook', user.facebook],
   ];
   for (const [platform, url] of pairs) {
-    if (url && String(url).trim()) {
-      out.push({ id: `legacy-${platform}`, platform, url: String(url).trim() });
+    const safe = url ? normalizeLinkUrl(String(url).trim()) : null;
+    if (safe) {
+      out.push({ id: `legacy-${platform}`, platform, url: safe });
     }
   }
   return out;

@@ -20,8 +20,8 @@ Physical Boop device → tap URL (`/p/[code]`) → public profile (`/{username}`
 
 ### Brand & public surface
 - Official Boop wordmark SVGs (`public/brand/boop-logo-black.svg`, `boop-logo-white.svg`, `boop-logo-grey.svg`)
-- Public profile footer order: tagline → logo → "by EasyDidIt"
-- Tagline: *Building Opportunities One Profile at a time*
+- Public profile footer order: tagline → BOOP logo (no "by" line)
+- Tagline: *Building Opportunities One Profile at a Time*
 - Skin system: Classic, Jazz Night, Night City, and additional packs
 - Public profiles with hero, socials, links, Add to Contacts (vCard)
 

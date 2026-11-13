@@ -3,6 +3,13 @@ import bcrypt from 'bcryptjs';
 import connectDB from '@/lib/mongodb';
 import User from '@/lib/models/User';
 import { setSessionCookie } from '@/lib/session';
+import { LIMITS, clientIp, hitLimit, retryAfterSeconds } from '@/lib/rateLimit';
+
+const tooMany = (seconds: number) =>
+  NextResponse.json(
+    { error: 'Too many sign-in tries. Wait a few minutes and try again, or reset your password.' },
+    { status: 429, headers: { 'Retry-After': String(seconds) } }
+  );
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,6 +22,13 @@ export async function POST(request: NextRequest) {
     if (!emailOrUsername || !password) {
       return NextResponse.json({ error: 'Email/Username and password are required' }, { status: 400 });
     }
+    if (emailOrUsername.length > 254 || password.length > 200) {
+      return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+    }
+
+    // Per IP and per account, so one person can't hammer many accounts or one account from many tries.
+    if (await hitLimit(LIMITS.loginIp, clientIp(request), { failOpen: true })) return tooMany(retryAfterSeconds(LIMITS.loginIp));
+    if (await hitLimit(LIMITS.loginAccount, emailOrUsername, { failOpen: true })) return tooMany(retryAfterSeconds(LIMITS.loginAccount));
 
     const user = await User.findOne({
       $or: [

@@ -128,6 +128,9 @@ export default function LoginPage() {
           >
             {loading ? 'Signing in...' : minting ? 'Sign in to mint' : pendingCode ? 'Sign in and claim' : 'Sign in'}
           </button>
+          <p className="text-center text-sm">
+            <Link href="/forgot-password" className="text-white/60 underline">Forgot password?</Link>
+          </p>
         </form>
 
         {!minting && (

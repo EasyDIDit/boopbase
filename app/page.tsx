@@ -7,8 +7,8 @@ import { boopShopUrl } from '@/lib/shopUrl';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'BOOP by easydidit',
-  description: 'Boop. Building Opportunities One Profile at a time. Tap-to-share digital business card. No monthly fee.',
+  title: 'BOOP — Building Opportunities One Profile at a Time',
+  description: 'Boop. Building Opportunities One Profile at a Time. Tap-to-share digital business card. No monthly fee.',
 };
 
 export default function Home() {
@@ -21,9 +21,9 @@ export default function Home() {
       </header>
 
       <section className="flex-1 flex flex-col items-center justify-center text-center px-6">
-        <p className="text-sm uppercase tracking-[0.2em] text-white/50">BOOP by easydidit</p>
+        <p className="text-sm uppercase tracking-[0.2em] text-white/50">BOOP</p>
         <h1 className="mt-4 text-4xl sm:text-6xl font-bold max-w-3xl">
-          Building Opportunities One Profile at a time.
+          Building Opportunities One Profile at a Time.
         </h1>
         <p className="mt-6 text-lg text-white/70 max-w-xl">
           Tap-to-share digital business card. No monthly fee.
@@ -39,7 +39,7 @@ export default function Home() {
         <p className="mt-8 text-sm text-white/50">Got a Boop? Tap it on your phone to set up your profile.</p>
       </section>
 
-      <footer className="px-6 py-6 text-center text-xs text-white/40">BOOP by easydidit</footer>
+      <footer className="px-6 py-6 text-center text-xs text-white/40">BOOP · Building Opportunities One Profile at a Time</footer>
     </main>
   );
 }

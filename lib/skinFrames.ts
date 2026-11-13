@@ -64,7 +64,7 @@ export function buildLinkFrameSvg(p: LinkFrameParams = {}): string {
   const inset = p.insetStroke ?? '#E72679';
   const pad = ow + 4;
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" fill="none">
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" fill="none" preserveAspectRatio="none">
   <rect x="${ow / 2}" y="${ow / 2}" width="${w - ow}" height="${h - ow}" rx="${r}" ry="${r}" fill="${fill}" stroke="${outer}" stroke-width="${ow}"/>
   <rect x="${pad}" y="${pad}" width="${w - pad * 2}" height="${h - pad * 2}" rx="${Math.max(6, r - 4)}" ry="${Math.max(6, r - 4)}" stroke="${inset}" stroke-width="${iw}" fill="none"/>
 </svg>`;

@@ -4,14 +4,7 @@ import User from '@/lib/models/User';
 import Device from '@/lib/models/Device';
 import Customer from '@/lib/models/Customer';
 import { getSessionUsername, setSessionCookie, unauthorized } from '@/lib/session';
-
-function cleanUsername(raw: string) {
-  return String(raw || '')
-    .toLowerCase()
-    .trim()
-    .replace(/@/g, '')
-    .replace(/[^a-z0-9._-]/g, '');
-}
+import { checkUsername, cleanUsername } from '@/lib/username';
 
 export async function POST(request: NextRequest) {
   try {
@@ -21,21 +14,13 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json().catch(() => ({}));
-    const next = cleanUsername(body.username);
-
-    if (String(body.username || '').includes('@')) {
-      return NextResponse.json(
-        { error: 'No @. Your link is just yourname.' },
-        { status: 400 }
-      );
+    // Keeping the same name is always fine (even names now reserved, e.g. the admin accounts).
+    if (!String(body.username || '').includes('@') && cleanUsername(body.username) === current) {
+      return NextResponse.json({ success: true, username: current });
     }
-
-    if (!next || next.length < 3 || next.length > 30) {
-      return NextResponse.json(
-        { error: 'Username must be 3–30 letters or numbers.' },
-        { status: 400 }
-      );
-    }
+    const checked = checkUsername(body.username);
+    if (!checked.ok) return NextResponse.json({ error: checked.error }, { status: 400 });
+    const next = checked.username;
 
     if (next === current) {
       return NextResponse.json({ success: true, username: next });

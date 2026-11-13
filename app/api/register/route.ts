@@ -5,38 +5,44 @@ import User from '@/lib/models/User';
 import { checkClaimable, claimDevice } from '@/lib/claimDevice';
 import Customer from '@/lib/models/Customer';
 import { setSessionCookie } from '@/lib/session';
+import { checkUsername } from '@/lib/username';
+import { cleanEmail, isValidEmail, passwordProblem } from '@/lib/authTokens';
+import { LIMITS, clientIp, hitLimit } from '@/lib/rateLimit';
+import { sendVerificationEmail } from '@/lib/emailVerification';
 
 export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
     const body = await request.json().catch(() => ({}));
-    const username = String(body.username || '')
-      .toLowerCase()
-      .trim()
-      .replace(/@/g, '')
-      .replace(/[^a-z0-9._-]/g, '');
-    const name = String(body.name || '').trim();
-    const email = String(body.email || '').toLowerCase().trim();
-    const password = String(body.password || '');
-    const code = String(body.code || '').toUpperCase().trim();
+    const name = String(body.name || '').trim().slice(0, 100);
+    const email = cleanEmail(body.email);
+    const password = typeof body.password === 'string' ? body.password : '';
+    const code = String(body.code || '').toUpperCase().trim().slice(0, 32);
 
-    if (String(body.username || '').includes('@')) {
-      return NextResponse.json(
-        { error: 'Username cannot include @. Use just yourname.' },
-        { status: 400 }
-      );
-    }
-
-    if (!username || !name || !password) {
+    if (!String(body.username || '').trim() || !name || !password) {
       return NextResponse.json(
         { error: 'Username, name, and password are required' },
         { status: 400 }
       );
     }
 
-    if (!email || !email.includes('@')) {
+    const checked = checkUsername(body.username);
+    if (!checked.ok) return NextResponse.json({ error: checked.error }, { status: 400 });
+    const username = checked.username;
+
+    if (!isValidEmail(email)) {
       return NextResponse.json({ error: 'A valid email is required' }, { status: 400 });
+    }
+
+    const weak = passwordProblem(password);
+    if (weak) return NextResponse.json({ error: weak }, { status: 400 });
+
+    if (await hitLimit(LIMITS.registerIp, clientIp(request), { failOpen: true })) {
+      return NextResponse.json(
+        { error: 'Too many new accounts from here. Try again in an hour.' },
+        { status: 429, headers: { 'Retry-After': '3600' } }
+      );
     }
 
     const existingUsername = await User.findOne({ username });
@@ -62,7 +68,11 @@ export async function POST(request: NextRequest) {
       name,
       email,
       password: hashedPassword,
+      emailVerified: false,
     });
+
+    // Confirm-your-email link. Never blocks sign-up; no email leaves the server unless configured.
+    await sendVerificationEmail(user, request.nextUrl.origin).catch(() => null);
 
     // Customer CDP row from registration — shop and promo share the same path
     await Customer.findOneAndUpdate(
