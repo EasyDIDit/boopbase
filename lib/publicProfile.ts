@@ -9,6 +9,7 @@
  */
 import { isOwner, isAdminUsername } from './ownerAuth';
 import type { SocialPlatformId } from './socialPlatforms';
+import { isOfficialPaymentUrl, isPaymentPlatform } from './socialPlatforms';
 
 type AnyRecord = Record<string, unknown>;
 
@@ -148,7 +149,7 @@ export function toPublicProfile(user: AnyRecord): PublicProfile {
     id: str(s.id),
     platform: str(s.platform) as SocialPlatformId,
     url: str(s.url),
-  }));
+  })).filter((s) => !isPaymentPlatform(s.platform) || isOfficialPaymentUrl(s.platform, s.url));
 
   out.showContactEmail = bool(user.showContactEmail, false);
   // Page/API JSON only includes the address when the owner opts in. The vCard still uses it whenever it is set.

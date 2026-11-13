@@ -25,7 +25,10 @@ for (const missing of [{ photo: null }, { name: ' ' }, { bio: ' ' }, { socials: 
 const editor = readFileSync(resolve('app/dashboard/page.tsx'), 'utf8');
 const mascot = readFileSync(resolve('components/Mascot.tsx'), 'utf8');
 ok(!editor.includes('MascotStyleSwitch') && !mascot.includes('URLSearchParams'), 'no style switch or query override');
-ok((editor.match(/pose="4-thumbs-up"/g) || []).length === 1, 'thumbs-up only in save toast');
+// Stage 2 mobile editor (approved 390x844 mockups): save status lives in the bottom save bar,
+// no peeking panthers in the editor; the panther head is the default photo / link thumb.
+ok(!editor.includes('pose="4-thumbs-up"') && editor.includes('All changes saved'), 'save bar replaces the thumbs-up toast');
+ok(editor.includes('<MascotHead') && readFileSync(resolve('components/editor/LinkCard.tsx'), 'utf8').includes('<MascotHead'), 'no photo = Boop panther head');
 ok(!readFileSync(resolve('components/InsightsPanel.tsx'), 'utf8').includes('Mascot'), 'no insight empty-state mascots');
 ok(!/[\u{1f431}\u{1f63a}-\u{1f640}\u{1f408}]/u.test(readFileSync(resolve('lib/skins.ts'), 'utf8')), 'no yellow-cat badge');
 for (const [name, v] of Object.entries(PEEK_EXPRESSIONS)) {
@@ -33,8 +36,7 @@ for (const [name, v] of Object.entries(PEEK_EXPRESSIONS)) {
   ok(v.grip > 0 && v.grip < 0.25 && v.width > 0 && v.height > 0, `peek ${name} grip line sane`);
 }
 ok(startHereExpression(0) === 'shock' && startHereExpression(2) === 'grin' && startHereExpression(4) === 'gasp', 'start-here reacts to progress');
-const spots = [...editor.matchAll(/peek="(\w+)"/g)].map((m) => m[1]);
-ok(spots.length === 3 && new Set(spots).size === 3 && !spots.includes('tongue'), 'each card has its own expression');
+ok(!/peek="\w+"/.test(editor) && !editor.includes('PeekPanther'), 'mobile editor has no peeking panthers (per approved mockups)');
 ok(!('tongue' in PEEK_EXPRESSIONS) && !existsSync(resolve('public/mascots/peek/panther-drawn-peek-tongue.webp')), 'tongue-out omitted');
 ok(readFileSync(resolve('app/globals.css'), 'utf8').includes('prefers-reduced-motion: reduce'), 'reduced motion respected');
 console.log(`mascot.verify: all ${checks} checks passed`);
