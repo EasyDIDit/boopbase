@@ -6,6 +6,7 @@ import { normalizeLinkUrl } from '@/lib/safeUrl';
 import { cleanImageValue } from '@/lib/imageGuard';
 import { cleanEmail, isValidEmail } from '@/lib/authTokens';
 import { sendVerificationEmail } from '@/lib/emailVerification';
+import { isOfficialPaymentUrl, isPaymentPlatform } from '@/lib/socialPlatforms';
 
 const MAX_BODY_CHARS = 8_000_000;
 const MAX_LINKS = 100;
@@ -153,6 +154,7 @@ export async function POST(request: NextRequest) {
           rawImg.startsWith('/skins/')
             ? rawImg
             : '';
+        // Only link and (existing) video kinds are stored; anything else (e.g. gif) saves as a plain link, extra fields dropped.
         const kind = String(l?.kind || 'link') === 'video' ? 'video' : 'link';
         const rawTap = String(l?.tapUrl || '').trim();
         const tapUrl = kind === 'video' && rawTap ? normalizeLinkUrl(rawTap) : '';
@@ -183,7 +185,9 @@ export async function POST(request: NextRequest) {
       updateData.socials = (updateData.socials as Array<Record<string, unknown>>)
         .slice(0, 40)
         .map((s) => ({ id: String(s?.id ?? '').slice(0, 64), platform: String(s?.platform ?? '').slice(0, 40), url: normalizeLinkUrl(s?.url) || '' }))
-        .filter((s) => s.platform && s.url);
+        .filter((s) => s.platform && s.url)
+        // Get-paid handles: official paypal.me / cash.app / venmo.com links only.
+        .filter((s) => !isPaymentPlatform(s.platform) || isOfficialPaymentUrl(s.platform, s.url));
     }
     for (const key of ['instagram', 'tiktok', 'youtube', 'facebook'] as const) {
       if (key in updateData && updateData[key]) updateData[key] = normalizeLinkUrl(updateData[key]) || '';

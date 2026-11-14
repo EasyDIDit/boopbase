@@ -22,7 +22,10 @@ export type SocialPlatformId =
   | 'telegram'
   | 'reddit'
   | 'behance'
-  | 'website';
+  | 'website'
+  | 'cashapp'
+  | 'venmo'
+  | 'paypal';
 
 export type SocialPlatform = {
   id: SocialPlatformId;
@@ -32,6 +35,10 @@ export type SocialPlatform = {
   placeholder: string;
   /** Optional hint under the field */
   hint?: string;
+  /** Payment handles: only links on these official hosts are ever stored or shown. */
+  officialHosts?: string[];
+  /** Short label shown in front of the handle field, e.g. "cash.app/$". */
+  display?: string;
 };
 
 export const SOCIAL_PLATFORMS: SocialPlatform[] = [
@@ -55,6 +62,54 @@ export const SOCIAL_PLATFORMS: SocialPlatform[] = [
   { id: 'website', name: 'Website', prefix: 'https://', placeholder: 'yoursite.com' },
 ];
 
+/** "Get paid" handles. Users type a handle; we build the official link (no lookalike domains). */
+export const PAYMENT_PLATFORMS: SocialPlatform[] = [
+  { id: 'cashapp', name: 'Cash App', prefix: 'https://cash.app/$', display: 'cash.app/$', placeholder: 'yourname', officialHosts: ['cash.app'] },
+  { id: 'venmo', name: 'Venmo', prefix: 'https://venmo.com/u/', display: 'venmo.com/u/', placeholder: 'your-name', officialHosts: ['venmo.com', 'account.venmo.com'] },
+  { id: 'paypal', name: 'PayPal', prefix: 'https://paypal.me/', display: 'paypal.me/', placeholder: 'yourname', officialHosts: ['paypal.me', 'www.paypal.me', 'paypal.com', 'www.paypal.com'] },
+];
+
+export function isPaymentPlatform(id: string): boolean {
+  return PAYMENT_PLATFORMS.some((p) => p.id === id);
+}
+
+/** Payment handle: letters, numbers, dot, dash, underscore only (1–40). */
+export function cleanPaymentHandle(raw: string): string {
+  return raw.trim().replace(/^\$+/, '').replace(/^@+/, '').replace(/[^A-Za-z0-9._-]/g, '').slice(0, 40);
+}
+
+/** True when a payment URL is on that platform's official host over https. */
+export function isOfficialPaymentUrl(platformId: string, url: string): boolean {
+  const p = PAYMENT_PLATFORMS.find((x) => x.id === platformId);
+  if (!p) return false;
+  try {
+    const u = new URL(url);
+    return u.protocol === 'https:' && !u.username && !u.password && !u.port && (p.officialHosts || []).includes(u.hostname.toLowerCase());
+  } catch {
+    return false;
+  }
+}
+
+/** Short field label shown before the handle input (e.g. "instagram.com/"). */
+export function socialDisplayPrefix(platformId: string): string {
+  const p = getPlatform(platformId);
+  if (!p) return '';
+  if (p.display) return p.display;
+  if (p.id === 'website') return 'https://';
+  return p.prefix.replace(/^https?:\/\//, '');
+}
+
+/** Handle part of a saved URL for editing (the full URL when it does not match the prefix). */
+export function handleFromSocialUrl(platformId: string, url: string): string {
+  const p = getPlatform(platformId);
+  if (!p || !url) return url || '';
+  const bare = (v: string) => v.replace(/^https?:\/\/(www\.)?/i, '').toLowerCase();
+  const pre = bare(p.prefix);
+  if (p.id !== 'website' && bare(url).startsWith(pre)) return url.replace(/^https?:\/\/(www\.)?/i, '').slice(pre.length).replace(/\/$/, '');
+  if (p.id === 'website') return url.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+  return url;
+}
+
 export type SocialEntry = {
   id: string;
   platform: SocialPlatformId;
@@ -62,7 +117,7 @@ export type SocialEntry = {
 };
 
 export function getPlatform(id: string): SocialPlatform | undefined {
-  return SOCIAL_PLATFORMS.find((p) => p.id === id);
+  return SOCIAL_PLATFORMS.find((p) => p.id === id) || PAYMENT_PLATFORMS.find((p) => p.id === id);
 }
 
 /** Build a full URL from handle or URL input. */
@@ -71,6 +126,13 @@ export function buildSocialUrl(platformId: SocialPlatformId, raw: string): strin
   if (!value) return '';
   const platform = getPlatform(platformId);
   if (!platform) return value;
+
+  if (isPaymentPlatform(platformId)) {
+    // Official links only: a pasted URL must already be on the official host; a handle builds one.
+    if (/^https?:\/\//i.test(value)) return isOfficialPaymentUrl(platformId, value) ? value : '';
+    const handle = cleanPaymentHandle(value);
+    return handle ? platform.prefix + handle : '';
+  }
 
   if (/^https?:\/\//i.test(value)) return value;
 
@@ -97,6 +159,7 @@ export function legacySocialsToEntries(user: {
     // Only http(s) links ever render (no javascript:/data: links on a public page).
     return user.socials
       .filter((s) => s && s.platform && s.url && normalizeLinkUrl(s.url))
+      .filter((s) => !isPaymentPlatform(s.platform) || isOfficialPaymentUrl(s.platform, normalizeLinkUrl(s.url) as string))
       .map((s) => ({ ...s, url: normalizeLinkUrl(s.url) as string }));
   }
   const out: SocialEntry[] = [];
