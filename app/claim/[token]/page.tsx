@@ -5,6 +5,7 @@ import BoopLogo from '@/components/BoopLogo';
 import ClaimStatusScreen from '@/components/ClaimStatusScreen';
 import ClaimLinkActions from '@/components/ClaimLinkActions';
 import ResendLinkButton from '@/components/ResendLinkButton';
+import NfcOffPrompt from '@/components/NfcOffPrompt';
 import { findDeviceByToken, isClaimLinkExpired } from '@/lib/claimOrder';
 import { SESSION_COOKIE, usernameFromSessionToken } from '@/lib/session';
 
@@ -66,17 +67,20 @@ export default async function ClaimLinkPage({ params }: Props) {
     );
   }
 
+  // Claim button first (green), card info after (grey, quieter). NFC-off message, when needed, goes above everything.
   return (
     <Shell>
-      <div className="rounded-3xl border border-emerald-400/50 bg-emerald-400/15 px-5 py-5 text-center">
-        <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-300">BOOP card {device.code}</p>
-        <h1 className="mt-2 text-3xl font-extrabold leading-tight">Set up this card</h1>
-        <p className="mt-2 text-sm text-white/70">
+      <NfcOffPrompt>
+        <h1 className="text-center text-2xl font-extrabold leading-tight">Set up BOOP card {device.code}</h1>
+        <ClaimLinkActions token={token} username={username} />
+      </NfcOffPrompt>
+      <div className="rounded-2xl border border-white/10 bg-zinc-900 px-4 py-4 text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/40">About this card</p>
+        <p className="mt-2 text-sm text-white/60">
           Link this card to a page now so it works the moment it arrives. Got more than one card? Each has its own link —
           use them all on your page, or forward one so that card goes to someone else&apos;s page.
         </p>
       </div>
-      <ClaimLinkActions token={token} username={username} />
     </Shell>
   );
 }

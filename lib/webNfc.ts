@@ -176,3 +176,86 @@ export async function verifyThenLock(url: string, timeoutMs = 20000): Promise<{ 
   await lockTag(timeoutMs);
   return { locked: true, readUrl, serial: ev.serialNumber || null };
 }
+
+// ---- NFC-off prompt (customer claim page, Android Chrome) ----
+
+/**
+ * Android intent that asks for the NFC settings screen. Chrome only launches intents whose target declares
+ * BROWSABLE, and Android Settings usually does not, so this may do nothing. The prompt always shows manual steps too.
+ */
+export const NFC_SETTINGS_INTENT = 'intent:#Intent;action=android.settings.NFC_SETTINGS;end';
+
+export function isAndroidUA(ua: string): boolean {
+  return /\bAndroid\b/i.test(ua);
+}
+
+/** Chrome rejects NDEFReader.scan() with NotReadableError when the phone's NFC switch is off. */
+export function isNfcOffError(err: unknown): boolean {
+  return (err as { name?: string } | null)?.name === 'NotReadableError';
+}
+
+/** Only a BOOP card link (https://boopbase.com/p/CODE or www.) is ever opened from a scan. Anything else is ignored. */
+export function boopTapUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  try {
+    const u = new URL(raw);
+    if (u.protocol !== 'https:') return null;
+    if (u.hostname !== 'boopbase.com' && u.hostname !== 'www.boopbase.com') return null;
+    if (!/^\/p\/[A-Za-z0-9_-]{1,32}\/?$/.test(u.pathname)) return null;
+    return `https://www.boopbase.com${u.pathname.replace(/\/$/, '')}`;
+  } catch {
+    return null;
+  }
+}
+
+export type NfcProbe = 'on' | 'off' | 'blocked' | 'nonfc' | 'unknown';
+
+/** What a failed scan() means for the customer. NotAllowedError = NFC permission blocked (or, with no tap, not asked yet). */
+export function nfcProbeFromError(err: unknown): Exclude<NfcProbe, 'on'> {
+  if (isNfcOffError(err)) return 'off';
+  const name = (err as { name?: string } | null)?.name;
+  if (name === 'NotAllowedError') return 'blocked';
+  if (name === 'NotSupportedError') return 'nonfc';
+  return 'unknown';
+}
+
+/**
+ * Checks the NFC switch: starts a scan and stops it right away (no scan is left running). 'off' = NFC switched off.
+ * Without a tap, Chrome can't ask for NFC permission, so an automatic check only acts on 'off'.
+ */
+export async function probeNfc(): Promise<NfcProbe> {
+  const C = ctor();
+  if (!C) return 'nonfc';
+  const ctl = new AbortController();
+  try {
+    await new C().scan({ signal: ctl.signal });
+    return 'on';
+  } catch (err) {
+    return nfcProbeFromError(err);
+  } finally {
+    ctl.abort();
+  }
+}
+
+/**
+ * Listens for a BOOP card on this page and calls `onCard` with its link. Returns a stop function.
+ * Rejects like scan() (NotReadableError while NFC is still off).
+ */
+export async function listenForBoopCard(onCard: (url: string) => void): Promise<() => void> {
+  const C = ctor();
+  if (!C) throw Object.assign(new Error('Web NFC not supported'), { name: 'NotSupportedError' });
+  const ctl = new AbortController();
+  const reader = new C();
+  reader.addEventListener('reading', (e) => {
+    const urls = (e as NdefReadingEvent).message.records.map(decodeUrl);
+    const url = urls.map(boopTapUrl).find((u): u is string => !!u);
+    if (url) onCard(url);
+  }, { signal: ctl.signal });
+  try {
+    await reader.scan({ signal: ctl.signal });
+  } catch (err) {
+    ctl.abort();
+    throw err;
+  }
+  return () => ctl.abort();
+}
