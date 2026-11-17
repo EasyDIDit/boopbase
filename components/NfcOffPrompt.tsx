@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Mascot, MascotHead } from '@/components/Mascot';
 import { NFC_SETTINGS_INTENT, isAndroidUA, listenForBoopCard, probeNfc, webNfcSupported } from '@/lib/webNfc';
 
 type State = 'none' | 'link' | 'off' | 'ready' | 'on' | 'blocked' | 'nonfc' | 'unknown';
@@ -89,13 +90,17 @@ export default function NfcOffPrompt({ children }: { children?: ReactNode }) {
     );
   } else if (state === 'ready' || NOTES[state]) {
     const good = state === 'ready' || state === 'on';
+    // Boop the helper (existing drawn panther head) next to the help note. Notes sit below the claim button.
     below = (
-      <p
+      <div
         role="status"
-        className={`rounded-2xl border px-4 py-3 text-center text-sm ${good ? 'border-emerald-400/50 bg-emerald-400/15 font-bold text-emerald-100' : 'border-white/15 bg-zinc-900 text-white/75'}`}
+        className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-left text-sm ${good ? 'border-[#E72679]/50 bg-[#E72679]/10 font-bold text-white' : 'border-white/15 bg-zinc-900 text-white/75'}`}
       >
-        {state === 'ready' ? 'NFC is on. Hold your card to the back of the phone.' : NOTES[state]}
-      </p>
+        <span className="h-11 w-11 shrink-0 overflow-hidden rounded-full bg-[#f4d9b0]">
+          <MascotHead className="h-full w-full object-contain p-1" />
+        </span>
+        <p className="min-w-0">{state === 'ready' ? 'NFC is on. Hold your card to the back of the phone.' : NOTES[state]}</p>
+      </div>
     );
   }
 
@@ -117,9 +122,15 @@ export default function NfcOffPrompt({ children }: { children?: ReactNode }) {
 
   return (
     <>
-    <div role="alert" className="rounded-3xl border-2 border-amber-300 bg-amber-300 px-4 py-5 text-center text-black shadow-lg shadow-amber-300/20">
-      <p className="text-lg font-extrabold leading-tight">NFC is off on this phone</p>
-      <p className="mt-1 text-sm font-semibold text-black/75">Turn it on so your phone can read your card.</p>
+    <div role="alert" className="rounded-3xl border-2 border-amber-300 bg-amber-300 px-4 py-4 text-center text-black shadow-lg shadow-amber-300/20">
+      <div className="flex items-center gap-3 text-left">
+        {/* Boop the helper (existing drawn panther, phone + card pose) */}
+        <Mascot pose="2-phone-card" className="h-20 w-12" />
+        <div className="min-w-0">
+          <p className="text-lg font-extrabold leading-tight">NFC is off on this phone</p>
+          <p className="mt-1 text-sm font-semibold text-black/75">Turn it on so your phone can read your card.</p>
+        </div>
+      </div>
       <a
         href={NFC_SETTINGS_INTENT}
         onClick={openSettings}

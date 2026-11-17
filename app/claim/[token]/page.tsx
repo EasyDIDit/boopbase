@@ -67,7 +67,7 @@ export default async function ClaimLinkPage({ params }: Props) {
     );
   }
 
-  // Claim button first (green), card info after (grey, quieter). NFC-off message, when needed, goes above everything.
+  // Claim button first (BOOP pink), card info after (grey, quieter). NFC-off message, when needed, goes above everything.
   return (
     <Shell>
       <NfcOffPrompt>

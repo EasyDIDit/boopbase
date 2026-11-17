@@ -41,7 +41,7 @@ export default function ClaimReadyScreen({ code, productType, soldToEmail }: Pro
           <BoopLogo variant="white" className="h-9 w-auto max-w-[9rem]" priority />
         </Link>
 
-        {/* Claim button first (green); the card info below is grey and quieter so nobody tries to tap it. */}
+        {/* Claim button first (BOOP pink); the card info below is grey and quieter so nobody tries to tap it. */}
         <div className="text-center">
           <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/50">Your {thing} is ready</p>
           <h1 className="mt-1 text-3xl font-extrabold leading-tight tracking-tight">Claim it now.</h1>
@@ -56,7 +56,7 @@ export default function ClaimReadyScreen({ code, productType, soldToEmail }: Pro
 
         <Link
           href={registerHref}
-          className="flex min-h-14 items-center justify-center rounded-2xl bg-emerald-400 text-lg font-extrabold text-black shadow-lg shadow-emerald-400/20"
+          className="flex min-h-14 items-center justify-center rounded-2xl bg-[#E72679] text-lg font-extrabold text-white shadow-lg shadow-[#E72679]/25"
         >
           Create my page and claim
         </Link>
