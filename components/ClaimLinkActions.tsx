@@ -10,7 +10,7 @@ export default function ClaimLinkActions({ token, username }: { token: string; u
   if (!username) {
     return (
       <div className="flex flex-col gap-3">
-        <a href={`/register${q}`} className="flex min-h-14 items-center justify-center rounded-2xl bg-white text-lg font-extrabold text-black">
+        <a href={`/register${q}`} className="flex min-h-14 items-center justify-center rounded-2xl bg-[#E72679] text-lg font-extrabold text-white shadow-lg shadow-[#E72679]/25">
           Create my page
         </a>
         <a href={`/login${q}`} className="text-center text-sm font-bold underline">
@@ -38,7 +38,7 @@ export default function ClaimLinkActions({ token, username }: { token: string; u
 
   return (
     <div className="flex flex-col gap-3">
-      <button onClick={finish} disabled={busy} className="min-h-14 rounded-2xl bg-white text-lg font-extrabold text-black disabled:opacity-60">
+      <button onClick={finish} disabled={busy} className="min-h-14 rounded-2xl bg-[#E72679] text-lg font-extrabold text-white shadow-lg shadow-[#E72679]/25 disabled:opacity-60">
         {busy ? 'Linking…' : `Link this card to @${username}`}
       </button>
       <a href={`/login${q}`} className="text-center text-sm underline text-white/70">Not you? Sign in with another account</a>

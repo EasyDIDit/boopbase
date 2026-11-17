@@ -41,22 +41,10 @@ export default function ClaimReadyScreen({ code, productType, soldToEmail }: Pro
           <BoopLogo variant="white" className="h-9 w-auto max-w-[9rem]" priority />
         </Link>
 
-        <div className="rounded-3xl border border-emerald-400/50 bg-emerald-400/15 px-5 py-5 text-center">
-          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-emerald-300">
-            Your {thing} is ready
-          </p>
-          <h1 className="mt-2 text-3xl font-extrabold leading-tight tracking-tight">
-            Claim it now.
-          </h1>
-          <p className="mt-2 text-sm text-white/70">
-            One page. One tap. Do not leave until it is yours.
-          </p>
-        </div>
-
-        <div className="rounded-2xl bg-zinc-900 px-4 py-4 text-center">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">This code</p>
-          <p className="mt-1 font-mono text-3xl font-bold tracking-[0.18em]">{code}</p>
-          <p className="mt-1 text-xs text-white/45">Write nothing. Just finish the form.</p>
+        {/* Claim button first (BOOP pink); the card info below is grey and quieter so nobody tries to tap it. */}
+        <div className="text-center">
+          <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-white/50">Your {thing} is ready</p>
+          <h1 className="mt-1 text-3xl font-extrabold leading-tight tracking-tight">Claim it now.</h1>
         </div>
 
         {soldToEmail && (
@@ -65,6 +53,30 @@ export default function ClaimReadyScreen({ code, productType, soldToEmail }: Pro
           </p>
         )}
         {soldToEmail && <ResendLinkButton code={code} label="Email me a setup link instead" />}
+
+        <Link
+          href={registerHref}
+          className="flex min-h-14 items-center justify-center rounded-2xl bg-[#E72679] text-lg font-extrabold text-white shadow-lg shadow-[#E72679]/25"
+        >
+          Create my page and claim
+        </Link>
+
+        <div className="rounded-2xl border border-white/10 px-4 py-3 text-center">
+          <p className="text-sm text-white/70">Already made a page?</p>
+          <Link href={loginHref} className="mt-1 inline-block text-sm font-bold underline">
+            Sign in and attach this {thing}
+          </Link>
+        </div>
+
+        <div className="rounded-2xl border border-white/10 bg-zinc-900 px-4 py-3 text-center">
+          <p className="text-sm text-white/60">One page. One tap. Do not leave until it is yours.</p>
+        </div>
+
+        <div className="rounded-2xl bg-zinc-900 px-4 py-4 text-center">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-white/40">This code</p>
+          <p className="mt-1 font-mono text-3xl font-bold tracking-[0.18em]">{code}</p>
+          <p className="mt-1 text-xs text-white/45">Write nothing. Just finish the form.</p>
+        </div>
 
         <div>
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-white/40">
@@ -83,20 +95,6 @@ export default function ClaimReadyScreen({ code, productType, soldToEmail }: Pro
               </li>
             ))}
           </ol>
-        </div>
-
-        <Link
-          href={registerHref}
-          className="flex min-h-14 items-center justify-center rounded-2xl bg-white text-lg font-extrabold text-black"
-        >
-          Create my page and claim
-        </Link>
-
-        <div className="rounded-2xl border border-white/10 px-4 py-3 text-center">
-          <p className="text-sm text-white/70">Already made a page?</p>
-          <Link href={loginHref} className="mt-1 inline-block text-sm font-bold underline">
-            Sign in and attach this {thing}
-          </Link>
         </div>
 
         <ul className="grid grid-cols-3 gap-2 text-center text-[11px] text-white/45">
