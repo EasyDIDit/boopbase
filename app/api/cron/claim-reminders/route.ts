@@ -25,8 +25,11 @@ function authorized(request: NextRequest): boolean {
  * store reports Resend configured (signed health check). Links rotate only after the store confirms the email was sent.
  */
 export async function GET(request: NextRequest) {
-  if (!process.env.CRON_SECRET?.trim()) return NextResponse.json({ ok: true, skipped: 'CRON_SECRET not set' });
-  if (!authorized(request)) return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  // Closed without CRON_SECRET: the same 401 as a bad token, so the public response never reveals setup state.
+  if (!authorized(request)) {
+    if (!process.env.CRON_SECRET?.trim()) console.warn(JSON.stringify({ msg: 'claim_reminders.skipped', reason: 'cron secret not set' }));
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
   const secret = provisionSecret();
   if (!secret || !process.env.STORE_NOTIFY_URL?.trim()) return NextResponse.json({ ok: true, skipped: 'notify not configured' });
 
